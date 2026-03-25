@@ -2,11 +2,16 @@
   {
     "label": "Power Weaver",
     "build": "Builds/power-weaver.json",
-    "rotation": "Rotations/power_weaver.json"
+    "rotation": "Rotations/power-weaver.json"
   },
   {
     "label": "Condi Alac Tempest",
     "build": "Builds/condi-alac-tempest.json",
     "rotation": "Rotations/condi-alac-tempest.json"
+  },
+  {
+    "label": "Inferno Tempest",
+    "build": "Builds/inferno-tempest.json",
+    "rotation": "Rotations/inferno-tempest.json"
   }
 ]

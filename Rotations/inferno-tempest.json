@@ -1,0 +1,23 @@
+{
+  "rotation": [
+    "Rock Barrier",
+    "Overload Air",
+    "Lightning Strike",
+    "\"Feel the Burn!\"",
+    "Ride the Lightning",
+    "Earth Attunement",
+    "Hurl",
+    "Earthquake",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 0
+    },
+    "Phoenix",
+    "Ring of Fire",
+    "Fire Grab",
+    "Dragon's Tooth",
+    "Glyph of Storms (Fire)",
+    "Signet of Fire"
+  ]
+}
