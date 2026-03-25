@@ -495,12 +495,13 @@ header .accent {
     align-items: center;
     gap: 8px;
     padding: 5px 10px;
+    /* Symmetric gradient so both edges fade equally; no dark bar on one side */
     background: linear-gradient(90deg,
             rgba(12, 12, 20, 0.90) 0%,
-            rgba(12, 12, 20, 0.65) 30%,
-            rgba(12, 12, 20, 0.45) 55%,
-            rgba(12, 12, 20, 0.70) 80%,
-            rgba(12, 12, 20, 0.92) 100%);
+            rgba(12, 12, 20, 0.55) 20%,
+            rgba(12, 12, 20, 0.35) 50%,
+            rgba(12, 12, 20, 0.55) 80%,
+            rgba(12, 12, 20, 0.90) 100%);
 }
 
 .spec-header-col {
@@ -561,6 +562,7 @@ header .accent {
 .spec-tiers {
     display: flex;
     align-items: center;
+    justify-content: center;
     flex: 1;
     gap: 0;
 }
