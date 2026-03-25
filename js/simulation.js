@@ -802,7 +802,7 @@ export class SimulationEngine {
                 const zapMul = zapBuff ? 1.03 : 1;
                 const targetHasVuln = this._vulnStacksAt(S, ev.time) > 0;
                 const piercingShardsMul = (S._hasPiercingShards && targetHasVuln)
-                    ? (hitAtt === 'Water' ? 1.20 : 1.10) : 1;
+                    ? (hitAtt === 'Water' ? 1.14 : 1.07) : 1;
                 const strikeMul = baseStrike * vulnMul * relicStrikeMul
                     * pyroMul * fieryMightMul * serratedMul * stormsoulMul * flowLikeWaterMul * boltMul * zapMul * piercingShardsMul;
                 const cMul = baseCond * vulnMul;
@@ -853,9 +853,9 @@ export class SimulationEngine {
                 if (S._hasElemLockdown && ev.cc && !ev.isTraitProc && !ev.isSigilProc && !ev.isRelicProc
                     && ev.time >= (S.traitICD['ElemLockdown'] || 0)) {
                     S.traitICD['ElemLockdown'] = ev.time + 1000;
-                    if (hitAtt === 'Fire')       this._trackEffect(S, 'Might', 5, 5, ev.time);
+                    if (hitAtt === 'Fire') this._trackEffect(S, 'Might', 5, 5, ev.time);
                     else if (hitAtt === 'Water') this._trackEffect(S, 'Regeneration', 1, 10, ev.time);
-                    else if (hitAtt === 'Air')   this._trackEffect(S, 'Fury', 1, 5, ev.time);
+                    else if (hitAtt === 'Air') this._trackEffect(S, 'Fury', 1, 5, ev.time);
                     else if (hitAtt === 'Earth') this._trackEffect(S, 'Protection', 1, 4, ev.time);
                 }
 
@@ -1116,11 +1116,24 @@ export class SimulationEngine {
         if (ht('Arcane Lightning')) modifiers.push({ id: 'Trait:Arcane Lightning', name: 'Arcane Lightning' });
         if (ht('Bountiful Power')) modifiers.push({ id: 'Trait:Bountiful Power', name: 'Bountiful Power' });
 
+        // When a kill occurred, run an extra infinite-HP pass to get a clean baseline for
+        // all modifiers that don't need finite HP.  Using the finite-HP baseline for every
+        // modifier inflates contributions because removing a buff also shrinks Bolt to the
+        // Heart's window (or any other HP-gated mechanic), double-counting the interaction.
+        // Bolt to the Heart itself is the exception — it must use the finite-HP window so
+        // it actually fires and produces a non-zero contribution.
+        let fullDpsForContrib = fullDps;
+        if (baselineStop !== null) {
+            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
+            fullDpsForContrib = this.results.dps;
+        }
+
         const contributions = [];
         for (const mod of modifiers) {
-            if (baselineStop !== null) {
-                // Finite-HP mode: run with the same targetHP so HP-gated traits fire, but
-                // always stop at the baseline death time so the window is the same for every run.
+            const isBolt = mod.id === 'Trait:Bolt to the Heart';
+            if (baselineStop !== null && isBolt) {
+                // Bolt to the Heart: must use finite-HP so it actually fires.
+                // Stop at baseline kill time so the window is fixed.
                 this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, targetHP, baselineStop);
                 const withoutDps = this.results.totalDamage / baselineWindowSec;
                 const increase = fullDps - withoutDps;
@@ -1131,9 +1144,11 @@ export class SimulationEngine {
                     pctIncrease: withoutDps > 0 ? (increase / withoutDps) * 100 : 0,
                 });
             } else {
+                // All other mods (and infinite-HP mode): compare using infinite-HP runs so
+                // each modifier's contribution is isolated and cannot interact with Bolt.
                 this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, 0);
                 const withoutDps = this.results.dps;
-                const increase = fullDps - withoutDps;
+                const increase = fullDpsForContrib - withoutDps;
                 contributions.push({
                     id: mod.id,
                     name: mod.name,
@@ -1438,10 +1453,10 @@ export class SimulationEngine {
 
         if (S._hasArcaneLightning && sk.type === 'Arcane') {
             this._refreshArcaneLightningBuff(S, end);
-            if (sk.name === 'Arcane Brilliance')      this._trackEffect(S, 'Protection', 1, 3.5, end);
-            else if (sk.name === 'Arcane Wave')        this._trackEffect(S, 'Immobilize', 1, 2, end);
-            else if (sk.name === 'Arcane Blast')       this._trackEffect(S, 'Blindness', 1, 5, end);
-            else if (sk.name === 'Arcane Echo')        this._trackEffect(S, 'Quickness', 1, 4, end);
+            if (sk.name === 'Arcane Brilliance') this._trackEffect(S, 'Protection', 1, 3.5, end);
+            else if (sk.name === 'Arcane Wave') this._trackEffect(S, 'Immobilize', 1, 2, end);
+            else if (sk.name === 'Arcane Blast') this._trackEffect(S, 'Blindness', 1, 5, end);
+            else if (sk.name === 'Arcane Echo') this._trackEffect(S, 'Quickness', 1, 4, end);
         }
 
         const isDual = sk.slot === '3' && sk.attunement && sk.attunement.includes('+');
@@ -2438,7 +2453,11 @@ export class SimulationEngine {
     }
 
     _scheduleHits(S, sk, castStart, scaleOff = off => off) {
-        const rows = this.skillHits[sk.name] || [];
+        // GW2 shout skills have display quotes in their names (e.g. "Feel the Burn!").
+        // The Skills CSV stores them quoted, but the Skill_hits CSV may not.
+        // Try both the raw name and the name with surrounding quotes stripped.
+        const strippedName = sk.name.replace(/^"|"$/g, '');
+        const rows = this.skillHits[sk.name] || this.skillHits[strippedName] || [];
         const ws = this._ws(sk);
 
         for (const h of rows) {
@@ -2526,9 +2545,9 @@ export class SimulationEngine {
         if (time < (S.traitICD['ArcanePrecision'] || 0)) return;
         S.traitArcanePrecAccum -= 1;
         S.traitICD['ArcanePrecision'] = time + 3000;
-        if (attunement === 'Fire')       this._applyCondition(S, 'Burning', 1, 1.5, time, 'Arcane Precision');
+        if (attunement === 'Fire') this._applyCondition(S, 'Burning', 1, 1.5, time, 'Arcane Precision');
         else if (attunement === 'Water') this._trackEffect(S, 'Vulnerability', 1, 10, time);
-        else if (attunement === 'Air')   this._trackEffect(S, 'Weakness', 1, 3, time);
+        else if (attunement === 'Air') this._trackEffect(S, 'Weakness', 1, 3, time);
         else if (attunement === 'Earth') this._applyCondition(S, 'Bleeding', 1, 5, time, 'Arcane Precision');
         S.log.push({ t: time, type: 'trait_proc', trait: 'Arcane Precision', skill: 'Arcane Precision' });
         S.steps.push({ skill: 'Arcane Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
@@ -2545,9 +2564,9 @@ export class SimulationEngine {
     }
 
     _applyElemAttunementBoon(S, attunement, time) {
-        if (attunement === 'Fire')       this._trackEffect(S, 'Might', 1, 15, time);
+        if (attunement === 'Fire') this._trackEffect(S, 'Might', 1, 15, time);
         else if (attunement === 'Water') this._trackEffect(S, 'Regeneration', 1, 5, time);
-        else if (attunement === 'Air')   this._trackEffect(S, 'Swiftness', 1, 8, time);
+        else if (attunement === 'Air') this._trackEffect(S, 'Swiftness', 1, 8, time);
         else if (attunement === 'Earth') this._trackEffect(S, 'Protection', 1, 5, time);
     }
 
