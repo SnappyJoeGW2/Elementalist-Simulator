@@ -821,6 +821,22 @@ export class SimulationEngine {
                 }
                 this._procHit(S, procEv, power, hitCondDmg, critMult, strikeMul, cMul);
 
+                // Attach diagnostic breakdown to the log entry that _procHit just pushed
+                const hitLog = S.log[S.log.length - 1];
+                if (hitLog && hitLog.type === 'hit') {
+                    hitLog.diag = {
+                        power, ws: ev.ws, condDmg: hitCondDmg,
+                        critCh: cc, critDmg: effectiveCritDmg, critMul: critMult,
+                        might, fury, vulnStacks: skipVuln ? 0 : this._vulnStacksAt(S, ev.time), vulnMul,
+                        strikeMul, baseStrike, addStrike,
+                        pyroMul, stormMul: stormsoulMul, boltMul, serratedMul, fieryMightMul,
+                        piercingShardsMul, flowLikeWaterMul, zapMul, relicStrikeMul,
+                        condMul: cMul,
+                        att: hitAtt, att2: hitAtt2,
+                        empFlame, powOvr: powOvr, polyPow, polyFer,
+                    };
+                }
+
                 if (!ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc && !ev.isField && ev.dmg > 0 && ev.ws > 0) {
                     this._checkOnCritSigils(S, ev.time, cc);
                     if (S._hasBurningPrecision) this._checkBurningPrecision(S, ev.time, cc);
@@ -959,7 +975,15 @@ export class SimulationEngine {
                     ? (S._hasFamiliarsFocus ? 0.10 : 0.05) : 0;
                 const tickCondMul = (1 + sigilMuls.condAdd + tickTempAria + tickTranscT
                     + tickElemRage + tickEmpAuras + tickFP) * sigilMuls.condMul * vulnMul;
-                this._procCondTick(S, ev, condDmg, tickCondMul, infernoPower);
+                const tickDiag = {
+                    condDmg, infernoPower, condMul: tickCondMul,
+                    sigilCondAdd: sigilMuls.condAdd, sigilCondMul: sigilMuls.condMul,
+                    tempAria: tickTempAria, transcTemp: tickTranscT,
+                    elemRage: tickElemRage, empAuras: tickEmpAuras, famProwess: tickFP,
+                    vulnStacks: skipVuln ? 0 : this._vulnStacksAt(S, ev.time), vulnMul,
+                    might,
+                };
+                this._procCondTick(S, ev, condDmg, tickCondMul, infernoPower, tickDiag);
             }
 
             if (deathTime === null && (S.totalStrike + S.totalCond) >= tgtHP) {
@@ -2729,9 +2753,20 @@ export class SimulationEngine {
         }
 
         const activeAtTime = cs.stacks.filter(s => s.t <= time && s.expiresAt > time).length;
+        const wpApplied = S._hasWeaversProwess && (() => {
+            const a1 = this._attAt(S, time);
+            const a2 = this._att2At(S, time);
+            return a2 !== null && a1 !== a2;
+        })();
         S.log.push({
             t: time, type: 'cond_apply', cond, stacks, durMs: adjMs,
             total: activeAtTime, skill: skillName,
+            diag: {
+                baseDurMs: Math.round(durSec * 1000),
+                bonusPct: Math.round(bonus * 100) / 100,
+                weaversProwess: wpApplied || false,
+                uncappedPct: uncapped,
+            },
         });
 
         if (S.activeRelic === 'Blightbringer' && (cond === 'Poisoned' || cond === 'Poison')) {
@@ -3071,7 +3106,7 @@ export class SimulationEngine {
         };
     }
 
-    _procCondTick(S, ev, condDmg, condMul, infernoPower = 0) {
+    _procCondTick(S, ev, condDmg, condMul, infernoPower = 0, diag = null) {
         const { cond } = ev;
         const cs = S.condState[cond];
         if (!cs) return;
@@ -3080,9 +3115,10 @@ export class SimulationEngine {
         const active = cs.stacks.filter(s => s.t <= t && s.expiresAt >= t);
 
         if (active.length > 0) {
-            const tick = (infernoPower > 0 && cond === 'Burning')
-                ? (0.075 * infernoPower + 131) * condMul
-                : conditionTickDamage(cond, condDmg) * condMul;
+            const baseTick = (infernoPower > 0 && cond === 'Burning')
+                ? (0.075 * infernoPower + 131)
+                : conditionTickDamage(cond, condDmg);
+            const tick = baseTick * condMul;
             const total = tick * active.length;
             S.totalCond += total;
             S.condDamage[cond] = (S.condDamage[cond] || 0) + total;
@@ -3096,6 +3132,7 @@ export class SimulationEngine {
             S.log.push({
                 t, type: 'cond_tick', cond,
                 stacks: active.length, perStack: Math.round(tick), total: Math.round(total),
+                diag: diag ? { ...diag, baseTick: Math.round(baseTick * 100) / 100 } : null,
             });
         }
 
@@ -3111,5 +3148,105 @@ export class SimulationEngine {
 
     _ensurePerSkill(S, name) {
         if (!S.perSkill[name]) S.perSkill[name] = { strike: 0, condition: 0, casts: 0, castTimeMs: 0 };
+    }
+
+    static exportLogCSV(log) {
+        const CSV_COLS = [
+            'Time', 'Type', 'Skill/Condition',
+            'Hit#', 'Coeff', 'StrikeDmg',
+            'Stacks', 'PerStack', 'CondTotal',
+            'BaseDurMs', 'AdjDurMs', 'DurBonus%', 'WeaversProwess', 'ActiveTotal',
+            'Power', 'WeaponStr', 'CondDmg', 'InfernoPower',
+            'CritCh%', 'CritDmg%', 'CritMul',
+            'Might', 'Fury', 'VulnStacks', 'VulnMul',
+            'StrikeMul', 'BaseStrike', 'AddStrike',
+            'PyroMul', 'StormMul', 'BoltMul', 'SerratedMul', 'FieryMightMul',
+            'PiercingMul', 'FlowLikeWaterMul', 'ZapMul', 'RelicStrikeMul',
+            'CondMul', 'SigilCondAdd', 'SigilCondMul', 'BaseTick',
+            'TempAria', 'TranscTemp', 'ElemRage', 'EmpAuras', 'FamProwess',
+            'EmpFlame', 'PowOvr', 'PolyPow', 'PolyFer',
+            'Att', 'Att2', 'Extra',
+        ];
+
+        const esc = v => {
+            if (v === null || v === undefined || v === '') return '';
+            const s = String(v);
+            return s.includes(',') || s.includes('"') || s.includes('\n')
+                ? '"' + s.replace(/"/g, '""') + '"' : s;
+        };
+        const r = v => v !== undefined && v !== null ? (typeof v === 'number' ? Math.round(v * 1000) / 1000 : v) : '';
+
+        const rows = [CSV_COLS.join(',')];
+        for (const ev of log) {
+            const d = ev.diag || {};
+            const time = (ev.t / 1000).toFixed(3);
+            let row;
+            switch (ev.type) {
+                case 'hit':
+                    row = [
+                        time, 'HIT', esc(ev.skill),
+                        `${ev.hit}.${ev.sub}`, r(ev.coeff), r(ev.strike),
+                        '', '', '',
+                        '', '', '', '', '',
+                        r(d.power), r(d.ws), r(d.condDmg), '',
+                        r(d.critCh), r(d.critDmg), r(d.critMul),
+                        r(d.might), r(d.fury), r(d.vulnStacks), r(d.vulnMul),
+                        r(d.strikeMul), r(d.baseStrike), r(d.addStrike),
+                        r(d.pyroMul), r(d.stormMul), r(d.boltMul), r(d.serratedMul), r(d.fieryMightMul),
+                        r(d.piercingShardsMul), r(d.flowLikeWaterMul), r(d.zapMul), r(d.relicStrikeMul),
+                        r(d.condMul), '', '', '',
+                        '', '', '', '', '',
+                        r(d.empFlame), r(d.powOvr), r(d.polyPow), r(d.polyFer),
+                        r(d.att), r(d.att2), ev.isField ? 'field' : '',
+                    ];
+                    break;
+                case 'cond_tick':
+                    row = [
+                        time, 'TICK', esc(ev.cond),
+                        '', '', '',
+                        r(ev.stacks), r(ev.perStack), r(ev.total),
+                        '', '', '', '', '',
+                        '', '', r(d.condDmg), r(d.infernoPower),
+                        '', '', '',
+                        r(d.might), '', r(d.vulnStacks), r(d.vulnMul),
+                        '', '', '',
+                        '', '', '', '', '',
+                        '', '', '', '',
+                        r(d.condMul), r(d.sigilCondAdd), r(d.sigilCondMul), r(d.baseTick),
+                        r(d.tempAria), r(d.transcTemp), r(d.elemRage), r(d.empAuras), r(d.famProwess),
+                        '', '', '', '',
+                        '', '', '',
+                    ];
+                    break;
+                case 'cond_apply':
+                    row = [
+                        time, 'APPLY', esc(ev.cond),
+                        '', '', '',
+                        r(ev.stacks), '', '',
+                        r(d.baseDurMs), r(ev.durMs), r(d.bonusPct), r(d.weaversProwess), r(ev.total),
+                        '', '', '', '',
+                        '', '', '',
+                        '', '', '', '',
+                        '', '', '',
+                        '', '', '', '', '',
+                        '', '', '', '',
+                        '', '', '', '',
+                        '', '', '', '', '',
+                        '', '', '', '',
+                        '', '', esc(ev.skill),
+                    ];
+                    break;
+                case 'cast':
+                    row = [time, 'CAST', esc(ev.skill), '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', r(ev.att), '', `${ev.dur}ms`];
+                    break;
+                case 'swap':
+                    row = [time, 'SWAP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', `${ev.from}→${ev.to}`];
+                    break;
+                default:
+                    continue;
+            }
+            rows.push(row.join(','));
+        }
+        return rows.join('\n');
     }
 }

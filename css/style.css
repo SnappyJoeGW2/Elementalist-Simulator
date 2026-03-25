@@ -1732,6 +1732,21 @@ header .accent {
     letter-spacing: 1px;
 }
 
+.btn-csv-export {
+    margin: 6px 0;
+    padding: 4px 12px;
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-bright);
+    font-size: 11px;
+    cursor: pointer;
+}
+.btn-csv-export:hover {
+    background: var(--accent);
+    color: #000;
+}
+
 .res-log {
     max-height: 400px;
     overflow-y: auto;

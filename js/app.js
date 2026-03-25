@@ -1959,6 +1959,18 @@ class App {
         const el = document.getElementById('rotation-results');
         if (!this.sim?.results) { el.innerHTML = ''; return; }
         const r = this.sim.results;
+
+        window._exportLogCSV = () => {
+            if (!r?.log) return;
+            const csv = SimulationEngine.exportLogCSV(r.log);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'event_log.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
         const dur = (r.rotationMs / 1000).toFixed(2);
         const killTime = r.deathTime !== null ? (r.deathTime / 1000).toFixed(2) : null;
 
@@ -2049,18 +2061,37 @@ class App {
 
         h += this._buildChartHtml(r);
 
-        h += `<details class="res-log-wrap"><summary>Event Log (${r.log.length} events)</summary><div class="res-log">`;
+        h += `<details class="res-log-wrap"><summary>Event Log (${r.log.length} events)</summary>`;
+        h += `<button class="btn-csv-export" onclick="window._exportLogCSV()">Download CSV Log</button>`;
+        h += `<div class="res-log">`;
         for (const ev of r.log) {
             const ts = `${(ev.t / 1000).toFixed(3)}s`;
             let desc = '', cls = '';
+            const d = ev.diag || {};
             switch (ev.type) {
                 case 'cast':      desc = `CAST ${ev.skill} [${ev.att}] (${ev.dur}ms)`; break;
                 case 'cast_end':  desc = `END  ${ev.skill}`; break;
                 case 'swap':      desc = `SWAP ${ev.from} → ${ev.to}`; break;
-                case 'hit':       desc = `HIT  ${ev.skill} #${ev.hit}.${ev.sub} → ${ev.strike} dmg (coeff ${ev.coeff?.toFixed(3) || 0})${ev.isField ? ' [field]' : ''}`; break;
+                case 'hit': {
+                    let detail = `HIT  ${ev.skill} #${ev.hit}.${ev.sub} → ${ev.strike} dmg (coeff ${ev.coeff?.toFixed(3) || 0})`;
+                    if (ev.isField) detail += ' [field]';
+                    if (d.power) detail += ` | pwr:${d.power} ws:${d.ws} cc:${d.critCh?.toFixed(1)}% cd:${d.critDmg?.toFixed(1)}% cMul:${d.critMul?.toFixed(3)} sMul:${d.strikeMul?.toFixed(3)}`;
+                    desc = detail;
+                    break;
+                }
                 case 'apply':     desc = `EFFECT ${ev.effect} ×${ev.stacks}${ev.dur > 0 ? ` (${ev.dur}s)` : ''} [${ev.skill}]`; break;
-                case 'cond_apply': desc = `COND+ ${ev.cond} ×${ev.stacks} (${ev.durMs}ms) [${ev.skill}] total:${ev.total}`; break;
-                case 'cond_tick': desc = `TICK  ${ev.cond} ×${ev.stacks} → ${ev.total} dmg`; break;
+                case 'cond_apply': {
+                    let detail = `COND+ ${ev.cond} ×${ev.stacks} (${ev.durMs}ms) [${ev.skill}] total:${ev.total}`;
+                    if (d.baseDurMs) detail += ` | base:${d.baseDurMs}ms +${d.bonusPct}%${d.weaversProwess ? ' [WP+20%]' : ''}`;
+                    desc = detail;
+                    break;
+                }
+                case 'cond_tick': {
+                    let detail = `TICK  ${ev.cond} ×${ev.stacks} → ${ev.total} dmg (${ev.perStack}/stack)`;
+                    if (d.condMul) detail += ` | condDmg:${d.condDmg} base:${d.baseTick} mul:${d.condMul?.toFixed(3)} vuln:${d.vulnMul?.toFixed(2)}`;
+                    desc = detail;
+                    break;
+                }
                 case 'field':     desc = `FIELD ${ev.field} (${ev.dur}ms) [${ev.skill}]`; break;
                 case 'aura':      desc = `AURA  ${ev.aura} (${ev.dur}ms) [${ev.skill}]`; break;
                 case 'conjure':   desc = `CONJURE ${ev.weapon} equipped (pickup expires ${(ev.pickupExpires / 1000).toFixed(1)}s)`; break;
