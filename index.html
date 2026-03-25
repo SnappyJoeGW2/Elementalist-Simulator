@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>GW2 DPS Calculator</title>
+    <title>GW2 Elementalist Rotation Simulator and Optimizer</title>
     <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
     <div id="loading-overlay">
         <div class="loader-content">
@@ -28,8 +30,10 @@
                     <div class="panel-hdr">
                         <h3>Gear</h3>
                         <div class="build-io-btns">
-                            <button id="btn-export-build" class="btn btn-io" title="Download build as JSON">⬇ Export</button>
-                            <button id="btn-import-build" class="btn btn-io" title="Load build from JSON file">⬆ Import</button>
+                            <button id="btn-export-build" class="btn btn-io" title="Download build as JSON">⬇
+                                Export</button>
+                            <button id="btn-import-build" class="btn btn-io" title="Load build from JSON file">⬆
+                                Import</button>
                             <input type="file" id="import-file-input" accept=".json" style="display:none" />
                         </div>
                     </div>
@@ -74,7 +78,8 @@
             <div class="panel rotation-panel">
                 <h3>Rotation Builder</h3>
                 <div id="rotation-palette" class="rotation-palette"></div>
-                <p class="palette-hint">Click to add to rotation &nbsp;·&nbsp; <b>Shift+click</b> an instant-cast skill to fire it mid-animation of the previous skill</p>
+                <p class="palette-hint">Click to add to rotation &nbsp;·&nbsp; <b>Shift+click</b> an instant-cast skill
+                    to fire it mid-animation of the previous skill</p>
                 <div class="rotation-mid">
                     <div class="rotation-tl-label">Rotation</div>
                     <div id="start-att-selector" class="start-att-selector"></div>
@@ -98,7 +103,8 @@
         <section id="optimizer-section" class="panel optimizer-panel hidden">
             <div class="opt-header">
                 <h3>Gear Optimizer</h3>
-                <span class="opt-hint">Selects the best combination of gear from your allowed options using your current rotation.</span>
+                <span class="opt-hint">Selects the best combination of gear from your allowed options using your current
+                    rotation.</span>
             </div>
 
             <!-- Search Space -->
@@ -194,7 +200,9 @@
                 <button id="btn-opt-run" class="opt-run-btn">▶ Optimize</button>
                 <button id="btn-opt-cancel" class="opt-cancel-btn hidden">■ Cancel</button>
                 <div id="opt-progress-wrap" class="opt-progress-wrap hidden">
-                    <div class="opt-progress-bar"><div id="opt-progress-fill" class="opt-progress-fill"></div></div>
+                    <div class="opt-progress-bar">
+                        <div id="opt-progress-fill" class="opt-progress-fill"></div>
+                    </div>
                     <span id="opt-progress-label" class="opt-progress-label">0 / 0 evaluations</span>
                 </div>
                 <button id="btn-opt-export" class="opt-export-btn hidden">↓ Export JSON</button>
@@ -214,4 +222,5 @@
 
     <script type="module" src="js/app.js"></script>
 </body>
+
 </html>
