@@ -323,7 +323,7 @@ export class SimulationEngine {
         return false;
     }
 
-    run(startAtt = 'Fire', startAtt2 = null, startEvokerElement = null, permaBoons = {}, disabled = null, targetHP = 0) {
+    run(startAtt = 'Fire', startAtt2 = null, startEvokerElement = null, permaBoons = {}, disabled = null, targetHP = 0, stopAtTime = null) {
         const a = this.attributes.attributes;
 
         const disSigil = disabled?.startsWith('Sigil:') ? disabled.slice(6) : null;
@@ -580,6 +580,23 @@ export class SimulationEngine {
             for (let i = 0; i < count; i++) {
                 S.allCondStacks.push({ t: 0, cond: effect, expiresAt: PERMA_EXPIRY, perma: true });
             }
+            // Damaging conditions must also live in condState so they generate ctick events
+            // and actually deal damage. Previously they were display-only in allCondStacks.
+            if (DAMAGING_CONDITIONS.has(effect)) {
+                if (!S.condState[effect]) {
+                    S.condState[effect] = { stacks: [], tickActive: false, nextTick: null };
+                }
+                const cs = S.condState[effect];
+                for (let i = 0; i < count; i++) {
+                    cs.stacks.push({ expiresAt: PERMA_EXPIRY, appliedBy: `Permanent ${effect}` });
+                }
+                if (!cs.tickActive) {
+                    cs.tickActive = true;
+                    cs.nextTick = 1000;
+                    // S.eq is sorted at line ~636 before the event loop, so a plain push is fine
+                    S.eq.push({ time: 1000, type: 'ctick', cond: effect });
+                }
+            }
         }
         if (permaBoons.Quickness) S.quicknessUntil = PERMA_EXPIRY;
         if (permaBoons.Alacrity) S.alacrityUntil = PERMA_EXPIRY;
@@ -637,6 +654,7 @@ export class SimulationEngine {
         while (S.eq.length > 0) {
             const ev = S.eq.shift();
             if (deathTime !== null && ev.time > deathTime) break;
+            if (stopAtTime !== null && ev.time > stopAtTime) break;
 
             // Track when damage is first and last dealt.
             // firstHitTime → DPS window start (mirrors GW2 golem benchmarks: timer begins at
@@ -1021,10 +1039,23 @@ export class SimulationEngine {
         this.run(startAtt, startAtt2, evokerElement, permaBoons, null, targetHP);
         const fullResults = this.results;
 
-        // Separate no-cap run for contributions baseline.  Using the same hp-free window for
-        // both "with" and "without" each modifier keeps the comparison symmetric.
-        this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
-        const fullDps = this.results.dps;
+        // When the target actually dies, run comparison sims with the same targetHP and cap
+        // each one at the baseline's death time.  This keeps all DPS windows identical and
+        // allows HP-gated mechanics (Bolt to the Heart, Eagle relic) to fire correctly.
+        // When there is no kill (infinite dummy), fall back to the old no-cap approach.
+        let fullDps, baselineWindowSec, baselineStop;
+        if (targetHP > 0 && fullResults.deathTime !== null) {
+            fullDps = fullResults.dps;
+            baselineWindowSec = fullResults.dpsWindowMs / 1000;
+            baselineStop = fullResults.deathTime;
+        } else {
+            // No kill — run a separate no-cap baseline so the window is independent of
+            // modifier effects on kill time.
+            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
+            fullDps = this.results.dps;
+            baselineWindowSec = null;
+            baselineStop = null;
+        }
 
         const modifiers = [];
         const ht = name => this.activeTraitNames.has(name);
@@ -1093,21 +1124,31 @@ export class SimulationEngine {
         if (ht('Arcane Lightning')) modifiers.push({ id: 'Trait:Arcane Lightning', name: 'Arcane Lightning' });
         if (ht('Bountiful Power')) modifiers.push({ id: 'Trait:Bountiful Power', name: 'Bountiful Power' });
 
-        // Contribution sub-runs intentionally ignore targetHP (run to end of rotation without
-        // a kill cap). When targetHP is set, a modifier can cause the golem to die in one run
-        // but not the other, producing asymmetric DPS windows and wildly inflated percentages.
-        // Using a consistent no-cap window gives accurate "how much damage does this add" values.
         const contributions = [];
         for (const mod of modifiers) {
-            this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, 0);
-            const withoutDps = this.results.dps;
-            const increase = fullDps - withoutDps;
-            contributions.push({
-                id: mod.id,
-                name: mod.name,
-                dpsIncrease: increase,
-                pctIncrease: withoutDps > 0 ? (increase / withoutDps) * 100 : 0,
-            });
+            if (baselineStop !== null) {
+                // Finite-HP mode: run with the same targetHP so HP-gated traits fire, but
+                // always stop at the baseline death time so the window is the same for every run.
+                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, targetHP, baselineStop);
+                const withoutDps = this.results.totalDamage / baselineWindowSec;
+                const increase = fullDps - withoutDps;
+                contributions.push({
+                    id: mod.id,
+                    name: mod.name,
+                    dpsIncrease: increase,
+                    pctIncrease: withoutDps > 0 ? (increase / withoutDps) * 100 : 0,
+                });
+            } else {
+                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, 0);
+                const withoutDps = this.results.dps;
+                const increase = fullDps - withoutDps;
+                contributions.push({
+                    id: mod.id,
+                    name: mod.name,
+                    dpsIncrease: increase,
+                    pctIncrease: withoutDps > 0 ? (increase / withoutDps) * 100 : 0,
+                });
+            }
         }
 
         contributions.sort((a, b) => b.dpsIncrease - a.dpsIncrease);
