@@ -133,6 +133,7 @@ export class GW2API {
         this.skillIcons['Deploy Jade Sphere (Water)'] = 'https://render.guildwars2.com/file/6016319AAF18417F0401800EF36C0F18E207FFD5/2491600.png';
         this.skillIcons['Deploy Jade Sphere (Air)']   = 'https://render.guildwars2.com/file/07D9C76FEB07BB04B9D07A05D87C09A0A0AE0319/2491594.png';
         this.skillIcons['Deploy Jade Sphere (Earth)'] = 'https://render.guildwars2.com/file/97BEF22148DDA3159B4CF6DB18ECFEDE7107710B/2491596.png';
+        this.skillIcons['Hurl'] = 'https://render.guildwars2.com/file/BB59A576C805054EB94C66D8190490F273C7BBED/102974.png';
     }
 
     getSkillIcon(name) {

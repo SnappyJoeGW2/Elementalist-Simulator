@@ -1284,7 +1284,11 @@ export class SimulationEngine {
                 finalCd = end + this._alaCd(S, baseCdMs, end);
             }
             S.skillCD[key] = finalCd;
-            if (!isCharged) this._propagateChainCD(S, sk, finalCd);
+            // Skill-swap chains (A↔B where B replaces A in the slot) have independent CDs:
+            // casting A should not put B on A's cooldown — B is immediately available.
+            const isSwapChain = sk.chainSkill &&
+                this._skill(sk.chainSkill)?.chainSkill === sk.name;
+            if (!isCharged && !isSwapChain) this._propagateChainCD(S, sk, finalCd);
         }
 
         if (sk.chainSkill) {
