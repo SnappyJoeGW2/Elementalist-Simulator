@@ -1938,8 +1938,22 @@ class App {
         h += `<div class="res-breakdown"><div class="res-hdr">
             <span>Skill</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span><span>Avg/Cast</span><span>DCT</span><span>Casts</span>
         </div>`;
+        // Build a name→icon map from proc steps (sigils/relics carry their icon there)
+        const stepIconMap = {};
+        for (const s of (r.steps || [])) {
+            if (s.icon && !stepIconMap[s.skill]) stepIconMap[s.skill] = s.icon;
+        }
+        const _lookupIcon = (name) => {
+            return this.api.getSkillIcon(name)
+                || this.api.getTraitIcon(name)
+                || stepIconMap[name]
+                // strip common synthetic suffixes and retry
+                || this.api.getSkillIcon(name.replace(/ (?:Proc|Bonus)$/, ''))
+                || this.api.getTraitIcon(name.replace(/ (?:Proc|Bonus)$/, ''));
+        };
+
         for (const [name, total, d] of sorted) {
-            const icon = this.api.getSkillIcon(name);
+            const icon = _lookupIcon(name);
             const skillDps   = dpsWindowSec > 0 ? Math.round(total / dpsWindowSec) : 0;
             const avgPerCast = d.casts > 0 ? Math.round(total / d.casts) : 0;
             const castTimeSec = (d.castTimeMs || 0) / 1000;
