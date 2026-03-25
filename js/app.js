@@ -1401,7 +1401,8 @@ class App {
             const olAtt = sk.name.replace('Overload ', '');
             if (olAtt !== es.att) return false;
             if ((es.skillCD[skillName] || 0) > t) return false;
-            const dwellReady = es.attEnteredAt + 6000;
+            const dwell = es._hasTranscendentTempest ? 4000 : 6000;
+            const dwellReady = es.attEnteredAt + dwell;
             if (t < dwellReady) return false;
             return true;
         }
