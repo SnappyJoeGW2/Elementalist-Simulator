@@ -255,7 +255,7 @@ header .accent { color: var(--accent); }
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 12px;
+    padding: 5px 10px;
     background: linear-gradient(90deg,
         rgba(12,12,20,0.90) 0%,
         rgba(12,12,20,0.65) 30%,
@@ -274,7 +274,7 @@ header .accent { color: var(--accent); }
 }
 
 .spec-icon-wrap {
-    width: 44px; height: 44px; flex-shrink: 0;
+    width: 36px; height: 36px; flex-shrink: 0;
 }
 .spec-icon-wrap img {
     width: 100%; height: 100%;
@@ -321,7 +321,7 @@ header .accent { color: var(--accent); }
 }
 
 .spec-trait-minor {
-    width: 30px; height: 30px;
+    width: 24px; height: 24px;
     border-radius: 50%;
     overflow: hidden;
     border: 2px solid var(--accent-dim);
@@ -337,13 +337,18 @@ header .accent { color: var(--accent); }
 }
 
 .spec-trait-major {
-    width: 36px; height: 36px;
+    width: 28px; height: 28px;
     transform: rotate(45deg);
-    overflow: hidden;
     border: 2px solid var(--border-light);
-    transition: all 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s, filter 0.15s;
     flex-shrink: 0;
     cursor: pointer;
+    /* overflow:hidden is intentionally on the child, not here — putting it on the
+       same element as transform causes a browser clipping bug (black bars). */
+}
+.spec-trait-major-clip {
+    width: 100%; height: 100%;
+    overflow: hidden;
 }
 .spec-trait-major img {
     width: 142%; height: 142%;

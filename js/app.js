@@ -751,7 +751,9 @@ class App {
                             return `<div class="spec-trait-major ${sel ? 'sel' : 'dim'}"
                                         data-slot="${slotIdx}" data-tier="${tierIdx}" data-pos="${m.position}"
                                         title="${esc(m.name)}">
-                                <img src="${ic || PLACEHOLDER_ICON}" />
+                                <div class="spec-trait-major-clip">
+                                    <img src="${ic || PLACEHOLDER_ICON}" />
+                                </div>
                             </div>`;
                         }).join('')}
                     </div>
