@@ -411,6 +411,7 @@ export class SimulationEngine {
             quicknessUntil: 0,
             alacrityUntil: 0,
             arcaneEchoUntil: 0,
+            bountifulPowerStacks: 0,
             overloadAirBonusPending: false,
             sphereExpiry: { Fire: 0, Water: 0, Air: 0, Earth: 0 },
             sigilICD: {},
@@ -462,6 +463,18 @@ export class SimulationEngine {
             _hasRockSolid: this._hasTrait('Rock Solid'),
             _hasGeoTraining: this._hasTrait("Geomancer's Training"),
             _hasWrittenInStone: this._hasTrait('Written in Stone'),
+            _hasSoothingIce: this._hasTrait('Soothing Ice'),
+            _hasPiercingShards: this._hasTrait('Piercing Shards'),
+            _hasFlowLikeWater: this._hasTrait('Flow like Water'),
+            _hasAquamancerTraining: this._hasTrait("Aquamancer's Training"),
+            _hasArcaneProwess: this._hasTrait('Arcane Prowess'),
+            _hasArcanePrecision: this._hasTrait('Arcane Precision'),
+            _hasRenewingStamina: this._hasTrait('Renewing Stamina'),
+            _hasElemAttunement: this._hasTrait('Elemental Attunement'),
+            _hasElemLockdown: this._hasTrait('Elemental Lockdown'),
+            _hasElemEnchantment: this._hasTrait('Elemental Enchantment'),
+            _hasArcaneLightning: this._hasTrait('Arcane Lightning'),
+            _hasBountifulPower: this._hasTrait('Bountiful Power'),
             _hasGaleSong: this._hasTrait('Gale Song'),
             _hasLatentStamina: this._hasTrait('Latent Stamina'),
             _hasUnstableConduit: this._hasTrait('Unstable Conduit'),
@@ -504,6 +517,8 @@ export class SimulationEngine {
             traitICD: {},
             traitBurnPrecAccum: 0,
             traitRagingStormAccum: 0,
+            traitArcanePrecAccum: 0,
+            traitRenewingStaminaAccum: 0,
             freshAirAccum: 0,
             electricEnchantmentStacks: 0,
             elemBalanceCount: 0,
@@ -539,6 +554,14 @@ export class SimulationEngine {
                 'Lightning Rod': '_hasLightningRod',
                 'Burning Rage': '_hasBurningRage',
                 'Serrated Stones': '_hasSerratedStones',
+                'Piercing Shards': '_hasPiercingShards',
+                'Flow like Water': '_hasFlowLikeWater',
+                'Arcane Precision': '_hasArcanePrecision',
+                'Arcane Prowess': '_hasArcaneProwess',
+                'Elemental Attunement': '_hasElemAttunement',
+                'Elemental Lockdown': '_hasElemLockdown',
+                'Arcane Lightning': '_hasArcaneLightning',
+                'Bountiful Power': '_hasBountifulPower',
             };
             const flag = TRAIT_FLAGS[disTrait];
             if (flag) S[flag] = false;
@@ -696,8 +719,10 @@ export class SimulationEngine {
                     && this._effectStacksAt(S, 'Fresh Air', ev.time) > 0;
                 const freshAirFerocity = freshAirActive ? (250 / 15) : 0;
                 const zapPassiveFer = (S.evokerElement === 'Air' && fury) ? 75 / 15 : 0;
+                const arcaneLightningFer = (S._hasArcaneLightning
+                    && this._effectStacksAt(S, 'Arcane Lightning', ev.time) > 0) ? 150 / 15 : 0;
                 const effectiveCritDmg = critDmg + ragingFerocity + aeroFerocity
-                    + freshAirFerocity + polyFer + empCritDmg + conjureFer + zapPassiveFer + (ev.bonusCritDmg || 0);
+                    + freshAirFerocity + polyFer + empCritDmg + conjureFer + zapPassiveFer + arcaneLightningFer + (ev.bonusCritDmg || 0);
                 const signetFireLost = S.signetFirePassiveLostUntil > ev.time ? (180 / 21) : 0;
                 const supElemCrit = (S._hasSuperiorElements
                     && this._effectStacksAt(S, 'Weakness', ev.time) > 0) ? 15 : 0;
@@ -727,6 +752,8 @@ export class SimulationEngine {
                 const fpStrike = (famProwessUp && S.evokerElement === 'Air') ? fpPct : 0;
                 const fpCond = (famProwessUp && S.evokerElement === 'Fire') ? fpPct : 0;
                 const relentlessFireUp = this._effectStacksAt(S, 'Relentless Fire', ev.time) > 0;
+                const bountifulPowerUp = S._hasBountifulPower
+                    && this._effectStacksAt(S, 'Bountiful Power Active', ev.time) > 0;
                 const wsFireBonus = (S.weaveSelfVisited.has('Fire') && ev.time < S.weaveSelfUntil)
                     || ev.time < S.perfectWeaveUntil;
                 const wsAirBonus = (S.weaveSelfVisited.has('Air') && ev.time < S.weaveSelfUntil)
@@ -738,6 +765,7 @@ export class SimulationEngine {
                     + (hasSpeed ? 0.07 : 0)
                     + empAurasStacks * 0.01
                     + (relentlessFireUp ? 0.10 : 0)
+                    + (bountifulPowerUp ? 0.20 : 0)
                     + (wsAirBonus ? 0.10 : 0)
                     + fpStrike;
                 const addCond = (tempAriaUp ? 0.05 : 0)
@@ -757,12 +785,16 @@ export class SimulationEngine {
                     && (S.condState['Bleeding']?.stacks.some(s => s.expiresAt > ev.time) || false);
                 const serratedMul = hasBleeding ? 1.05 : 1;
                 const stormsoulMul = S._hasStormsoul ? 1.07 : 1;
+                const flowLikeWaterMul = S._hasFlowLikeWater ? 1.10 : 1;
                 const boltMul = (S._hasBoltToHeart && tgtHP < Infinity
                     && (S.totalStrike + S.totalCond) >= tgtHP * 0.5) ? 1.20 : 1;
 
                 const zapMul = zapBuff ? 1.03 : 1;
+                const targetHasVuln = this._vulnStacksAt(S, ev.time) > 0;
+                const piercingShardsMul = (S._hasPiercingShards && targetHasVuln)
+                    ? (hitAtt === 'Water' ? 1.20 : 1.10) : 1;
                 const strikeMul = baseStrike * vulnMul * relicStrikeMul
-                    * pyroMul * fieryMightMul * serratedMul * stormsoulMul * boltMul * zapMul;
+                    * pyroMul * fieryMightMul * serratedMul * stormsoulMul * flowLikeWaterMul * boltMul * zapMul * piercingShardsMul;
                 const cMul = baseCond * vulnMul;
 
                 // Primordial Stance: apply conditions based on attunements at hit time (not cast time)
@@ -780,6 +812,8 @@ export class SimulationEngine {
                     if (S._hasBurningPrecision) this._checkBurningPrecision(S, ev.time, cc);
                     if (S._hasRagingStorm) this._checkRagingStorm(S, ev.time, cc);
                     if (S._hasFreshAir) this._checkFreshAir(S, ev.time, cc);
+                    if (S._hasArcanePrecision) this._checkArcanePrecision(S, ev.time, cc, hitAtt);
+                    if (S._hasRenewingStamina) this._checkRenewingStamina(S, ev.time, cc);
                 }
 
                 if (S._hasLightningRod && ev.cc && !ev.isTraitProc && !ev.isSigilProc && !ev.isRelicProc) {
@@ -804,6 +838,15 @@ export class SimulationEngine {
                     S.traitICD['ViciousEmp'] = ev.time + 250;
                     this._grantElemEmpowerment(S, 2, ev.time);
                     this._trackEffect(S, 'Might', 2, 10, ev.time);
+                }
+
+                if (S._hasElemLockdown && ev.cc && !ev.isTraitProc && !ev.isSigilProc && !ev.isRelicProc
+                    && ev.time >= (S.traitICD['ElemLockdown'] || 0)) {
+                    S.traitICD['ElemLockdown'] = ev.time + 1000;
+                    if (hitAtt === 'Fire')       this._trackEffect(S, 'Might', 5, 5, ev.time);
+                    else if (hitAtt === 'Water') this._trackEffect(S, 'Regeneration', 1, 10, ev.time);
+                    else if (hitAtt === 'Air')   this._trackEffect(S, 'Fury', 1, 5, ev.time);
+                    else if (hitAtt === 'Earth') this._trackEffect(S, 'Protection', 1, 4, ev.time);
                 }
 
                 if (!ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc) {
@@ -1040,6 +1083,14 @@ export class SimulationEngine {
         if (ht('Empowering Auras')) modifiers.push({ id: 'Trait:Empowering Auras', name: 'Empowering Auras' });
         if (ht("Familiar's Prowess")) modifiers.push({ id: "Trait:Familiar's Prowess", name: "Familiar's Prowess" });
         if (ht('Lightning Rod')) modifiers.push({ id: 'Trait:Lightning Rod', name: 'Lightning Rod' });
+        if (ht('Piercing Shards')) modifiers.push({ id: 'Trait:Piercing Shards', name: 'Piercing Shards' });
+        if (ht('Flow like Water')) modifiers.push({ id: 'Trait:Flow like Water', name: 'Flow like Water' });
+        if (ht('Arcane Precision')) modifiers.push({ id: 'Trait:Arcane Precision', name: 'Arcane Precision' });
+        if (ht('Arcane Prowess')) modifiers.push({ id: 'Trait:Arcane Prowess', name: 'Arcane Prowess' });
+        if (ht('Elemental Attunement')) modifiers.push({ id: 'Trait:Elemental Attunement', name: 'Elemental Attunement' });
+        if (ht('Elemental Lockdown')) modifiers.push({ id: 'Trait:Elemental Lockdown', name: 'Elemental Lockdown' });
+        if (ht('Arcane Lightning')) modifiers.push({ id: 'Trait:Arcane Lightning', name: 'Arcane Lightning' });
+        if (ht('Bountiful Power')) modifiers.push({ id: 'Trait:Bountiful Power', name: 'Bountiful Power' });
 
         // Contribution sub-runs intentionally ignore targetHP (run to end of rotation without
         // a kill cap). When targetHP is set, a modifier can cause the golem to die in one run
@@ -1306,6 +1357,13 @@ export class SimulationEngine {
             S.log.push({ t: end, type: 'trait_proc', trait: "Earth's Embrace", skill: "Earth's Embrace" });
         }
 
+        if (S._hasSoothingIce && sk.type === 'Healing skill'
+            && end >= (S.traitICD['SoothingIce'] || 0)) {
+            S.traitICD['SoothingIce'] = end + 15000;
+            this._applyAura(S, 'Frost Aura', 4000, end, 'Soothing Ice');
+            this._trackEffect(S, 'Regeneration', 1, 4, end);
+        }
+
         if (sk.type === 'Signet') {
             if (S._hasWrittenInStone) {
                 if (sk.name === 'Signet of Restoration') this._applyAura(S, 'Frost Aura', 4000, end, 'Written in Stone');
@@ -1327,6 +1385,14 @@ export class SimulationEngine {
 
         if (S._hasBolsteredElements && sk.type === 'Stance') {
             this._trackEffect(S, 'Protection', 1, 3, end);
+        }
+
+        if (S._hasArcaneLightning && sk.type === 'Arcane') {
+            this._refreshArcaneLightningBuff(S, end);
+            if (sk.name === 'Arcane Brilliance')      this._trackEffect(S, 'Protection', 1, 3.5, end);
+            else if (sk.name === 'Arcane Wave')        this._trackEffect(S, 'Immobilize', 1, 2, end);
+            else if (sk.name === 'Arcane Blast')       this._trackEffect(S, 'Blindness', 1, 5, end);
+            else if (sk.name === 'Arcane Echo')        this._trackEffect(S, 'Quickness', 1, 4, end);
         }
 
         const isDual = sk.slot === '3' && sk.attunement && sk.attunement.includes('+');
@@ -1467,14 +1533,15 @@ export class SimulationEngine {
 
         const isEvoker = S.eliteSpec === 'Evoker';
         const evoEl = S.evokerElement;
-        const prevBaseCd = (isEvoker && prev === evoEl) ? OFF_ATT_CD : Math.round(sk.recharge * 1000);
+        const rawPrevBaseCd = (isEvoker && prev === evoEl) ? OFF_ATT_CD : Math.round(sk.recharge * 1000);
+        const prevBaseCd = this._attCdMs(S, rawPrevBaseCd);
         const existingCD = S.attCD[prev] || 0;
         S.attCD[prev] = Math.max(existingCD, S.t + this._alaCd(S, prevBaseCd, S.t));
 
         for (const other of ATTUNEMENTS) {
             if (other === target || other === prev) continue;
             const existingOther = S.attCD[other] || 0;
-            S.attCD[other] = Math.max(existingOther, S.t + this._alaCd(S, OFF_ATT_CD, S.t));
+            S.attCD[other] = Math.max(existingOther, S.t + this._alaCd(S, this._attCdMs(S, OFF_ATT_CD), S.t));
         }
 
         this._scheduleHits(S, sk, S.t);
@@ -1512,6 +1579,9 @@ export class SimulationEngine {
                 S.elemBalanceExpiry = S.t + 5000;
             }
         }
+        if (S._hasArcaneProwess) this._trackEffect(S, 'Might', 1, 8, S.t);
+        if (S._hasElemAttunement) this._applyElemAttunementBoon(S, target, S.t);
+        this._triggerBountifulPower(S, 1, S.t);
         S.attTimeline.push({ t: S.t, att: target });
 
         S.log.push({ t: S.t, type: 'swap', from: prev, to: target });
@@ -1551,7 +1621,7 @@ export class SimulationEngine {
         }
 
         // The 4th swap that ends Weave Self still gets the 2s cooldown (weaveSelfWasActive)
-        const weaveSelfSwapCD = weaveSelfWasActive ? 2000 : WEAVER_SWAP_CD;
+        const weaveSelfSwapCD = weaveSelfWasActive ? 2000 : this._attCdMs(S, WEAVER_SWAP_CD);
         for (const a of ATTUNEMENTS) {
             S.attCD[a] = S.t + this._alaCd(S, weaveSelfSwapCD, S.t);
         }
@@ -1579,6 +1649,11 @@ export class SimulationEngine {
         if (S._hasElementsOfRage && target === prevPrimary) {
             this._refreshEffect(S, 'Elements of Rage', 8, S.t);
         }
+        if (S._hasArcaneProwess) this._trackEffect(S, 'Might', 1, 8, S.t);
+        // Elemental Attunement: no boon if the swap would result in both attunements being the same
+        if (S._hasElemAttunement && target !== prevPrimary) this._applyElemAttunementBoon(S, target, S.t);
+        // Bountiful Power: both primary and secondary change per Weaver swap → 2 stacks
+        this._triggerBountifulPower(S, 2, S.t);
         S.attTimeline.push({ t: S.t, att: target, att2: prevPrimary });
 
         S.log.push({ t: S.t, type: 'swap', from: `${prevPrimary}/${prevSecondary}`, to: `${target}/${prevPrimary}` });
@@ -1628,7 +1703,7 @@ export class SimulationEngine {
         S.t = end;
         S.log.push({ t: end, type: 'cast_end', skill: sk.name });
 
-        const olBaseCd = Math.round(sk.recharge * 1000);
+        const olBaseCd = this._attCdMs(S, Math.round(sk.recharge * 1000));
         const olEffCd = this._alaCd(S, olBaseCd, end);
         S.attCD[olAtt] = end + olEffCd;
         S.skillCD[sk.name] = end + olEffCd;
@@ -1687,7 +1762,7 @@ export class SimulationEngine {
         this._trackField(S, sk, S.t);
 
         if (sk.recharge > 0) {
-            const baseCdMs = Math.round(sk.recharge * 1000);
+            const baseCdMs = this._attCdMs(S, Math.round(sk.recharge * 1000));
             S.skillCD[cdKey] = S.t + this._alaCd(S, baseCdMs, S.t);
         }
 
@@ -2209,6 +2284,7 @@ export class SimulationEngine {
             if (this._hasTrait("Pyromancer's Training") && sk.attunement === 'Fire') baseMs = Math.round(baseMs * 0.8);
             if (this._hasTrait("Aeromancer's Training") && sk.attunement === 'Air') baseMs = Math.round(baseMs * 0.8);
             if (this._hasTrait("Geomancer's Training") && sk.attunement === 'Earth') baseMs = Math.round(baseMs * 0.8);
+            if (this._hasTrait("Aquamancer's Training") && sk.attunement === 'Water') baseMs = Math.round(baseMs * 0.8);
         }
         return baseMs;
     }
@@ -2386,6 +2462,63 @@ export class SimulationEngine {
         S.steps.push({ skill: 'Burning Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
     }
 
+    _checkArcanePrecision(S, time, critChancePct, attunement) {
+        if (critChancePct <= 0) return;
+        S.traitArcanePrecAccum += (critChancePct / 100) * 0.33;
+        if (S.traitArcanePrecAccum < 1) return;
+        if (time < (S.traitICD['ArcanePrecision'] || 0)) return;
+        S.traitArcanePrecAccum -= 1;
+        S.traitICD['ArcanePrecision'] = time + 3000;
+        if (attunement === 'Fire')       this._applyCondition(S, 'Burning', 1, 1.5, time, 'Arcane Precision');
+        else if (attunement === 'Water') this._trackEffect(S, 'Vulnerability', 1, 10, time);
+        else if (attunement === 'Air')   this._trackEffect(S, 'Weakness', 1, 3, time);
+        else if (attunement === 'Earth') this._applyCondition(S, 'Bleeding', 1, 5, time, 'Arcane Precision');
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Arcane Precision', skill: 'Arcane Precision' });
+        S.steps.push({ skill: 'Arcane Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
+    }
+
+    _checkRenewingStamina(S, time, critChancePct) {
+        if (critChancePct <= 0) return;
+        S.traitRenewingStaminaAccum += critChancePct / 100;
+        if (S.traitRenewingStaminaAccum < 1) return;
+        if (time < (S.traitICD['RenewingStamina'] || 0)) return;
+        S.traitRenewingStaminaAccum -= 1;
+        S.traitICD['RenewingStamina'] = time + 10000;
+        this._trackEffect(S, 'Vigor', 1, 5, time);
+    }
+
+    _applyElemAttunementBoon(S, attunement, time) {
+        if (attunement === 'Fire')       this._trackEffect(S, 'Might', 1, 15, time);
+        else if (attunement === 'Water') this._trackEffect(S, 'Regeneration', 1, 5, time);
+        else if (attunement === 'Air')   this._trackEffect(S, 'Swiftness', 1, 8, time);
+        else if (attunement === 'Earth') this._trackEffect(S, 'Protection', 1, 5, time);
+    }
+
+    // Elemental Enchantment: −15% attunement swap recharge (applied before Alacrity)
+    _attCdMs(S, baseCdMs) {
+        return S._hasElemEnchantment ? Math.round(baseCdMs * 0.85) : baseCdMs;
+    }
+
+    // Arcane Lightning: 150 Ferocity buff (15s, refreshes on each Arcane cast)
+    _refreshArcaneLightningBuff(S, time) {
+        const existing = S.allCondStacks.find(
+            s => s.cond === 'Arcane Lightning' && s.expiresAt > time && !s.perma);
+        if (existing) existing.expiresAt = time + 15000;
+        else S.allCondStacks.push({ t: time, cond: 'Arcane Lightning', expiresAt: time + 15000 });
+    }
+
+    // Bountiful Power: accumulate stacks on swap; at 5 → Quickness + 7s +20% strike buff
+    _triggerBountifulPower(S, stacks, time) {
+        if (!S._hasBountifulPower) return;
+        S.bountifulPowerStacks += stacks;
+        if (S.bountifulPowerStacks >= 5) {
+            S.bountifulPowerStacks -= 5;
+            this._trackEffect(S, 'Quickness', 1, 5, time);
+            S.allCondStacks.push({ t: time, cond: 'Bountiful Power Active', expiresAt: time + 7000 });
+            S.log.push({ t: time, type: 'skill_proc', skill: 'Bountiful Power', detail: '+20% strike, 5s Quickness' });
+        }
+    }
+
     _procOnSwapSigils(S, time) {
         const swapSigils = this._activeProcSigils.filter(n => SIGIL_PROCS[n].trigger === 'swap');
         for (const name of swapSigils) {
@@ -2549,6 +2682,7 @@ export class SimulationEngine {
             }
         } else {
             bonus = getConditionDurationBonus(effect, attrs);
+            if (S._hasPiercingShards && effect === 'Vulnerability') bonus += 33;
             if (S._hasWeaversProwess) {
                 const a1 = this._attAt(S, time);
                 const a2 = this._att2At(S, time);

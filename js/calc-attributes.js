@@ -178,6 +178,7 @@ export function calcAttributes(build, skills) {
         if (trait.conditionDamage)  add(traitAcc, 'Condition Damage', trait.conditionDamage);
         if (trait.ferocity)         add(traitAcc, 'Ferocity',         trait.ferocity);
         if (trait.concentration)    add(traitAcc, 'Concentration',    trait.concentration);
+        if (trait.vitality)         add(traitAcc, 'Vitality',         trait.vitality);
         if (trait.burningDuration)  add(runeDur,  'Burning Duration', trait.burningDuration);
         if (trait.bleedingDuration) add(runeDur,  'Bleeding Duration', trait.bleedingDuration);
         if (trait.criticalChance)   traitCC += trait.criticalChance;

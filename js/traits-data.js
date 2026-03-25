@@ -68,7 +68,7 @@ export const TRAITS = [
     { tier: 'Minor Grandmaster', name: "Aquamancer's Training",  specialization: 'Water',   position: 0 },
     { tier: 'Major Grandmaster', name: 'Cleansing Water',        specialization: 'Water',   position: 1 },
     { tier: 'Major Grandmaster', name: 'Powerful Aura',          specialization: 'Water',   position: 2 },
-    { tier: 'Major Grandmaster', name: 'Soothing Power',         specialization: 'Water',   position: 3 },
+    { tier: 'Major Grandmaster', name: 'Soothing Power',         specialization: 'Water',   position: 3, vitality: 300 },
 
     // ── Arcane ───────────────────────────────────────────────────────────────
     { tier: 'Minor Adept',       name: 'Arcane Prowess',         specialization: 'Arcane',  position: 0 },
