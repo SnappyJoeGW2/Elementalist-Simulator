@@ -230,15 +230,18 @@ header .accent {
     padding-top: 4px;
     padding-bottom: 3px;
 }
+
 .consumable-row .gear-label {
     padding-top: 2px;
 }
+
 .consumable-select-wrap {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 2px;
 }
+
 .consumable-hint {
     font-size: 9px;
     color: var(--text-dim);
@@ -269,7 +272,7 @@ header .accent {
 }
 
 .inf-count {
-    width: 38px;
+    width: 46px;
     background: var(--bg-panel-alt);
     border: 1px solid var(--border-light);
     border-radius: 3px;
@@ -652,7 +655,7 @@ header .accent {
 }
 
 .spec-trait-major.sel {
-    filter: drop-shadow(0 0 3px rgba(200,162,76,1)) drop-shadow(0 0 5px rgba(200,162,76,0.6));
+    filter: drop-shadow(0 0 3px rgba(200, 162, 76, 1)) drop-shadow(0 0 5px rgba(200, 162, 76, 0.6));
 }
 
 .spec-trait-major.dim {
@@ -666,7 +669,7 @@ header .accent {
 }
 
 .spec-trait-major.sel:hover {
-    filter: drop-shadow(0 0 5px rgba(200,162,76,1)) drop-shadow(0 0 8px rgba(200,162,76,0.7));
+    filter: drop-shadow(0 0 5px rgba(200, 162, 76, 1)) drop-shadow(0 0 8px rgba(200, 162, 76, 0.7));
 }
 
 /* ─── Skills Section ─── */
@@ -2073,11 +2076,13 @@ header .accent {
     gap: 1px;
     width: 100%;
 }
+
 .opt-consumable-name {
     font-size: 0.78rem;
     color: var(--text);
     line-height: 1.3;
 }
+
 .opt-consumable-desc {
     font-size: 0.69rem;
     color: var(--text-dim);
