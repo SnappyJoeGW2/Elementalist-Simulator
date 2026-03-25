@@ -224,6 +224,32 @@ header .accent {
     max-width: 130px;
 }
 
+/* Consumable (food/utility) rows with stat hint */
+.consumable-row {
+    align-items: flex-start;
+    padding-top: 4px;
+    padding-bottom: 3px;
+}
+.consumable-row .gear-label {
+    padding-top: 2px;
+}
+.consumable-select-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+.consumable-hint {
+    font-size: 9px;
+    color: var(--text-dim);
+    line-height: 1.2;
+    max-width: 130px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .gear-checkbox {
     width: 14px;
     height: 14px;
@@ -2037,6 +2063,25 @@ header .accent {
 .opt-check-grid label.opt-prefix-disabled {
     opacity: 0.4;
     pointer-events: none;
+}
+
+/* Consumable (food/utility) labels with stat descriptions */
+.opt-check-grid label.consumable-label {
+    flex-direction: column;
+    align-items: flex-start;
+    white-space: normal;
+    gap: 1px;
+}
+.opt-consumable-name {
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.3;
+}
+.opt-consumable-desc {
+    font-size: 0.69rem;
+    color: var(--text-dim);
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 /* Run controls */

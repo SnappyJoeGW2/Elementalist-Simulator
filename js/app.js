@@ -1,8 +1,8 @@
 import { loadAllData } from './csv-loader.js';
 import { calcAttributes } from './calc-attributes.js';
 import {
-    PREFIXES, GEAR_SLOTS, RUNE_NAMES, FOOD_NAMES,
-    UTILITY_NAMES, INFUSION_STATS,
+    PREFIXES, GEAR_SLOTS, RUNE_NAMES, FOOD_NAMES, FOOD_DATA,
+    UTILITY_NAMES, UTILITY_DATA, UTILITY_CONVERSION_RATES, INFUSION_STATS,
     WEAPON_DATA, SIGIL_DATA, SIGIL_NAMES, RELIC_DATA, RELIC_NAMES,
 } from './gear-data.js';
 import { TRAITS, SPECIALIZATIONS } from './traits-data.js';
@@ -10,6 +10,34 @@ import { GW2API, PLACEHOLDER_ICON } from './gw2-api.js';
 import { calculateSkillDamage } from './damage.js';
 import { SimulationEngine } from './simulation.js';
 import { GearOptimizer } from './optimizer.js';
+
+// ─── Consumable description helpers ──────────────────────────────────────────
+const STAT_ABBR = {
+    'Power': 'Pwr', 'Precision': 'Prec', 'Toughness': 'Tough',
+    'Vitality': 'Vit', 'Ferocity': 'Ferc', 'Condition Damage': 'CndDmg',
+    'Expertise': 'Exprt', 'Concentration': 'Conc', 'Healing Power': 'Heal',
+};
+const DUR_ABBR = {
+    'Burning Duration': 'Burn', 'Bleeding Duration': 'Bleed',
+    'Poison Duration': 'Poison', 'Torment Duration': 'Torment',
+    'Confusion Duration': 'Confuse',
+};
+function _foodDesc(name) {
+    const d = FOOD_DATA[name];
+    if (!d) return '';
+    return [
+        ...Object.entries(d.stats).map(([k, v]) => `+${v} ${STAT_ABBR[k] || k}`),
+        ...Object.entries(d.durations).map(([k, v]) => `+${v}% ${DUR_ABBR[k] || k}`),
+    ].join(', ');
+}
+function _utilityDesc(name) {
+    const convs = UTILITY_DATA[name];
+    if (!convs) return '';
+    return convs.map(c => {
+        const rate = UTILITY_CONVERSION_RATES[c.from] || 0;
+        return `${rate}% ${STAT_ABBR[c.from] || c.from}→${STAT_ABBR[c.to] || c.to}`;
+    }).join(', ');
+}
 
 // ─── Default build (Weaver Sword/Dagger DPS) ─────────────────────────────────
 const DEFAULT_BUILD = {
@@ -320,13 +348,26 @@ class App {
                 </select>
             </div>`;
 
+        const consumableRow = (label, id, options, selected, descFn, cls = '') => {
+            const hint = selected ? esc(descFn(selected)) : '';
+            return `<div class="gear-row consumable-row">
+                <span class="gear-label">${label}</span>
+                <div class="consumable-select-wrap">
+                    <select class="gear-select${cls ? ' ' + cls : ''}" id="${id}">
+                        ${options.map(o => `<option value="${esc(o)}"${o === selected ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+                    </select>
+                    <span class="consumable-hint" id="${id}-hint">${hint}</span>
+                </div>
+            </div>`;
+        };
+
         eq.innerHTML = `
             ${selRow('Rune',    'sel-rune',    RUNE_NAMES,    b.rune)}
             ${selRow('Sigil 1', 'sel-sig1',    sigilNames,    b.sigils[0])}
             ${selRow('Sigil 2', 'sel-sig2',    sigilNames,    b.sigils[1])}
             ${selRow('Relic',   'sel-relic',   relicNames,    b.relic)}
-            ${selRow('Food',    'sel-food',    FOOD_NAMES,    b.food,    'small-select')}
-            ${selRow('Utility', 'sel-utility', UTILITY_NAMES, b.utility)}
+            ${consumableRow('Food',    'sel-food',    FOOD_NAMES,    b.food,    _foodDesc, 'small-select')}
+            ${consumableRow('Utility', 'sel-utility', UTILITY_NAMES, b.utility, _utilityDesc)}
             <div class="gear-row">
                 <span class="gear-label">Jade Bot</span>
                 <input type="checkbox" id="chk-jbc" class="gear-checkbox"${b.jadeBotCore ? ' checked' : ''} />
@@ -352,8 +393,8 @@ class App {
         bind('sel-sig1',    e => { b.sigils[0] = e.target.value; this._onBuildChange(); });
         bind('sel-sig2',    e => { b.sigils[1] = e.target.value; this._onBuildChange(); });
         bind('sel-relic',   e => { b.relic = e.target.value; this._onBuildChange(); });
-        bind('sel-food',    e => { b.food = e.target.value; this._onBuildChange(); });
-        bind('sel-utility', e => { b.utility = e.target.value; this._onBuildChange(); });
+        bind('sel-food',    e => { b.food = e.target.value;    const h = document.getElementById('sel-food-hint');    if (h) h.textContent = _foodDesc(e.target.value);    this._onBuildChange(); });
+        bind('sel-utility', e => { b.utility = e.target.value; const h = document.getElementById('sel-utility-hint'); if (h) h.textContent = _utilityDesc(e.target.value); this._onBuildChange(); });
         bind('chk-jbc', e => { b.jadeBotCore = e.target.checked; this._onBuildChange(); });
 
         // Infusion listeners (3 slots, total capped at 18)
@@ -2428,14 +2469,28 @@ class App {
             }).join('');
         };
 
+        const makeConsumableGrid = (containerId, items, group, currentVals, descFn) => {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = items.map(name => {
+                const checked = currentVals.includes(name) ? ' checked' : '';
+                const short   = name.length > 28 ? name.slice(0, 27) + '…' : name;
+                const desc    = descFn(name);
+                return `<label class="consumable-label" title="${esc(name)}">
+                    <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
+                    <span class="opt-consumable-name">${esc(short)}</span>${desc ? `<span class="opt-consumable-desc">${esc(desc)}</span>` : ''}
+                </label>`;
+            }).join('');
+        };
+
         // Pre-check the build's current choices as sensible defaults.
         const curPrefix = Object.values(b.gear || {})[0] || PREFIXES[0];
         makeGrid('opt-prefixes',  PREFIXES,     'prefix',   [curPrefix, "Assassin's"].filter(p => PREFIXES.includes(p)));
         makeGrid('opt-runes',     RUNE_NAMES,   'rune',     [b.rune].filter(Boolean));
         makeGrid('opt-sigils',    SIGIL_NAMES,  'sigil',    (b.sigils || []).filter(Boolean));
         makeGrid('opt-relics',    RELIC_NAMES,  'relic',    [b.relic].filter(Boolean));
-        makeGrid('opt-food',      FOOD_NAMES,   'food',     [b.food].filter(Boolean));
-        makeGrid('opt-utility',   UTILITY_NAMES,'utility',  [b.utility].filter(Boolean));
+        makeConsumableGrid('opt-food',     FOOD_NAMES,    'food',    [b.food].filter(Boolean),    _foodDesc);
+        makeConsumableGrid('opt-utility',  UTILITY_NAMES, 'utility', [b.utility].filter(Boolean), _utilityDesc);
 
         // Infusions — stat type checkboxes + total count input.
         const infEl = document.getElementById('opt-infusions');
