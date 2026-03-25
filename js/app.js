@@ -565,11 +565,8 @@ class App {
                 <div class="cond-ctrl"><span class="cond-unit cond-trait-note">✓ Empowered Empowerment active</span></div>` : ''}
             </div>` : ''}
 
-            ${autoRows.length ? `
-            <div class="cond-section">Auto-Applied <span class="cond-hint">(driven by other controls above)</span></div>
-            <div class="cond-auto-list">
-                ${autoRows.map(r => `<div class="cond-auto-row"><span class="cond-auto-label">${r.label}</span><span class="cond-auto-text">${r.text}</span></div>`).join('')}
-            </div>` : ''}`;
+            `;
+        // autoRows are still built and used by _getConditionalAttrs() via this.conditions — just not displayed.
 
         const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('change', fn); };
         bind('cond-might',     e => { c.might = Math.max(0, Math.min(25, parseInt(e.target.value) || 0)); e.target.value = c.might; this.renderAttributes(); });
@@ -751,9 +748,7 @@ class App {
                             return `<div class="spec-trait-major ${sel ? 'sel' : 'dim'}"
                                         data-slot="${slotIdx}" data-tier="${tierIdx}" data-pos="${m.position}"
                                         title="${esc(m.name)}">
-                                <div class="spec-trait-major-clip">
-                                    <img src="${ic || PLACEHOLDER_ICON}" />
-                                </div>
+                                <img src="${ic || PLACEHOLDER_ICON}" />
                             </div>`;
                         }).join('')}
                     </div>
