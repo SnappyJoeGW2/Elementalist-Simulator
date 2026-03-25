@@ -1526,7 +1526,8 @@ class App {
         // Overload: max of skill CD and dwell time requirement
         if (name.startsWith('Overload ')) {
             const skillCd = ((es.skillCD[name] || 0) - t) / 1000;
-            const dwellCd = (es.attEnteredAt + 6000 - t) / 1000;
+            const dwell = es._hasTranscendentTempest ? 4000 : 6000;
+            const dwellCd = (es.attEnteredAt + dwell - t) / 1000;
             const cd = Math.max(skillCd, dwellCd);
             return cd > 0 ? cd : null;
         }
