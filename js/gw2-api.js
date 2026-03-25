@@ -102,15 +102,15 @@ export class GW2API {
         // Wiki specialization backgrounds are exactly 647×136 px — ideal for our panel width.
         // Special:FilePath redirects to the actual file regardless of internal hash paths.
         const WIKI_BG = {
-            'Fire':     'https://wiki.guildwars2.com/wiki/Special:FilePath/Fire_specialization.jpg',
-            'Water':    'https://wiki.guildwars2.com/wiki/Special:FilePath/Water_specialization.jpg',
-            'Air':      'https://wiki.guildwars2.com/wiki/Special:FilePath/Air_specialization.png',
-            'Earth':    'https://wiki.guildwars2.com/wiki/Special:FilePath/Earth_specialization.jpg',
-            'Arcane':   'https://wiki.guildwars2.com/wiki/Special:FilePath/Arcane_specialization.jpg',
-            'Tempest':  'https://wiki.guildwars2.com/wiki/Special:FilePath/Tempest_specialization.png',
-            'Weaver':   'https://wiki.guildwars2.com/wiki/Special:FilePath/Weaver_specialization.png',
+            'Fire': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Fire_specialization.png',
+            'Water': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Water_specialization.png',
+            'Air': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Air_specialization.png',
+            'Earth': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Earth_specialization.png',
+            'Arcane': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Arcane_specialization.png',
+            'Tempest': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Tempest_specialization.png',
+            'Weaver': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Weaver_specialization.png',
             'Catalyst': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Catalyst_specialization.png',
-            'Evoker':   'https://wiki.guildwars2.com/wiki/Special:FilePath/Evoker_specialization.png',
+            'Evoker': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Evoker_specialization.png',
         };
 
         const traitIds = new Set();
