@@ -2065,12 +2065,13 @@ header .accent {
     pointer-events: none;
 }
 
-/* Consumable (food/utility) labels with stat descriptions */
+/* Consumable (food/utility) labels with stat descriptions — each on its own line */
 .opt-check-grid label.consumable-label {
     flex-direction: column;
     align-items: flex-start;
     white-space: normal;
     gap: 1px;
+    width: 100%;
 }
 .opt-consumable-name {
     font-size: 0.78rem;
