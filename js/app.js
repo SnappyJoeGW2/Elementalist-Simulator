@@ -405,9 +405,16 @@ class App {
         const derived = ['Critical Chance','Critical Damage','Condition Duration','Boon Duration',
             'Burning Duration','Bleeding Duration','Torment Duration','Confusion Duration','Poison Duration'];
 
+        // Specific condition durations are additive with the general Condition Duration.
+        // Show the effective combined value so displayed numbers match what the sim uses.
+        const SPEC_COND_DUR = new Set(['Burning Duration','Bleeding Duration','Torment Duration','Confusion Duration','Poison Duration']);
+        const condDurBase = baseAttrs['Condition Duration']?.final ?? 0;
+        const condDurCond = condAttrs?.['Condition Duration']?.final ?? condDurBase;
+
         const row = (n) => {
-            const base = baseAttrs[n]?.final ?? 0;
-            const cond = condAttrs?.[n]?.final ?? base;
+            let base = baseAttrs[n]?.final ?? 0;
+            let cond = condAttrs?.[n]?.final ?? base;
+            if (SPEC_COND_DUR.has(n)) { base += condDurBase; cond += condDurCond; }
             const delta = cond - base;
             const hasDelta = Math.abs(delta) > 0.005;
             const sign = delta > 0 ? '+' : '';
