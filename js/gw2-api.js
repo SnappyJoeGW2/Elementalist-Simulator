@@ -1,5 +1,5 @@
 const API_BASE = 'https://api.guildwars2.com/v2';
-const CACHE_KEY = 'gw2_icon_cache_v11';
+const CACHE_KEY = 'gw2_icon_cache_v12';
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const EXTRA_ELEM_SKILL_IDS = [
@@ -99,12 +99,26 @@ export class GW2API {
         const specIds = prof.specializations || [];
         const specs = await this._fetchBatch('specializations', specIds);
 
+        // Wiki specialization backgrounds are exactly 647×136 px — ideal for our panel width.
+        // Special:FilePath redirects to the actual file regardless of internal hash paths.
+        const WIKI_BG = {
+            'Fire':     'https://wiki.guildwars2.com/wiki/Special:FilePath/Fire_specialization.jpg',
+            'Water':    'https://wiki.guildwars2.com/wiki/Special:FilePath/Water_specialization.jpg',
+            'Air':      'https://wiki.guildwars2.com/wiki/Special:FilePath/Air_specialization.png',
+            'Earth':    'https://wiki.guildwars2.com/wiki/Special:FilePath/Earth_specialization.jpg',
+            'Arcane':   'https://wiki.guildwars2.com/wiki/Special:FilePath/Arcane_specialization.jpg',
+            'Tempest':  'https://wiki.guildwars2.com/wiki/Special:FilePath/Tempest_specialization.png',
+            'Weaver':   'https://wiki.guildwars2.com/wiki/Special:FilePath/Weaver_specialization.png',
+            'Catalyst': 'https://wiki.guildwars2.com/wiki/Special:FilePath/Catalyst_specialization.png',
+            'Evoker':   'https://wiki.guildwars2.com/wiki/Special:FilePath/Evoker_specialization.png',
+        };
+
         const traitIds = new Set();
         for (const spec of specs) {
             this.specData[spec.name] = {
                 id: spec.id,
                 icon: spec.icon || '',
-                background: spec.background || '',
+                background: WIKI_BG[spec.name] || spec.background || '',
                 elite: spec.elite || false,
                 minorTraits: spec.minor_traits || [],
                 majorTraits: spec.major_traits || [],

@@ -474,7 +474,10 @@ header .accent {
 .traits-panel-inline {
     border-radius: 6px;
     overflow: hidden;
-    align-self: flex-start; /* shrink-wrap to content; don't stretch to full build-left width */
+    /* Fixed width matching spec background images (647 px);
+       align-self keeps it from stretching to the full build-left column */
+    width: 647px;
+    align-self: flex-start;
 }
 
 .spec-row {
@@ -487,7 +490,7 @@ header .accent {
 .spec-bg {
     position: absolute;
     inset: 0;
-    background: var(--spec-bg) left center / cover no-repeat;
+    background: var(--spec-bg) center center / cover no-repeat;
 }
 
 .spec-content {
@@ -564,7 +567,8 @@ header .accent {
 .spec-tiers {
     display: flex;
     align-items: center;
-    /* No flex:1 — let it be its natural content width so the panel can shrink-wrap */
+    justify-content: center;
+    flex: 1;
     gap: 0;
 }
 
