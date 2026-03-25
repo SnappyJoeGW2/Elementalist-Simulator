@@ -474,6 +474,7 @@ header .accent {
 .traits-panel-inline {
     border-radius: 6px;
     overflow: hidden;
+    align-self: flex-start; /* shrink-wrap to content; don't stretch to full build-left width */
 }
 
 .spec-row {
@@ -495,13 +496,14 @@ header .accent {
     align-items: center;
     gap: 8px;
     padding: 5px 10px;
-    /* Symmetric gradient so both edges fade equally; no dark bar on one side */
+    /* Dark edge on the left (behind spec icon), transparent middle, dark edge on right */
     background: linear-gradient(90deg,
-            rgba(12, 12, 20, 0.90) 0%,
-            rgba(12, 12, 20, 0.55) 20%,
-            rgba(12, 12, 20, 0.35) 50%,
-            rgba(12, 12, 20, 0.55) 80%,
-            rgba(12, 12, 20, 0.90) 100%);
+            rgba(12, 12, 20, 0.92) 0%,
+            rgba(12, 12, 20, 0.60) 15%,
+            rgba(12, 12, 20, 0.35) 40%,
+            rgba(12, 12, 20, 0.35) 60%,
+            rgba(12, 12, 20, 0.60) 85%,
+            rgba(12, 12, 20, 0.92) 100%);
 }
 
 .spec-header-col {
@@ -562,8 +564,7 @@ header .accent {
 .spec-tiers {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex: 1;
+    /* No flex:1 — let it be its natural content width so the panel can shrink-wrap */
     gap: 0;
 }
 
