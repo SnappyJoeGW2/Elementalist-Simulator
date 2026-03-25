@@ -580,23 +580,9 @@ export class SimulationEngine {
             for (let i = 0; i < count; i++) {
                 S.allCondStacks.push({ t: 0, cond: effect, expiresAt: PERMA_EXPIRY, perma: true });
             }
-            // Damaging conditions must also live in condState so they generate ctick events
-            // and actually deal damage. Previously they were display-only in allCondStacks.
-            if (DAMAGING_CONDITIONS.has(effect)) {
-                if (!S.condState[effect]) {
-                    S.condState[effect] = { stacks: [], tickActive: false, nextTick: null };
-                }
-                const cs = S.condState[effect];
-                for (let i = 0; i < count; i++) {
-                    cs.stacks.push({ expiresAt: PERMA_EXPIRY, appliedBy: `Permanent ${effect}` });
-                }
-                if (!cs.tickActive) {
-                    cs.tickActive = true;
-                    cs.nextTick = 1000;
-                    // S.eq is sorted at line ~636 before the event loop, so a plain push is fine
-                    S.eq.push({ time: 1000, type: 'ctick', cond: effect });
-                }
-            }
+            // Damaging conditions stay in allCondStacks only (display / "target has X" checks).
+            // They must NOT go into condState — permanent stacks never expire, which causes
+            // _procCondTick to reschedule indefinitely and hang the simulation.
         }
         if (permaBoons.Quickness) S.quicknessUntil = PERMA_EXPIRY;
         if (permaBoons.Alacrity) S.alacrityUntil = PERMA_EXPIRY;
@@ -796,11 +782,17 @@ export class SimulationEngine {
                 const baseCond = (1 + sigilMuls.condAdd + addCond) * sigilMuls.condMul;
 
                 const targetHasBurning = (S._hasPyroTraining || S._hasFieryMight)
-                    ? (S.condState['Burning']?.stacks.some(s => s.expiresAt > ev.time) || false) : false;
+                    ? (
+                        (S.condState['Burning']?.stacks.some(s => s.expiresAt > ev.time) || false)
+                        || !!(S.permaBoons?.Burning)
+                    ) : false;
                 const pyroMul = (S._hasPyroTraining && targetHasBurning) ? 1.07 : 1;
                 const fieryMightMul = (S._hasFieryMight && targetHasBurning) ? 1.05 : 1;
                 const hasBleeding = S._hasSerratedStones
-                    && (S.condState['Bleeding']?.stacks.some(s => s.expiresAt > ev.time) || false);
+                    && (
+                        (S.condState['Bleeding']?.stacks.some(s => s.expiresAt > ev.time) || false)
+                        || !!(S.permaBoons?.Bleeding)
+                    );
                 const serratedMul = hasBleeding ? 1.05 : 1;
                 const stormsoulMul = S._hasStormsoul ? 1.07 : 1;
                 const flowLikeWaterMul = S._hasFlowLikeWater ? 1.10 : 1;
