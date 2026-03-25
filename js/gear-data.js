@@ -229,7 +229,7 @@ export const RUNE_NAMES = Object.keys(RUNE_DATA);
 // durations: percentage bonuses stored as numbers
 export const FOOD_DATA = {
     'Plate of Jerk Poultry': { isConverted: true, stats: { Power: 150 }, durations: {} },
-    'Plate of Truffle Steak': { isConverted: true, stats: { Power: 100, Ferocity: 70 }, durations: {} },
+    'Plate of Truffle Steak': { isConverted: true, stats: { Power: 100, Precision: 70 }, durations: {} },
     'Plate of Fire Flank Steak': { isConverted: true, stats: { Power: 100, 'Condition Damage': 70 }, durations: {} },
     'Bowl of Sweet and Spicy Butternut Squash Soup': { isConverted: true, stats: { Power: 100, Ferocity: 70 }, durations: {} },
     'Bowl of Sawgill Mushroom Risotto': { isConverted: true, stats: { Precision: 150 }, durations: {} },
@@ -285,22 +285,22 @@ export const UTILITY_NAMES = Object.keys(UTILITY_DATA);
 //           'mh+oh' = either hand, '2h' = two-handed, '-' = special
 export const WEAPON_DATA = {
     // Main-hand only
-    Pistol:   { wielding: 'mh',    weaponStrength: 1000 },
-    Sword:    { wielding: 'mh',    weaponStrength: 1000 },
-    Scepter:  { wielding: 'mh',    weaponStrength: 1000 },
+    Pistol: { wielding: 'mh', weaponStrength: 1000 },
+    Sword: { wielding: 'mh', weaponStrength: 1000 },
+    Scepter: { wielding: 'mh', weaponStrength: 1000 },
     // Main-hand or off-hand
-    Dagger:   { wielding: 'mh+oh', weaponStrength: 1000 },
+    Dagger: { wielding: 'mh+oh', weaponStrength: 1000 },
     // Off-hand only
-    Focus:    { wielding: 'oh',    weaponStrength:  900 },
-    Warhorn:  { wielding: 'oh',    weaponStrength:  900 },
+    Focus: { wielding: 'oh', weaponStrength: 900 },
+    Warhorn: { wielding: 'oh', weaponStrength: 900 },
     // Two-handed
-    Staff:    { wielding: '2h',    weaponStrength: 1100 },
-    Hammer:   { wielding: '2h',    weaponStrength: 1100 },
-    Spear:    { wielding: '2h',    weaponStrength: 1000 },
+    Staff: { wielding: '2h', weaponStrength: 1100 },
+    Hammer: { wielding: '2h', weaponStrength: 1100 },
+    Spear: { wielding: '2h', weaponStrength: 1000 },
     // Special / internal
-    Unequipped:            { wielding: '-',  weaponStrength:  690.5 },
-    'Profession mechanic': { wielding: '-',  weaponStrength: 1100 },
-    'Conjured Weapon':     { wielding: '2h', weaponStrength:  968.5 },
+    Unequipped: { wielding: '-', weaponStrength: 690.5 },
+    'Profession mechanic': { wielding: '-', weaponStrength: 1100 },
+    'Conjured Weapon': { wielding: '2h', weaponStrength: 968.5 },
 };
 
 // ─── Sigil Data ───────────────────────────────────────────────────────────────

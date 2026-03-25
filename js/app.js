@@ -233,6 +233,7 @@ class App {
         });
 
         this.render();
+        this._loadPresets();
     }
 
     // ─── Build change handler ───
@@ -2380,6 +2381,57 @@ class App {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    // ─── Presets ─────────────────────────────────────────────────────────────
+
+    async _loadPresets() {
+        try {
+            const res = await fetch('Builds/manifest.json');
+            if (!res.ok) return;
+            const presets = await res.json();
+            if (!Array.isArray(presets) || presets.length === 0) return;
+
+            const bar  = document.getElementById('presets-bar');
+            const btns = document.getElementById('presets-btns');
+            btns.innerHTML = presets.map((p, i) =>
+                `<button class="btn preset-btn" data-idx="${i}">${esc(p.label)}</button>`
+            ).join('');
+
+            btns.addEventListener('click', e => {
+                const btn = e.target.closest('.preset-btn');
+                if (!btn) return;
+                this._loadPreset(presets[+btn.dataset.idx], btn);
+            });
+
+            bar.style.display = '';
+        } catch (_) { /* silently skip if no manifest */ }
+    }
+
+    async _loadPreset(preset, btn) {
+        if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+        try {
+            const buildRes = await fetch(preset.build);
+            if (!buildRes.ok) throw new Error(`Could not load ${preset.build}`);
+            const buildData = await buildRes.json();
+            this._applySnapshot(buildData);
+
+            if (preset.rotation) {
+                const rotRes = await fetch(preset.rotation);
+                if (rotRes.ok) {
+                    const rotData = await rotRes.json();
+                    const items = Array.isArray(rotData) ? rotData : rotData.rotation;
+                    if (Array.isArray(items)) this._deserializeRotation(items);
+                }
+            }
+
+            this._onBuildChange();
+            this.render();
+        } catch (err) {
+            alert('Failed to load preset: ' + err.message);
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = preset.label; }
+        }
     }
 
     _importBuild(file) {

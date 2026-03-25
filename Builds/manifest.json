@@ -1,0 +1,12 @@
+[
+  {
+    "label": "Power Weaver",
+    "build": "Builds/power-weaver.json",
+    "rotation": "Rotations/power_weaver.json"
+  },
+  {
+    "label": "Condi Alac Tempest",
+    "build": "Builds/condi-alac-tempest.json",
+    "rotation": "Rotations/condi-alac-tempest.json"
+  }
+]

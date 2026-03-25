@@ -139,6 +139,46 @@ header .accent {
     opacity: 0.75;
 }
 
+/* ─── Presets bar ─── */
+.presets-bar {
+    max-width: 860px;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.presets-label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.presets-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.preset-btn {
+    font-size: 0.78rem;
+    padding: 3px 11px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.preset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-panel-alt);
+}
+.preset-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 /* ─── Loading ─── */
 #loading-overlay {
     position: fixed;
