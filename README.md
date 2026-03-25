@@ -84,10 +84,8 @@ python -m http.server
 
 ## Limitations & known assumptions
 
-- Rotation DPS assumes the rotation loops indefinitely. Phase transitions, movement, and downtime are not modelled.
-- Only a subset of relics and sigils that are commonly used in Elementalist builds are implemented. Proc-only sigils (Air, Earth, etc.) are listed but their proc damage is not simulated (they are included for optimizer coverage).
-- **Weapons:** Pistol and Hammer are not yet implemented.
+- **Weapons:** Pistol, Spear and Hammer are not yet implemented.
 - **Skill list is intentionally incomplete** — only skills relevant to DPS are included. Utility skills, healing skills, and elite skills that have no meaningful damage contribution are omitted.
-- **No elemental/pet simulation** — Elementals (Fire Elemental, Earth Elemental, etc.) and any conjured weapon elementals are not simulated.
+- **No elemental/pet simulation** — Elementals (Fire Elemental, Earth Elemental, etc.) are not simulated.
 - **No healing or dodge simulation** — outgoing healing, barrier, and evade frames are not modelled. Healing Power is tracked in attributes but has no effect on the simulation output.
 - Healer and support builds are not the focus of this tool.
