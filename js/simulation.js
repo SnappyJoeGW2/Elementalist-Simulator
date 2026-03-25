@@ -1162,7 +1162,7 @@ export class SimulationEngine {
         }
 
         if (sk.type === 'Attunement' && !sk.name.startsWith('Overload')) {
-            this._doSwap(S, sk);
+            this._doSwap(S, sk, skipCastUntil);
             return;
         }
 
@@ -1290,6 +1290,17 @@ export class SimulationEngine {
         if (sk.chainSkill) {
             const chainRoot = this._getChainRoot(sk);
             S.chainState[chainRoot] = sk.chainSkill;
+        }
+
+        // Deferred aaCarryover detection for concurrent attunement swaps:
+        // _doSwap defers _detectAACarryover when called concurrently so it can run here,
+        // after the anchor's chain state is finalised.
+        if (S._pendingAACPrev !== undefined) {
+            const _savedAtt = S.att;
+            S.att = S._pendingAACPrev;
+            S.aaCarryover = this._detectAACarryover(S);
+            S.att = _savedAtt;
+            delete S._pendingAACPrev;
         }
 
         if (S.aaCarryover) {
@@ -1504,11 +1515,11 @@ export class SimulationEngine {
         }
     }
 
-    _doSwap(S, sk) {
+    _doSwap(S, sk, isConcurrent = false) {
         const target = sk.name.replace(' Attunement', '');
 
         if (S.eliteSpec === 'Weaver') {
-            this._doWeaverSwap(S, sk, target);
+            this._doWeaverSwap(S, sk, target, isConcurrent);
             return;
         }
 
@@ -1522,7 +1533,11 @@ export class SimulationEngine {
             return;
         }
 
-        S.aaCarryover = this._detectAACarryover(S);
+        if (!isConcurrent) {
+            S.aaCarryover = this._detectAACarryover(S);
+        } else {
+            S._pendingAACPrev = S.att;
+        }
 
         const cdReady = S.attCD[target] || 0;
         if (S.t < cdReady) S.t = cdReady;
@@ -1588,13 +1603,17 @@ export class SimulationEngine {
         S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri });
     }
 
-    _doWeaverSwap(S, sk, target) {
+    _doWeaverSwap(S, sk, target, isConcurrent = false) {
         if (target === S.att && target === S.att2) {
             S.log.push({ t: S.t, type: 'err', msg: `Already in ${target}/${target}` });
             return;
         }
 
-        S.aaCarryover = this._detectAACarryover(S);
+        if (!isConcurrent) {
+            S.aaCarryover = this._detectAACarryover(S);
+        } else {
+            S._pendingAACPrev = S.att;
+        }
 
         const cdReady = S.attCD[target] || 0;
         if (S.t < cdReady) S.t = cdReady;
