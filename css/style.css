@@ -54,6 +54,70 @@ header .accent {
     color: var(--accent);
 }
 
+/* ─── About / explanation box ─── */
+.about-box {
+    max-width: 860px;
+    margin: 0 auto 14px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    color: var(--text);
+}
+.about-toggle {
+    padding: 7px 14px;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 0.80rem;
+    letter-spacing: 0.03em;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+}
+.about-toggle::-webkit-details-marker { display: none; }
+.about-toggle::before {
+    content: '▶';
+    font-size: 0.6rem;
+    color: var(--accent-dim);
+    transition: transform 0.15s;
+    display: inline-block;
+}
+.about-box[open] > .about-toggle::before {
+    transform: rotate(90deg);
+}
+.about-toggle:hover { color: var(--text-bright); }
+.about-body {
+    padding: 0 16px 12px;
+    border-top: 1px solid var(--border);
+    line-height: 1.55;
+}
+.about-body p {
+    margin: 10px 0 8px;
+    color: var(--text);
+}
+.about-body ul {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--text-muted);
+}
+.about-body li strong { color: var(--text); }
+.about-body li em { color: var(--text-dim); font-style: normal; }
+.about-limitations-label {
+    margin: 10px 0 4px;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+}
+.about-limitations {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    opacity: 0.75;
+}
+
 /* ─── Loading ─── */
 #loading-overlay {
     position: fixed;
@@ -393,7 +457,7 @@ header .accent {
 }
 
 .cond-num {
-    width: 42px;
+    width: 46px;
     background: var(--bg-panel-alt);
     border: 1px solid var(--border-light);
     border-radius: 3px;

@@ -1,0 +1,93 @@
+# GW2 Elementalist Rotation Simulator & Build Optimizer
+
+A client-side web tool that **accurately simulates Elementalist DPS** and optimizes gear for any rotation you build. Everything runs in the browser — no server, no login required.
+
+---
+
+## What it does
+
+### Simulation engine
+
+Unlike tools that apply a single damage formula, this simulator **replays your rotation event by event** the same way the game processes combat:
+
+- Skill casts fire in sequence; each hit, tick, and proc is evaluated at its actual timestamp.
+- Condition stacks are tracked individually — bleed, burn, torment, poison, confusion — with the correct damage formula per tick.
+- Boons are tracked in real time: Might stacks, Fury, Alacrity, Quickness, Swiftness, etc. Quickness and Alacrity affect cast times and cooldowns during the simulation, including partial application (e.g. Quickness falling off mid-cast is handled correctly).
+- Sigil procs (on-crit, on-hit, on-swap), relic triggers, and trait interactions (ICD-gated or event-driven) fire at the correct moments.
+- **No real RNG.** Critical hit chance, weapon strength, and probabilistic procs (e.g. chance to apply a condition) all use their expected values, giving consistent and reproducible numbers.
+
+### Build coverage
+
+Every meaningful piece of the Elementalist build is modelled:
+
+| Category | Coverage |
+|---|---|
+| Gear | All 12 equipment slots, full prefix list (Berserker's, Viper's, Assassin's, etc.), mixed prefixes |
+| Weapon | Sword, Dagger, Staff, Scepter + off-hand; correct weapon strength ranges |
+| Runes | Stat bonuses and relevant set bonuses |
+| Sigils | Stat sigils (Accuracy, Force, Bursting, …) and proc sigils (Air, Earth, …) |
+| Relics | Proc relics with their correct trigger conditions and cooldowns |
+| Food & Utility | Flat stats, conversion-based utility consumables |
+| Infusions | Up to 18 × any stat |
+| Traits | All three traitlines; minor and major traits including passive stat bonuses, on-event triggers, conversion bonuses, and condition modifiers |
+| Boons | Might (stacking), Fury, Alacrity, Quickness, and more — manually configured uptime |
+
+### Rotation builder
+
+Build your skill sequence manually using the on-screen skill palette. The rotation panel shows cast time, DPS contribution, and cumulative time per skill. Run the simulation any time to see the full breakdown:
+
+- Total DPS, strike DPS, condition DPS
+- Per-skill damage contribution
+- Condition uptime and average stacks
+- Boon uptime
+- Combat log (optional)
+
+### Save & Load
+
+Export your entire build — gear, traitline selections, skill rotation — as a JSON file. Import it back on any browser or share it with others.
+
+---
+
+## Gear Optimizer
+
+Once you have a rotation, the optimizer finds the **best gear combination** for it using coordinate descent with multi-threaded Web Workers:
+
+1. Choose which prefixes, runes, sigils, relics, food, and utility to test.
+2. Optionally set minimum constraints (Boon Duration, Critical Chance, Toughness, Vitality).
+3. Hit **Run** — the optimizer hill-climbs from multiple starting points in parallel, evaluating the full simulation for each candidate build.
+4. The top-10 results are ranked by DPS and displayed with one-click apply.
+
+Because the optimizer runs your actual rotation through the full simulator for every evaluation, the results account for all trait synergies, proc timing, and boon interactions — not just a stat formula.
+
+---
+
+## Technical notes
+
+- Pure client-side HTML + CSS + JavaScript (ES modules). No framework, no build step.
+- Optimizer parallelism via `Worker` threads (one per logical CPU core).
+- GW2 skill and specialization data fetched from the official GW2 API and the GW2 Wiki, then cached in `localStorage`.
+- Designed for Elementalist (Fire, Water, Air, Earth, Arcane, Tempest, Weaver, Catalyst). Other professions are not currently supported.
+
+---
+
+## Running locally
+
+Just open `index.html` in a browser that supports ES modules (any modern browser). No build step or package install required. If you serve it over `file://` and the browser blocks module imports, run a simple local server instead:
+
+```bash
+npx serve .
+# or
+python -m http.server
+```
+
+---
+
+## Limitations & known assumptions
+
+- Rotation DPS assumes the rotation loops indefinitely. Phase transitions, movement, and downtime are not modelled.
+- Only a subset of relics and sigils that are commonly used in Elementalist builds are implemented. Proc-only sigils (Air, Earth, etc.) are listed but their proc damage is not simulated (they are included for optimizer coverage).
+- **Weapons:** Pistol and Hammer are not yet implemented.
+- **Skill list is intentionally incomplete** — only skills relevant to DPS are included. Utility skills, healing skills, and elite skills that have no meaningful damage contribution are omitted.
+- **No elemental/pet simulation** — Elementals (Fire Elemental, Earth Elemental, etc.) and any conjured weapon elementals are not simulated.
+- **No healing or dodge simulation** — outgoing healing, barrier, and evade frames are not modelled. Healing Power is tracked in attributes but has no effect on the simulation output.
+- Healer and support builds are not the focus of this tool.

@@ -24,6 +24,27 @@
             <h1>GW2 <span class="accent">Elementalist</span> Rotation Simulator and Build Optimizer</h1>
         </header>
 
+        <details class="about-box">
+            <summary class="about-toggle">About this tool</summary>
+            <div class="about-body">
+                <p>This tool <strong>accurately simulates Elementalist DPS</strong> the same way the game calculates it. It doesn't use simplified formulas — it replays every combat event in order: weapon swings, skill casts, condition ticks, sigil procs, relic triggers, trait interactions, and attunement swaps.</p>
+                <ul>
+                    <li><strong>Full build support</strong> — gear prefixes, runes, sigils, relics, food, utility, infusions, and all three traitlines with minor/major selections.</li>
+                    <li><strong>Accurate simulation</strong> — critical hits, condition stacking, boon tracking (Might, Fury, Alacrity, Quickness, etc.), and proc cooldowns are all modelled. Even handles Alacrity/Quickness loss <em>mid-cast</em>.</li>
+                    <li><strong>Expected values</strong> — no real RNG. Critical hit chance, weapon strength variance, and probabilistic procs use expected values, giving consistent, reproducible numbers.</li>
+                    <li><strong>Rotation builder</strong> — build your skill rotation manually, then hit Run to see the simulated DPS. Save and load entire builds (gear + traits + skills + rotation) as JSON.</li>
+                    <li><strong>Gear Optimizer</strong> — after building a rotation, run the optimizer to find the best gear combination (prefix mix, rune, sigil, relic, food, utility) for that exact rotation using coordinate descent.</li>
+                </ul>
+                <p class="about-limitations-label">Current limitations:</p>
+                <ul class="about-limitations">
+                    <li>Pistol and Hammer not yet implemented.</li>
+                    <li>Skill list is intentionally incomplete — only DPS-relevant skills are included.</li>
+                    <li>Elementals and conjured weapon pets are not simulated.</li>
+                    <li>No healing, barrier, or dodge simulation.</li>
+                </ul>
+            </div>
+        </details>
+
         <section class="build-section">
             <div class="build-left">
                 <div class="panel gear-panel">
