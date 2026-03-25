@@ -21,7 +21,7 @@
 
     <div id="app">
         <header>
-            <h1>GW2 <span class="accent">DPS</span> Calculator</h1>
+            <h1>GW2 <span class="accent">Elementalist</span> Rotation Simulator and Optimizer</h1>
         </header>
 
         <section class="build-section">
@@ -192,6 +192,38 @@
                         <span class="opt-inf-hint">Select stat types to mix</span>
                     </div>
                     <div class="opt-check-grid" id="opt-infusions"></div>
+                </div>
+            </div>
+
+            <!-- Stat Constraints -->
+            <div class="opt-constraints-block">
+                <div class="opt-space-label">
+                    <span>Stat Constraints <span class="opt-max-note">(minimum required — leave blank to
+                            skip)</span></span>
+                </div>
+                <div class="opt-constraints-grid">
+                    <label class="opt-constraint-row">
+                        <span class="opt-constraint-name">Boon Duration ≥</span>
+                        <input type="number" id="opt-min-boon-dur" min="0" max="100" step="1" placeholder="—"
+                            class="opt-constraint-input">
+                        <span class="opt-constraint-unit">%</span>
+                    </label>
+                    <label class="opt-constraint-row">
+                        <span class="opt-constraint-name">Critical Chance ≥</span>
+                        <input type="number" id="opt-min-crit" min="0" max="100" step="0.1" placeholder="—"
+                            class="opt-constraint-input">
+                        <span class="opt-constraint-unit">%</span>
+                    </label>
+                    <label class="opt-constraint-row">
+                        <span class="opt-constraint-name">Toughness ≥</span>
+                        <input type="number" id="opt-min-tough" min="0" max="5000" step="1" placeholder="—"
+                            class="opt-constraint-input">
+                    </label>
+                    <label class="opt-constraint-row">
+                        <span class="opt-constraint-name">Vitality ≥</span>
+                        <input type="number" id="opt-min-vit" min="0" max="5000" step="1" placeholder="—"
+                            class="opt-constraint-input">
+                    </label>
                 </div>
             </div>
 

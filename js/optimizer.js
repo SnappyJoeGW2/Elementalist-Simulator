@@ -38,7 +38,7 @@ export class GearOptimizer {
         this._cancelled = false;
         this._workers   = [];
 
-        const { build, selectedSkills, rotation, space,
+        const { build, selectedSkills, rotation, space, constraints = {},
                 startAtt, startAtt2, evokerElement, permaBoons,
                 targetHP = 0 } = config;
 
@@ -65,6 +65,7 @@ export class GearOptimizer {
             selectedSkills,
             rotation,
             prefixes:     space.prefixes,
+            constraints,
             startAtt, startAtt2, evokerElement, permaBoons,
         };
 
@@ -92,6 +93,7 @@ export class GearOptimizer {
                     evalsDone += data.evalsDone;
 
                     for (const r of data.results) {
+                        if (r.rawDps < 0) continue;  // constraint-violated result
                         const key = this._key(r);
                         if (!seenKeys.has(key)) {
                             seenKeys.add(key);
@@ -112,7 +114,7 @@ export class GearOptimizer {
                     this._runBatchSingleThread(
                         batch, build, selectedSkills, rotation, space.prefixes,
                         startAtt, startAtt2, evokerElement, permaBoons,
-                        top10, seenKeys,
+                        top10, seenKeys, constraints,
                     ).then(() => {
                         evalsDone += batch.length; // approximate
                         onProgress(evalsDone, totalEst, [...top10]);
@@ -141,7 +143,7 @@ export class GearOptimizer {
     // ── Single-threaded fallback for one batch (used if Worker fails) ─────────
     async _runBatchSingleThread(batch, build, selectedSkills, rotation, prefixes,
                                 startAtt, startAtt2, evokerElement, permaBoons,
-                                top10, seenKeys) {
+                                top10, seenKeys, constraints = {}) {
         const sim = this._makeSim(build, selectedSkills, rotation);
         for (const combo of batch) {
             let comboBest = null;
@@ -150,11 +152,11 @@ export class GearOptimizer {
                 for (const slot of GEAR_SLOTS) gear[slot] = startPrefix;
                 const result = this._descent(
                     sim, build, selectedSkills, combo, gear, prefixes,
-                    startAtt, startAtt2, evokerElement, permaBoons, () => {},
+                    startAtt, startAtt2, evokerElement, permaBoons, () => {}, constraints,
                 );
                 if (!comboBest || result.rawDps > comboBest.rawDps) comboBest = result;
             }
-            if (comboBest) {
+            if (comboBest && comboBest.rawDps >= 0) {
                 const key = this._key(comboBest);
                 if (!seenKeys.has(key)) {
                     seenKeys.add(key);
@@ -170,10 +172,10 @@ export class GearOptimizer {
 
     // ── Coordinate descent (single thread, used by fallback + final re-eval) ──
     _descent(sim, baseBuild, selectedSkills, combo, gear, prefixes,
-             startAtt, startAtt2, evokerElement, permaBoons, onEval) {
+             startAtt, startAtt2, evokerElement, permaBoons, onEval, constraints = {}) {
 
         let bestDps = this._eval(sim, baseBuild, selectedSkills, combo, gear,
-                                  startAtt, startAtt2, evokerElement, permaBoons);
+                                  startAtt, startAtt2, evokerElement, permaBoons, constraints);
         onEval(1);
 
         let improved = true;
@@ -188,7 +190,7 @@ export class GearOptimizer {
                     if (prefix === orig) continue;
                     gear[slot] = prefix;
                     const dps = this._eval(sim, baseBuild, selectedSkills, combo, gear,
-                                           startAtt, startAtt2, evokerElement, permaBoons);
+                                           startAtt, startAtt2, evokerElement, permaBoons, constraints);
                     onEval(1);
                     if (dps > winnerDps) { winnerDps = dps; winner = prefix; }
                 }
@@ -214,8 +216,9 @@ export class GearOptimizer {
 
     // ── Single DPS evaluation (no HP cap — fair comparison during search) ─────
     _eval(sim, baseBuild, selectedSkills, combo, gear,
-          startAtt, startAtt2, evokerElement, permaBoons) {
+          startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
         this._applyCombo(sim, baseBuild, selectedSkills, combo, gear);
+        if (!_meetsConstraints(sim.attributes.attributes, constraints)) return -1;
         sim.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
         return sim.results?.dps ?? 0;
     }
@@ -333,4 +336,18 @@ export class GearOptimizer {
             : (r.infusions.map(x => `${x.stat}×${x.count}`).join('+') || 'none');
         return `${g}|${r.rune}|${r.relic}|${r.sigil1}|${r.sigil2}|${r.food}|${r.utility}|${inf}`;
     }
+}
+
+// ── Constraint checker (shared by main thread; worker has its own copy) ───────
+function _meetsConstraints(attrs, constraints) {
+    if (!constraints) return true;
+    if (constraints.minBoonDuration != null &&
+        (attrs['Boon Duration']?.final ?? 0) < constraints.minBoonDuration) return false;
+    if (constraints.minCritChance != null &&
+        (attrs['Critical Chance']?.final ?? 0) < constraints.minCritChance) return false;
+    if (constraints.minToughness != null &&
+        (attrs['Toughness']?.final ?? 0) < constraints.minToughness) return false;
+    if (constraints.minVitality != null &&
+        (attrs['Vitality']?.final ?? 0) < constraints.minVitality) return false;
+    return true;
 }

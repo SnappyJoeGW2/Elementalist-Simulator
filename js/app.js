@@ -2544,6 +2544,17 @@ class App {
             infusionTotal,
         };
 
+        const _parseConstraint = id => {
+            const v = parseFloat(document.getElementById(id)?.value);
+            return isNaN(v) ? null : v;
+        };
+        const constraints = {
+            minBoonDuration: _parseConstraint('opt-min-boon-dur'),
+            minCritChance:   _parseConstraint('opt-min-crit'),
+            minToughness:    _parseConstraint('opt-min-tough'),
+            minVitality:     _parseConstraint('opt-min-vit'),
+        };
+
         if (!space.prefixes.length) { alert('Select at least one gear prefix.'); return; }
 
         // Combo count estimate for user feedback.
@@ -2578,6 +2589,7 @@ class App {
                     selectedSkills: Object.values(this.selectedSkills).filter(Boolean),
                     rotation:       this.sim.rotation,
                     space,
+                    constraints,
                     startAtt:       this.activeAttunement,
                     startAtt2:      this.secondaryAttunement,
                     evokerElement:  this.evokerElement,

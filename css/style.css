@@ -1316,6 +1316,41 @@ header .accent { color: var(--accent); }
 .opt-check-grid label.opt-prefix-disabled { opacity: 0.4; pointer-events: none; }
 
 /* Run controls */
+.opt-constraints-block {
+    margin: 10px 0 14px;
+    padding: 10px 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+}
+.opt-constraints-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 8px;
+}
+.opt-constraint-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    cursor: default;
+}
+.opt-constraint-name { min-width: 130px; }
+.opt-constraint-input {
+    width: 68px;
+    padding: 3px 6px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    color: var(--text-bright);
+    font-size: 0.82rem;
+    text-align: right;
+}
+.opt-constraint-input:focus { border-color: var(--accent); outline: none; }
+.opt-constraint-unit { color: var(--text-muted); font-size: 0.78rem; }
+
 .opt-controls {
     display: flex;
     align-items: center;

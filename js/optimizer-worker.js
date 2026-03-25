@@ -11,7 +11,7 @@ self.onmessage = ({ data }) => {
     const {
         skills, skillHits, weapons, sigilsData, relicsData,
         baseBuild, selectedSkills, rotation,
-        prefixes, startAtt, startAtt2, evokerElement, permaBoons,
+        prefixes, constraints = {}, startAtt, startAtt2, evokerElement, permaBoons,
         combos,
     } = data;
 
@@ -41,7 +41,7 @@ self.onmessage = ({ data }) => {
             for (const slot of GEAR_SLOTS) gear[slot] = startPrefix;
 
             let bestDps = _eval(sim, baseBuild, selectedSkills, combo, gear,
-                                startAtt, startAtt2, evokerElement, permaBoons);
+                                startAtt, startAtt2, evokerElement, permaBoons, constraints);
             evalsDone++;
 
             // Coordinate descent: cycle through slots until no improvement.
@@ -57,7 +57,7 @@ self.onmessage = ({ data }) => {
                         if (prefix === orig) continue;
                         gear[slot] = prefix;
                         const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
-                                          startAtt, startAtt2, evokerElement, permaBoons);
+                                          startAtt, startAtt2, evokerElement, permaBoons, constraints);
                         evalsDone++;
                         if (dps > winnerDps) { winnerDps = dps; winner = prefix; }
                     }
@@ -82,7 +82,7 @@ self.onmessage = ({ data }) => {
             if (!comboBest || result.rawDps > comboBest.rawDps) comboBest = result;
         }
 
-        if (comboBest) results.push(comboBest);
+        if (comboBest && comboBest.rawDps >= 0) results.push(comboBest);
     }
 
     self.postMessage({ results, evalsDone });
@@ -90,7 +90,7 @@ self.onmessage = ({ data }) => {
 
 // ── Single evaluation (no HP cap) ─────────────────────────────────────────────
 function _eval(sim, baseBuild, selectedSkills, combo, gear,
-               startAtt, startAtt2, evokerElement, permaBoons) {
+               startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
     const testBuild = {
         ...baseBuild,
         gear:      { ...gear },
@@ -105,8 +105,23 @@ function _eval(sim, baseBuild, selectedSkills, combo, gear,
     };
 
     const attrs = calcAttributes(testBuild, selectedSkills);
+    if (!_meetsConstraints(attrs.attributes, constraints)) return -1;
     sim.attributes = attrs;
     // activeTraitNames is constant (doesn't depend on gear) — already set at init.
     sim.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
     return sim.results?.dps ?? 0;
+}
+
+// ── Constraint checker ────────────────────────────────────────────────────────
+function _meetsConstraints(attrs, constraints) {
+    if (!constraints) return true;
+    if (constraints.minBoonDuration != null &&
+        (attrs['Boon Duration']?.final ?? 0) < constraints.minBoonDuration) return false;
+    if (constraints.minCritChance != null &&
+        (attrs['Critical Chance']?.final ?? 0) < constraints.minCritChance) return false;
+    if (constraints.minToughness != null &&
+        (attrs['Toughness']?.final ?? 0) < constraints.minToughness) return false;
+    if (constraints.minVitality != null &&
+        (attrs['Vitality']?.final ?? 0) < constraints.minVitality) return false;
+    return true;
 }
