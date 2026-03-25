@@ -1698,7 +1698,7 @@ export class SimulationEngine {
         if (S.t < cdReady) S.t = cdReady;
 
         const baseDwell = S._hasTranscendentTempest
-            ? Math.round(OVERLOAD_DWELL * 0.67) : OVERLOAD_DWELL;
+            ? Math.round(OVERLOAD_DWELL * (2 / 3)) : OVERLOAD_DWELL;
         const dwellEffMs = this._alaCd(S, baseDwell, S.attEnteredAt);
         const dwellReady = S.attEnteredAt + dwellEffMs;
         if (S.t < dwellReady) S.t = dwellReady;
