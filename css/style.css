@@ -1690,6 +1690,17 @@ header .accent {
     color: var(--accent);
 }
 
+.cond-breakdown .cond-hdr,
+.cond-breakdown .res-row {
+    grid-template-columns: 1fr 90px 72px 90px;
+}
+
+.res-row.res-total {
+    border-top: 1px solid var(--border);
+    margin-top: 2px;
+    padding-top: 4px;
+}
+
 .res-skill {
     display: flex;
     align-items: center;

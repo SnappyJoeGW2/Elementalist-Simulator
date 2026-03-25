@@ -430,6 +430,8 @@ export class SimulationEngine {
             relicThiefUntil: 0,
             totalStrike: 0,
             totalCond: 0,
+            condDamage: {},
+            condStackSeconds: {},
             firstHitTime: null,
             lastHitTime: null,
             perSkill: {},
@@ -980,6 +982,8 @@ export class SimulationEngine {
             ? deathTime
             : Math.max(rotEnd, S.lastHitTime ?? rotEnd);
         const dpsWindowMs = effectiveEnd - dpsStart;
+        S.log.sort((a, b) => a.t - b.t);
+
         this.results = {
             rotationMs: rotEnd,
             dpsWindowMs,
@@ -990,6 +994,17 @@ export class SimulationEngine {
             deathTime,
             targetHP: targetHP > 0 ? targetHP : null,
             perSkill: S.perSkill,
+            condDamage: S.condDamage,
+            condStackSeconds: S.condStackSeconds,
+            condAvgStacks: (() => {
+                const windowSec = dpsWindowMs / 1000;
+                if (windowSec <= 0) return {};
+                const avg = {};
+                for (const [c, ss] of Object.entries(S.condStackSeconds)) {
+                    avg[c] = ss / windowSec;
+                }
+                return avg;
+            })(),
             log: S.log,
             steps: S.steps,
             allCondStacks: S.allCondStacks,
@@ -3069,6 +3084,8 @@ export class SimulationEngine {
                 : conditionTickDamage(cond, condDmg) * condMul;
             const total = tick * active.length;
             S.totalCond += total;
+            S.condDamage[cond] = (S.condDamage[cond] || 0) + total;
+            S.condStackSeconds[cond] = (S.condStackSeconds[cond] || 0) + active.length;
 
             for (const stack of active) {
                 this._ensurePerSkill(S, stack.appliedBy);

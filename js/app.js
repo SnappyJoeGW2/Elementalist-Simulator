@@ -2016,6 +2016,37 @@ class App {
         }
         h += '</div>';
 
+        // ── Per-condition damage breakdown ──
+        const condEntries = Object.entries(r.condDamage || {})
+            .map(([cond, dmg]) => ({ cond, dmg, avgStacks: (r.condAvgStacks || {})[cond] || 0 }))
+            .filter(e => e.dmg > 0)
+            .sort((a, b) => b.dmg - a.dmg);
+        if (condEntries.length > 0) {
+            const dws = (r.dpsWindowMs ?? 0) / 1000;
+            let totalCondDmg = 0;
+            for (const e of condEntries) totalCondDmg += e.dmg;
+            h += `<div class="res-breakdown cond-breakdown"><div class="res-hdr cond-hdr">
+                <span>Condition</span><span>Damage</span><span>DPS</span><span>Avg Stacks</span>
+            </div>`;
+            for (const e of condEntries) {
+                const cdps = dws > 0 ? Math.round(e.dmg / dws) : 0;
+                h += `<div class="res-row">
+                    <span class="res-skill condi">${esc(e.cond)}</span>
+                    <span class="condi">${Math.round(e.dmg).toLocaleString()}</span>
+                    <span class="dps">${cdps.toLocaleString()}</span>
+                    <span>${e.avgStacks.toFixed(2)}</span>
+                </div>`;
+            }
+            const totalCondDps = dws > 0 ? Math.round(totalCondDmg / dws) : 0;
+            h += `<div class="res-row res-total">
+                <span class="res-skill"><b>Total Conditions</b></span>
+                <span class="condi"><b>${Math.round(totalCondDmg).toLocaleString()}</b></span>
+                <span class="dps"><b>${totalCondDps.toLocaleString()}</b></span>
+                <span></span>
+            </div>`;
+            h += '</div>';
+        }
+
         h += this._buildChartHtml(r);
 
         h += `<details class="res-log-wrap"><summary>Event Log (${r.log.length} events)</summary><div class="res-log">`;
