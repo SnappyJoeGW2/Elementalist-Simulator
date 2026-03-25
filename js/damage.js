@@ -42,11 +42,10 @@ export function conditionTotalDamage(conditionType, stacks, baseDurationSec, con
 }
 
 export function getConditionDurationBonus(conditionType, attributes) {
+    const base = attributes['Condition Duration']?.final ?? 0;
     const key = CONDITION_DURATION_KEYS[conditionType];
-    if (key && attributes[key] !== undefined) {
-        return attributes[key].final;
-    }
-    return attributes['Condition Duration']?.final ?? 0;
+    const specific = (key && attributes[key] !== undefined) ? attributes[key].final : 0;
+    return base + specific;
 }
 
 const BOON_DURATION_KEYS = {
