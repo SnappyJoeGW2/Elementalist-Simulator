@@ -23,13 +23,13 @@ Every meaningful piece of the Elementalist build is modelled:
 | Category | Coverage |
 |---|---|
 | Gear | All 12 equipment slots, full prefix list (Berserker's, Viper's, Assassin's, etc.), mixed prefixes |
-| Weapon | Sword, Dagger, Staff, Scepter + off-hand; correct weapon strength ranges |
+| Weapon | Sword, Dagger, Staff, Scepter + off-hand; correct weapon strength for utility/profession mechanics |
 | Runes | Stat bonuses and relevant set bonuses |
 | Sigils | Stat sigils (Accuracy, Force, Bursting, …) and proc sigils (Air, Earth, …) |
 | Relics | Proc relics with their correct trigger conditions and cooldowns |
 | Food & Utility | Flat stats, conversion-based utility consumables |
 | Infusions | Up to 18 × any stat |
-| Traits | All three traitlines; minor and major traits including passive stat bonuses, on-event triggers, conversion bonuses, and condition modifiers |
+| Traits | All elementalist traitlines; minor and major traits including passive stat bonuses, on-event triggers, conversion bonuses, and condition modifiers |
 | Boons | Might (stacking), Fury, Alacrity, Quickness, and more — manually configured uptime |
 
 ### Rotation builder
@@ -40,7 +40,7 @@ Build your skill sequence manually using the on-screen skill palette. The rotati
 - Per-skill damage contribution
 - Condition uptime and average stacks
 - Boon uptime
-- Combat log (optional)
+- Combat log to see each event
 
 ### Save & Load
 
