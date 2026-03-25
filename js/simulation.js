@@ -643,9 +643,10 @@ export class SimulationEngine {
             const ev = S.eq.shift();
             if (deathTime !== null && ev.time > deathTime) break;
             if (stopAtTime !== null && ev.time > stopAtTime) break;
-            // No-kill mode: stop at end of last skill's cast animation.
-            // Trailing condition ticks beyond the rotation are excluded.
-            if (tgtHP === Infinity && stopAtTime === null && ev.time > rotEnd) break;
+            // Stop at end of last skill's cast animation in both kill and no-kill modes.
+            // Trailing condition ticks beyond the rotation are excluded — if the target
+            // didn't die during the active rotation, it survived.
+            if (stopAtTime === null && ev.time > rotEnd) break;
 
             if ((ev.type === 'hit' && ev.dmg > 0) || ev.type === 'ctick') {
                 if (S.firstHitTime === null) S.firstHitTime = ev.time;
