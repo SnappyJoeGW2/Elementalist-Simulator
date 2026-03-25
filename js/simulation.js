@@ -783,14 +783,16 @@ export class SimulationEngine {
 
                 const targetHasBurning = (S._hasPyroTraining || S._hasFieryMight)
                     ? (
-                        (S.condState['Burning']?.stacks.some(s => s.expiresAt > ev.time) || false)
+                        (S.condState['Burning']?.stacks.some(
+                            s => s.t <= ev.time && s.expiresAt > ev.time) || false)
                         || !!(S.permaBoons?.Burning)
                     ) : false;
                 const pyroMul = (S._hasPyroTraining && targetHasBurning) ? 1.07 : 1;
                 const fieryMightMul = (S._hasFieryMight && targetHasBurning) ? 1.05 : 1;
                 const hasBleeding = S._hasSerratedStones
                     && (
-                        (S.condState['Bleeding']?.stacks.some(s => s.expiresAt > ev.time) || false)
+                        (S.condState['Bleeding']?.stacks.some(
+                            s => s.t <= ev.time && s.expiresAt > ev.time) || false)
                         || !!(S.permaBoons?.Bleeding)
                     );
                 const serratedMul = hasBleeding ? 1.05 : 1;
@@ -2697,7 +2699,11 @@ export class SimulationEngine {
         const cs = S.condState[cond];
 
         for (let i = 0; i < stacks; i++) {
-            cs.stacks.push({ expiresAt: time + adjMs, appliedBy: skillName });
+            // Store the application time so ticks only count stacks that have actually started.
+            // Trait procs (Sunspot, Flame Expulsion) are applied inline during rotation
+            // pre-processing with future timestamps; without this check every future stack
+            // would be counted from the very first tick event.
+            cs.stacks.push({ t: time, expiresAt: time + adjMs, appliedBy: skillName });
             S.allCondStacks.push({ t: time, cond, expiresAt: time + adjMs });
         }
 
@@ -2728,7 +2734,7 @@ export class SimulationEngine {
         }
 
         if (S.activeRelic === 'Fractal' && cond === 'Bleeding' && time >= (S.relicICD.Fractal || 0)) {
-            const activeStacks = cs.stacks.filter(s => s.expiresAt > time).length;
+                const activeStacks = cs.stacks.filter(s => s.t <= time && s.expiresAt > time).length;
             if (activeStacks >= 6) {
                 S.relicICD.Fractal = time + RELIC_PROCS.Fractal.icd;
                 const fp = RELIC_PROCS.Fractal;
@@ -3055,7 +3061,7 @@ export class SimulationEngine {
         if (!cs) return;
 
         const t = ev.time;
-        const active = cs.stacks.filter(s => s.expiresAt >= t);
+        const active = cs.stacks.filter(s => s.t <= t && s.expiresAt >= t);
 
         if (active.length > 0) {
             const tick = (infernoPower > 0 && cond === 'Burning')
