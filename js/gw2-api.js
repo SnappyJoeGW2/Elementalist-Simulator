@@ -1,20 +1,20 @@
 const API_BASE = 'https://api.guildwars2.com/v2';
-const CACHE_KEY = 'gw2_icon_cache_v9';
+const CACHE_KEY = 'gw2_icon_cache_v10';
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const EXTRA_ELEM_SKILL_IDS = [
     // Tempest: overloads, shouts
-    29415,29535,29548,29618,29706,29719,29948,29968,30008,30047,30336,30432,30662,
-    30446,30795,30864,29453,
+    29415, 29535, 29548, 29618, 29706, 29719, 29948, 29968, 30008, 30047, 30336, 30432, 30662,
+    30446, 30795, 30864, 29453,
     // Glyph variants, Weaver/Catalyst/Evoker skills
-    34609,34637,34651,34714,34724,34736,34743,34772,
-    35304,37873,40229,40326,43080,43199,43657,44637,44918,45216,45259,45983,46024,
-    49056,50447,51646,51662,51684,51711,
-    62694,62723,62813,62837,62862,62876,62940,65179,71796,71907,
+    34609, 34637, 34651, 34714, 34724, 34736, 34743, 34772,
+    35304, 37873, 40229, 40326, 43080, 43199, 43657, 44637, 44918, 45216, 45259, 45983, 46024,
+    49056, 50447, 51646, 51662, 51684, 51711,
+    62694, 62723, 62813, 62837, 62862, 62876, 62940, 65179, 71796, 71907,
     // Evoker familiars: Ignite, Splash, Zap, Calcify
-    76643,77225,77370,77226,
+    76643, 77225, 77370, 77226,
     // Conjured weapons: Frost Bow, Lightning Hammer, Fiery Greatsword
-    5517,5531,5532,5533,5568,5595,5625,5697,5720,5721,5723,5725,5726,5727,5728,5733,
+    5517, 5531, 5532, 5533, 5568, 5595, 5625, 5697, 5720, 5721, 5723, 5725, 5726, 5727, 5728, 5733,
 ];
 
 export class GW2API {
@@ -59,7 +59,7 @@ export class GW2API {
             traitIcons: this.traitIcons,
             specData: this.specData,
         };
-        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch { }
     }
 
     async _fetchJSON(url) {
@@ -129,14 +129,14 @@ export class GW2API {
             this.traitIcons[t.name] = t.icon || '';
         }
 
-        this.skillIcons['Deploy Jade Sphere (Fire)']  = 'https://render.guildwars2.com/file/22CA7C0F420C7F61CEBFA323DF3AADC5EF237475/2491598.png';
+        this.skillIcons['Deploy Jade Sphere (Fire)'] = 'https://render.guildwars2.com/file/22CA7C0F420C7F61CEBFA323DF3AADC5EF237475/2491598.png';
         this.skillIcons['Deploy Jade Sphere (Water)'] = 'https://render.guildwars2.com/file/6016319AAF18417F0401800EF36C0F18E207FFD5/2491600.png';
-        this.skillIcons['Deploy Jade Sphere (Air)']   = 'https://render.guildwars2.com/file/07D9C76FEB07BB04B9D07A05D87C09A0A0AE0319/2491594.png';
+        this.skillIcons['Deploy Jade Sphere (Air)'] = 'https://render.guildwars2.com/file/07D9C76FEB07BB04B9D07A05D87C09A0A0AE0319/2491594.png';
         this.skillIcons['Deploy Jade Sphere (Earth)'] = 'https://render.guildwars2.com/file/97BEF22148DDA3159B4CF6DB18ECFEDE7107710B/2491596.png';
         this.skillIcons['Hurl'] = 'https://render.guildwars2.com/file/BB59A576C805054EB94C66D8190490F273C7BBED/102974.png';
-        this.skillIcons['Glyph of Elemental Power (Fire)']  = 'https://render.guildwars2.com/file/0805084EF739CEDD5C9678561C331D7F0B01590B/1424236.png';
+        this.skillIcons['Glyph of Elemental Power (Fire)'] = 'https://render.guildwars2.com/file/0805084EF739CEDD5C9678561C331D7F0B01590B/1424236.png';
         this.skillIcons['Glyph of Elemental Power (Water)'] = 'https://render.guildwars2.com/file/BB18F50D1F7E7F59BFCBC521F6EBD9754522B22D/1424237.png';
-        this.skillIcons['Glyph of Elemental Power (Air)']   = 'https://render.guildwars2.com/file/B4E00C980DE7F1CB0BE62F3901EB031067F302F3/1424234.png';
+        this.skillIcons['Glyph of Elemental Power (Air)'] = 'https://render.guildwars2.com/file/B4E00C980DE7F1CB0BE62F3901EB031067F302F3/1424234.png';
         this.skillIcons['Glyph of Elemental Power (Earth)'] = 'https://render.guildwars2.com/file/C8AEFA0A46F573F37E7902257772AD9A5E742BBD/1424235.png';
     }
 
