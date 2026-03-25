@@ -1005,6 +1005,7 @@ export class SimulationEngine {
                 weaveSelfVisited: [...S.weaveSelfVisited],
                 perfectWeaveUntil: S.perfectWeaveUntil,
                 permaBoons: S.permaBoons || {},
+                _hasTranscendentTempest: S._hasTranscendentTempest,
             },
         };
 
