@@ -281,28 +281,26 @@ export const UTILITY_DATA = {
 export const UTILITY_NAMES = Object.keys(UTILITY_DATA);
 
 // ─── Weapon Data ──────────────────────────────────────────────────────────────
-// wielding: 1 = main-hand/off-hand, 2 = two-handed, '-' = special
+// wielding: 'mh' = main-hand only, 'oh' = off-hand only,
+//           'mh+oh' = either hand, '2h' = two-handed, '-' = special
 export const WEAPON_DATA = {
-    Axe: { wielding: '1', weaponStrength: 1000 },
-    Dagger: { wielding: '1', weaponStrength: 1000 },
-    Mace: { wielding: '1', weaponStrength: 1000 },
-    Pistol: { wielding: '1', weaponStrength: 1000 },
-    Sword: { wielding: '1', weaponStrength: 1000 },
-    Scepter: { wielding: '1', weaponStrength: 1000 },
-    Focus: { wielding: '1', weaponStrength: 900 },
-    Shield: { wielding: '1', weaponStrength: 900 },
-    Torch: { wielding: '1', weaponStrength: 900 },
-    Warhorn: { wielding: '1', weaponStrength: 900 },
-    Greatsword: { wielding: '2', weaponStrength: 1100 },
-    Hammer: { wielding: '2', weaponStrength: 1100 },
-    Longbow: { wielding: '2', weaponStrength: 1050 },
-    Rifle: { wielding: '2', weaponStrength: 1150 },
-    'Short bow': { wielding: '2', weaponStrength: 1000 },
-    Staff: { wielding: '2', weaponStrength: 1100 },
-    Spear: { wielding: '2', weaponStrength: 1000 },
-    Unequipped: { wielding: '-', weaponStrength: 690.5 },
-    'Profession mechanic': { wielding: '-', weaponStrength: 1100 },
-    'Conjured Weapon': { wielding: '2', weaponStrength: 968.5 },
+    // Main-hand only
+    Pistol:   { wielding: 'mh',    weaponStrength: 1000 },
+    Sword:    { wielding: 'mh',    weaponStrength: 1000 },
+    Scepter:  { wielding: 'mh',    weaponStrength: 1000 },
+    // Main-hand or off-hand
+    Dagger:   { wielding: 'mh+oh', weaponStrength: 1000 },
+    // Off-hand only
+    Focus:    { wielding: 'oh',    weaponStrength:  900 },
+    Warhorn:  { wielding: 'oh',    weaponStrength:  900 },
+    // Two-handed
+    Staff:    { wielding: '2h',    weaponStrength: 1100 },
+    Hammer:   { wielding: '2h',    weaponStrength: 1100 },
+    Spear:    { wielding: '2h',    weaponStrength: 1000 },
+    // Special / internal
+    Unequipped:            { wielding: '-',  weaponStrength:  690.5 },
+    'Profession mechanic': { wielding: '-',  weaponStrength: 1100 },
+    'Conjured Weapon':     { wielding: '2h', weaponStrength:  968.5 },
 };
 
 // ─── Sigil Data ───────────────────────────────────────────────────────────────

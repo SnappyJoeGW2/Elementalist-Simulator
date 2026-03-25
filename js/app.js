@@ -71,7 +71,9 @@ const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
 const ATTUNEMENT_COLORS = {
     Fire: '#e05530', Water: '#4488cc', Air: '#c06ad0', Earth: '#aa7744',
 };
-const TH_WEAPONS = new Set(['Staff', 'Greatsword', 'Hammer', 'Longbow', 'Rifle', 'Short bow', 'Spear']);
+const TH_WEAPONS = new Set(
+    Object.entries(WEAPON_DATA).filter(([, d]) => d.wielding === '2h').map(([k]) => k)
+);
 const CONJURE_MAP = {
     'Conjure Frost Bow': 'Frost Bow',
     'Conjure Lightning Hammer': 'Lightning Hammer',
@@ -423,13 +425,15 @@ class App {
     }
 
     _getMHTypes() {
-        return Object.keys(WEAPON_DATA).filter(t =>
-            t !== 'Unequipped' && t !== 'Profession mechanic' && t !== 'Conjured Weapon');
+        return Object.entries(WEAPON_DATA)
+            .filter(([, d]) => d.wielding === 'mh' || d.wielding === 'mh+oh' || d.wielding === '2h')
+            .map(([k]) => k);
     }
 
     _getOHTypes() {
-        return Object.keys(WEAPON_DATA).filter(t =>
-            !TH_WEAPONS.has(t) && t !== 'Unequipped' && t !== 'Profession mechanic' && t !== 'Conjured Weapon');
+        return Object.entries(WEAPON_DATA)
+            .filter(([, d]) => d.wielding === 'oh' || d.wielding === 'mh+oh')
+            .map(([k]) => k);
     }
 
     // ─── Attributes ───
