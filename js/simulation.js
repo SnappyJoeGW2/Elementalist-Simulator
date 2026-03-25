@@ -643,13 +643,10 @@ export class SimulationEngine {
             const ev = S.eq.shift();
             if (deathTime !== null && ev.time > deathTime) break;
             if (stopAtTime !== null && ev.time > stopAtTime) break;
+            // No-kill mode: stop at end of last skill's cast animation.
+            // Trailing condition ticks beyond the rotation are excluded.
+            if (tgtHP === Infinity && stopAtTime === null && ev.time > rotEnd) break;
 
-            // Track when damage is first and last dealt.
-            // firstHitTime → DPS window start (mirrors GW2 golem benchmarks: timer begins at
-            //   the first damaging hit, not at the start of the first cast animation).
-            // lastHitTime  → DPS window end, so skills with long-lasting ticks/pulses that
-            //   extend beyond the cast time (e.g. Glyph of Storms) are measured over their
-            //   full damage duration rather than just the cast window.
             if ((ev.type === 'hit' && ev.dmg > 0) || ev.type === 'ctick') {
                 if (S.firstHitTime === null) S.firstHitTime = ev.time;
                 S.lastHitTime = ev.time;
@@ -997,14 +994,11 @@ export class SimulationEngine {
         // rotation hit.  In-game DPS meters count real damage, not boss max-HP.
         const effectiveDmg = total;
         // DPS window: [firstHitTime, effectiveEnd]
-        //   start — first damaging hit (mirrors GW2 golem benchmark; excludes pre-cast time)
-        //   end   — whichever is latest: rotation end OR last damaging hit (so skills with
-        //           long ticks/pulses beyond the cast, e.g. Glyph of Storms, are measured
-        //           over their full damage duration, not just the cast window)
+        //   start  — first damaging hit (mirrors GW2 golem benchmark; excludes pre-cast time)
+        //   end    — kill mode: timestamp of the killing hit/tick (overkill damage included)
+        //            no-kill:   end of the last skill's cast animation (rotEnd)
         const dpsStart = S.firstHitTime ?? 0;
-        const effectiveEnd = deathTime !== null
-            ? deathTime
-            : Math.max(rotEnd, S.lastHitTime ?? rotEnd);
+        const effectiveEnd = deathTime !== null ? deathTime : rotEnd;
         const dpsWindowMs = effectiveEnd - dpsStart;
         S.log.sort((a, b) => a.t - b.t);
 

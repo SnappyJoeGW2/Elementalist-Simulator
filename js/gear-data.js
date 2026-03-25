@@ -311,7 +311,7 @@ export const WEAPON_DATA = {
 export const SIGIL_DATA = {
     Accuracy: { criticalChance: 7 },
     Force: { strikeDamageM: 5 },
-    Bursting: { conditionDamageM: 5 },
+    Bursting: { conditionDamageA: 5 },
     Malice: { conditionDuration: 10 },
     Agony: { bleedingDuration: 20 },
     Smoldering: { burningDuration: 20 },
