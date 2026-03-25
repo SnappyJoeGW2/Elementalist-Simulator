@@ -2728,9 +2728,10 @@ export class SimulationEngine {
             insertSorted(S.eq, { time: time + 1000, type: 'ctick', cond });
         }
 
+        const activeAtTime = cs.stacks.filter(s => s.t <= time && s.expiresAt > time).length;
         S.log.push({
             t: time, type: 'cond_apply', cond, stacks, durMs: adjMs,
-            total: cs.stacks.length, skill: skillName,
+            total: activeAtTime, skill: skillName,
         });
 
         if (S.activeRelic === 'Blightbringer' && (cond === 'Poisoned' || cond === 'Poison')) {
