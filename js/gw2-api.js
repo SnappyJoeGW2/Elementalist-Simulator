@@ -1,0 +1,168 @@
+const API_BASE = 'https://api.guildwars2.com/v2';
+const CACHE_KEY = 'gw2_icon_cache_v7';
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+
+const EXTRA_ELEM_SKILL_IDS = [
+    // Tempest: overloads, shouts
+    29415,29535,29548,29618,29706,29719,29948,29968,30008,30047,30336,30432,30662,
+    30446,30795,30864,29453,
+    // Glyph variants, Weaver/Catalyst/Evoker skills
+    34609,34637,34651,34714,34724,34736,34743,34772,
+    35304,37873,40229,40326,43080,43199,43657,44637,44918,45216,45259,45983,46024,
+    49056,50447,51646,51662,51684,51711,
+    62694,62723,62813,62837,62862,62876,62940,65179,71796,71907,
+    // Evoker familiars: Ignite, Splash, Zap, Calcify
+    76643,77225,77370,77226,
+    // Conjured weapons: Frost Bow, Lightning Hammer, Fiery Greatsword
+    5517,5531,5532,5533,5568,5595,5625,5697,5720,5721,5723,5725,5726,5727,5728,5733,
+];
+
+export class GW2API {
+    constructor() {
+        this.skillIcons = {};
+        this.traitIcons = {};
+        this.specData = {};
+        this.ready = false;
+    }
+
+    async init() {
+        if (this._loadCache()) {
+            this.ready = true;
+            return;
+        }
+        try {
+            await this._fetchAll();
+            this._saveCache();
+            this.ready = true;
+        } catch (e) {
+            console.warn('GW2 API fetch failed, icons will use placeholders:', e);
+        }
+    }
+
+    _loadCache() {
+        try {
+            const raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            if (Date.now() - data.ts > CACHE_TTL) return false;
+            this.skillIcons = data.skillIcons || {};
+            this.traitIcons = data.traitIcons || {};
+            this.specData = data.specData || {};
+            return true;
+        } catch { return false; }
+    }
+
+    _saveCache() {
+        const data = {
+            ts: Date.now(),
+            skillIcons: this.skillIcons,
+            traitIcons: this.traitIcons,
+            specData: this.specData,
+        };
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+    }
+
+    async _fetchJSON(url) {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error(`API ${r.status}: ${url}`);
+        return r.json();
+    }
+
+    async _fetchBatch(endpoint, ids) {
+        const results = [];
+        for (let i = 0; i < ids.length; i += 200) {
+            const batch = ids.slice(i, i + 200).join(',');
+            const data = await this._fetchJSON(`${API_BASE}/${endpoint}?ids=${batch}`);
+            results.push(...data);
+        }
+        return results;
+    }
+
+    async _fetchAll() {
+        const prof = await this._fetchJSON(`${API_BASE}/professions/Elementalist`);
+
+        const skillIds = new Set();
+        for (const s of (prof.skills || [])) {
+            skillIds.add(typeof s === 'object' ? s.id : s);
+        }
+        for (const [, weaponInfo] of Object.entries(prof.weapons || {})) {
+            for (const s of (weaponInfo.skills || [])) {
+                skillIds.add(s.id);
+            }
+        }
+        for (const track of (prof.training || [])) {
+            for (const item of (track.track || [])) {
+                if (item.type === 'Skill' && item.skill_id) skillIds.add(item.skill_id);
+            }
+        }
+
+        const specIds = prof.specializations || [];
+        const specs = await this._fetchBatch('specializations', specIds);
+
+        const traitIds = new Set();
+        for (const spec of specs) {
+            this.specData[spec.name] = {
+                id: spec.id,
+                icon: spec.icon || '',
+                background: spec.background || '',
+                elite: spec.elite || false,
+                minorTraits: spec.minor_traits || [],
+                majorTraits: spec.major_traits || [],
+            };
+            for (const t of [...(spec.minor_traits || []), ...(spec.major_traits || [])]) {
+                traitIds.add(t);
+            }
+            if (spec.elite && spec.skills_by_palette) {
+                for (const s of spec.skills_by_palette) skillIds.add(s[1]);
+            }
+        }
+
+        for (const id of EXTRA_ELEM_SKILL_IDS) skillIds.add(id);
+
+        const skills = await this._fetchBatch('skills', [...skillIds]);
+        for (const s of skills) {
+            this.skillIcons[s.name] = s.icon || '';
+        }
+
+        const traits = await this._fetchBatch('traits', [...traitIds]);
+        for (const t of traits) {
+            this.traitIcons[t.name] = t.icon || '';
+        }
+
+        this.skillIcons['Deploy Jade Sphere (Fire)']  = 'https://render.guildwars2.com/file/22CA7C0F420C7F61CEBFA323DF3AADC5EF237475/2491598.png';
+        this.skillIcons['Deploy Jade Sphere (Water)'] = 'https://render.guildwars2.com/file/6016319AAF18417F0401800EF36C0F18E207FFD5/2491600.png';
+        this.skillIcons['Deploy Jade Sphere (Air)']   = 'https://render.guildwars2.com/file/07D9C76FEB07BB04B9D07A05D87C09A0A0AE0319/2491594.png';
+        this.skillIcons['Deploy Jade Sphere (Earth)'] = 'https://render.guildwars2.com/file/97BEF22148DDA3159B4CF6DB18ECFEDE7107710B/2491596.png';
+    }
+
+    getSkillIcon(name) {
+        if (this.skillIcons[name]) return this.skillIcons[name];
+        const base = name.replace(/\s*\(.*\)$/, '');
+        if (this.skillIcons[base]) return this.skillIcons[base];
+        const quoted = `\u201C${name}\u201D`;
+        if (this.skillIcons[quoted]) return this.skillIcons[quoted];
+        const dquoted = `"${name}"`;
+        if (this.skillIcons[dquoted]) return this.skillIcons[dquoted];
+        if (this.skillIcons[name + '!']) return this.skillIcons[name + '!'];
+        const baseQuoted = `\u201C${base}\u201D`;
+        if (this.skillIcons[baseQuoted]) return this.skillIcons[baseQuoted];
+        const baseDquoted = `"${base}"`;
+        if (this.skillIcons[baseDquoted]) return this.skillIcons[baseDquoted];
+        return null;
+    }
+
+    getTraitIcon(name) {
+        return this.traitIcons[name] || null;
+    }
+
+    getSpecData(name) {
+        return this.specData[name] || null;
+    }
+}
+
+export const PLACEHOLDER_ICON = 'data:image/svg+xml,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="8" fill="#2a2a3a"/>
+        <text x="32" y="36" text-anchor="middle" fill="#666" font-size="12">?</text>
+    </svg>`
+);

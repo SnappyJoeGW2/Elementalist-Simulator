@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>GW2 DPS Calculator</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <div id="loading-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <div id="loading-status">Initializing...</div>
+        </div>
+    </div>
+
+    <div id="app">
+        <header>
+            <h1>GW2 <span class="accent">DPS</span> Calculator</h1>
+        </header>
+
+        <section class="build-section">
+            <div class="build-left">
+                <div class="panel gear-panel">
+                    <div class="panel-hdr">
+                        <h3>Gear</h3>
+                        <div class="build-io-btns">
+                            <button id="btn-export-build" class="btn btn-io" title="Download build as JSON">⬇ Export</button>
+                            <button id="btn-import-build" class="btn btn-io" title="Load build from JSON file">⬆ Import</button>
+                            <input type="file" id="import-file-input" accept=".json" style="display:none" />
+                        </div>
+                    </div>
+                    <div class="gear-columns">
+                        <div id="gear-slots" class="gear-col"></div>
+                        <div class="gear-col-right">
+                            <div id="equipment-info"></div>
+                            <div id="weapon-select" class="weapon-select"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="traits-panel" class="traits-panel-inline"></div>
+            </div>
+            <div class="panel attributes-panel">
+                <h3>Attributes</h3>
+                <div id="attributes-list"></div>
+                <div id="conditions-panel" class="conditions-panel"></div>
+            </div>
+        </section>
+
+        <section class="skills-section">
+            <div class="panel skills-panel-left">
+                <div id="attunement-bar" class="attunement-bar"></div>
+                <div id="weapon-bar" class="weapon-bar"></div>
+                <div class="skill-bar-label">Skill Bar</div>
+                <div id="skill-bar" class="skill-bar"></div>
+            </div>
+            <div class="panel skills-panel-right">
+                <h3>Skill Damage</h3>
+                <div id="skill-info-table"></div>
+            </div>
+        </section>
+
+        <section class="perma-section">
+            <div class="panel perma-panel">
+                <h3>Permanent Boons &amp; Conditions</h3>
+                <div id="perma-boons"></div>
+            </div>
+        </section>
+
+        <section class="rotation-section">
+            <div class="panel rotation-panel">
+                <h3>Rotation Builder</h3>
+                <div id="rotation-palette" class="rotation-palette"></div>
+                <p class="palette-hint">Click to add to rotation &nbsp;·&nbsp; <b>Shift+click</b> an instant-cast skill to fire it mid-animation of the previous skill</p>
+                <div class="rotation-mid">
+                    <div class="rotation-tl-label">Rotation</div>
+                    <div id="start-att-selector" class="start-att-selector"></div>
+                    <div class="rotation-btns">
+                        <button id="btn-sim-clear" class="btn btn-clear">✕ Clear</button>
+                        <button id="btn-export-rotation" class="btn btn-io">↓ Save Rotation</button>
+                        <button id="btn-import-rotation" class="btn btn-io">↑ Load Rotation</button>
+                        <input type="file" id="rotation-file-input" accept=".json" style="display:none" />
+                        <div class="target-hp-wrap">
+                            <label for="target-hp">Target HP</label>
+                            <input type="number" id="target-hp" value="4000000" min="0" step="100000" />
+                        </div>
+                    </div>
+                </div>
+                <div id="rotation-timeline" class="rotation-timeline"></div>
+            </div>
+            <div id="rotation-results" class="rotation-results"></div>
+        </section>
+
+        <!-- ── Gear Optimizer ── -->
+        <section id="optimizer-section" class="panel optimizer-panel hidden">
+            <div class="opt-header">
+                <h3>Gear Optimizer</h3>
+                <span class="opt-hint">Selects the best combination of gear from your allowed options using your current rotation.</span>
+            </div>
+
+            <!-- Search Space -->
+            <div class="opt-spaces">
+                <!-- Prefixes -->
+                <div class="opt-space-block">
+                    <div class="opt-space-label">
+                        <span>Gear Prefixes <span class="opt-max-note">(max 3)</span></span>
+                        <span class="opt-space-actions">
+                            <button class="opt-selall" data-group="prefix">All</button>
+                            <button class="opt-deselall" data-group="prefix">None</button>
+                        </span>
+                    </div>
+                    <div class="opt-check-grid" id="opt-prefixes"></div>
+                </div>
+                <!-- Runes -->
+                <div class="opt-space-block">
+                    <div class="opt-space-label">
+                        <span>Runes</span>
+                        <span class="opt-space-actions">
+                            <button class="opt-selall" data-group="rune">All</button>
+                            <button class="opt-deselall" data-group="rune">None</button>
+                        </span>
+                    </div>
+                    <div class="opt-check-grid" id="opt-runes"></div>
+                </div>
+                <!-- Sigils -->
+                <div class="opt-space-block">
+                    <div class="opt-space-label">
+                        <span>Sigils <span class="opt-max-note">(pool for both slots)</span></span>
+                        <span class="opt-space-actions">
+                            <button class="opt-selall" data-group="sigil">All</button>
+                            <button class="opt-deselall" data-group="sigil">None</button>
+                        </span>
+                    </div>
+                    <div class="opt-check-grid" id="opt-sigils"></div>
+                </div>
+                <!-- Relics -->
+                <div class="opt-space-block">
+                    <div class="opt-space-label">
+                        <span>Relics</span>
+                        <span class="opt-space-actions">
+                            <button class="opt-selall" data-group="relic">All</button>
+                            <button class="opt-deselall" data-group="relic">None</button>
+                        </span>
+                    </div>
+                    <div class="opt-check-grid" id="opt-relics"></div>
+                </div>
+                <!-- Food -->
+                <div class="opt-space-block">
+                    <div class="opt-space-label">
+                        <span>Food</span>
+                        <span class="opt-space-actions">
+                            <button class="opt-selall" data-group="food">All</button>
+                            <button class="opt-deselall" data-group="food">None</button>
+                        </span>
+                    </div>
+                    <div class="opt-check-grid" id="opt-food"></div>
+                </div>
+                <!-- Utility -->
+                <div class="opt-space-block">
+                    <div class="opt-space-label">
+                        <span>Utility</span>
+                        <span class="opt-space-actions">
+                            <button class="opt-selall" data-group="utility">All</button>
+                            <button class="opt-deselall" data-group="utility">None</button>
+                        </span>
+                    </div>
+                    <div class="opt-check-grid" id="opt-utility"></div>
+                </div>
+                <!-- Infusions -->
+                <div class="opt-space-block">
+                    <div class="opt-space-label">
+                        <span>Infusions</span>
+                        <span class="opt-space-actions">
+                            <button class="opt-selall" data-group="infusion">All</button>
+                            <button class="opt-deselall" data-group="infusion">None</button>
+                        </span>
+                    </div>
+                    <div class="opt-inf-row">
+                        <label class="opt-inf-count-label">
+                            Total:
+                            <input type="number" id="opt-inf-total" min="0" max="18" value="18" class="opt-inf-count">
+                        </label>
+                        <span class="opt-inf-hint">Select stat types to mix</span>
+                    </div>
+                    <div class="opt-check-grid" id="opt-infusions"></div>
+                </div>
+            </div>
+
+            <!-- Run controls -->
+            <div class="opt-controls">
+                <button id="btn-opt-run" class="opt-run-btn">▶ Optimize</button>
+                <button id="btn-opt-cancel" class="opt-cancel-btn hidden">■ Cancel</button>
+                <div id="opt-progress-wrap" class="opt-progress-wrap hidden">
+                    <div class="opt-progress-bar"><div id="opt-progress-fill" class="opt-progress-fill"></div></div>
+                    <span id="opt-progress-label" class="opt-progress-label">0 / 0 evaluations</span>
+                </div>
+                <button id="btn-opt-export" class="opt-export-btn hidden">↓ Export JSON</button>
+            </div>
+
+            <!-- Results -->
+            <div id="opt-results" class="opt-results hidden">
+                <div class="opt-results-hdr">
+                    <span>#</span><span>DPS</span><span>Gear Mix</span>
+                    <span>Rune</span><span>Relic</span><span>Sigils</span>
+                    <span>Food</span><span>Utility</span><span>Infusions</span><span></span>
+                </div>
+                <div id="opt-results-body"></div>
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

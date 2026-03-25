@@ -1,0 +1,340 @@
+// ─── Static GW2 Data ───────────────────────────────────────────────────────
+// Derived from user's curated CSV data and validated against Discretize Gear Optimizer.
+// Ascended stat values. Prefixes and items limited to those relevant for
+// Elementalist DPS/condi builds.
+
+export const GEAR_SLOTS = [
+    'Helm', 'Shoulders', 'Chest', 'Gloves', 'Leggins', 'Boots',
+    'Amulet', 'Ring1', 'Ring2', 'Accessory1', 'Accessory2', 'Back',
+    'Weapon1', 'Weapon2',
+];
+
+export const WEAPON_SLOTS = new Set(['Weapon1', 'Weapon2']);
+
+// GEAR_STATS[prefix][slot] → { stat: value, ... }
+export const GEAR_STATS = {
+    "Berserker's": {
+        Helm:       { Power: 63,  Precision: 45,  Ferocity: 45 },
+        Shoulders:  { Power: 47,  Precision: 34,  Ferocity: 34 },
+        Chest:      { Power: 141, Precision: 101, Ferocity: 101 },
+        Gloves:     { Power: 47,  Precision: 34,  Ferocity: 34 },
+        Leggins:    { Power: 94,  Precision: 67,  Ferocity: 67 },
+        Boots:      { Power: 47,  Precision: 34,  Ferocity: 34 },
+        Amulet:     { Power: 157, Precision: 108, Ferocity: 108 },
+        Ring1:      { Power: 126, Precision: 85,  Ferocity: 85 },
+        Ring2:      { Power: 126, Precision: 85,  Ferocity: 85 },
+        Accessory1: { Power: 110, Precision: 74,  Ferocity: 74 },
+        Accessory2: { Power: 110, Precision: 74,  Ferocity: 74 },
+        Back:       { Power: 63,  Precision: 40,  Ferocity: 40 },
+        Weapon1:    { Power: 125, Precision: 90,  Ferocity: 90 },
+        Weapon2:    { Power: 125, Precision: 90,  Ferocity: 90 },
+    },
+    "Assassin's": {
+        Helm:       { Power: 45,  Precision: 63,  Ferocity: 45 },
+        Shoulders:  { Power: 34,  Precision: 47,  Ferocity: 34 },
+        Chest:      { Power: 101, Precision: 141, Ferocity: 101 },
+        Gloves:     { Power: 34,  Precision: 47,  Ferocity: 34 },
+        Leggins:    { Power: 67,  Precision: 94,  Ferocity: 67 },
+        Boots:      { Power: 34,  Precision: 47,  Ferocity: 34 },
+        Amulet:     { Power: 108, Precision: 157, Ferocity: 108 },
+        Ring1:      { Power: 85,  Precision: 126, Ferocity: 85 },
+        Ring2:      { Power: 85,  Precision: 126, Ferocity: 85 },
+        Accessory1: { Power: 74,  Precision: 110, Ferocity: 74 },
+        Accessory2: { Power: 74,  Precision: 110, Ferocity: 74 },
+        Back:       { Power: 40,  Precision: 63,  Ferocity: 40 },
+        Weapon1:    { Power: 90,  Precision: 125, Ferocity: 90 },
+        Weapon2:    { Power: 90,  Precision: 125, Ferocity: 90 },
+    },
+    "Diviner's": {
+        Helm:       { Power: 54,  Precision: 30,  Ferocity: 30,  Concentration: 54 },
+        Shoulders:  { Power: 40,  Precision: 22,  Ferocity: 22,  Concentration: 40 },
+        Chest:      { Power: 121, Precision: 67,  Ferocity: 67,  Concentration: 121 },
+        Gloves:     { Power: 40,  Precision: 22,  Ferocity: 22,  Concentration: 40 },
+        Leggins:    { Power: 81,  Precision: 44,  Ferocity: 44,  Concentration: 81 },
+        Boots:      { Power: 40,  Precision: 22,  Ferocity: 22,  Concentration: 40 },
+        Amulet:     { Power: 133, Precision: 71,  Ferocity: 71,  Concentration: 133 },
+        Ring1:      { Power: 106, Precision: 56,  Ferocity: 56,  Concentration: 106 },
+        Ring2:      { Power: 106, Precision: 56,  Ferocity: 56,  Concentration: 106 },
+        Accessory1: { Power: 92,  Precision: 49,  Ferocity: 49,  Concentration: 92 },
+        Accessory2: { Power: 92,  Precision: 49,  Ferocity: 49,  Concentration: 92 },
+        Back:       { Power: 52,  Precision: 27,  Ferocity: 27,  Concentration: 52 },
+        Weapon1:    { Power: 108, Precision: 59,  Ferocity: 59,  Concentration: 108 },
+        Weapon2:    { Power: 108, Precision: 59,  Ferocity: 59,  Concentration: 108 },
+    },
+    "Viper's": {
+        Helm:       { Power: 54,  Precision: 30,  'Condition Damage': 54,  Expertise: 30 },
+        Shoulders:  { Power: 40,  Precision: 22,  'Condition Damage': 40,  Expertise: 22 },
+        Chest:      { Power: 121, Precision: 67,  'Condition Damage': 121, Expertise: 67 },
+        Gloves:     { Power: 40,  Precision: 22,  'Condition Damage': 40,  Expertise: 22 },
+        Leggins:    { Power: 81,  Precision: 44,  'Condition Damage': 81,  Expertise: 44 },
+        Boots:      { Power: 40,  Precision: 22,  'Condition Damage': 40,  Expertise: 22 },
+        Amulet:     { Power: 133, Precision: 71,  'Condition Damage': 133, Expertise: 71 },
+        Ring1:      { Power: 106, Precision: 56,  'Condition Damage': 106, Expertise: 56 },
+        Ring2:      { Power: 106, Precision: 56,  'Condition Damage': 106, Expertise: 56 },
+        Accessory1: { Power: 92,  Precision: 49,  'Condition Damage': 92,  Expertise: 49 },
+        Accessory2: { Power: 92,  Precision: 49,  'Condition Damage': 92,  Expertise: 49 },
+        Back:       { Power: 52,  Precision: 27,  'Condition Damage': 52,  Expertise: 27 },
+        Weapon1:    { Power: 108, Precision: 59,  'Condition Damage': 108, Expertise: 59 },
+        Weapon2:    { Power: 108, Precision: 59,  'Condition Damage': 108, Expertise: 59 },
+    },
+    'Grieving': {
+        Helm:       { Power: 54,  Precision: 30,  Ferocity: 30,  'Condition Damage': 54 },
+        Shoulders:  { Power: 40,  Precision: 22,  Ferocity: 22,  'Condition Damage': 40 },
+        Chest:      { Power: 121, Precision: 67,  Ferocity: 67,  'Condition Damage': 121 },
+        Gloves:     { Power: 40,  Precision: 22,  Ferocity: 22,  'Condition Damage': 40 },
+        Leggins:    { Power: 81,  Precision: 44,  Ferocity: 44,  'Condition Damage': 81 },
+        Boots:      { Power: 40,  Precision: 22,  Ferocity: 22,  'Condition Damage': 40 },
+        Amulet:     { Power: 133, Precision: 71,  Ferocity: 71,  'Condition Damage': 133 },
+        Ring1:      { Power: 106, Precision: 56,  Ferocity: 56,  'Condition Damage': 106 },
+        Ring2:      { Power: 106, Precision: 56,  Ferocity: 56,  'Condition Damage': 106 },
+        Accessory1: { Power: 92,  Precision: 49,  Ferocity: 49,  'Condition Damage': 92 },
+        Accessory2: { Power: 92,  Precision: 49,  Ferocity: 49,  'Condition Damage': 92 },
+        Back:       { Power: 52,  Precision: 27,  Ferocity: 27,  'Condition Damage': 52 },
+        Weapon1:    { Power: 108, Precision: 59,  Ferocity: 59,  'Condition Damage': 108 },
+        Weapon2:    { Power: 108, Precision: 59,  Ferocity: 59,  'Condition Damage': 108 },
+    },
+    'Sinister': {
+        Helm:       { Power: 45,  Precision: 45,  'Condition Damage': 63 },
+        Shoulders:  { Power: 34,  Precision: 34,  'Condition Damage': 47 },
+        Chest:      { Power: 101, Precision: 101, 'Condition Damage': 141 },
+        Gloves:     { Power: 34,  Precision: 34,  'Condition Damage': 47 },
+        Leggins:    { Power: 67,  Precision: 67,  'Condition Damage': 94 },
+        Boots:      { Power: 34,  Precision: 34,  'Condition Damage': 47 },
+        Amulet:     { Power: 108, Precision: 108, 'Condition Damage': 157 },
+        Ring1:      { Power: 85,  Precision: 85,  'Condition Damage': 126 },
+        Ring2:      { Power: 85,  Precision: 85,  'Condition Damage': 126 },
+        Accessory1: { Power: 74,  Precision: 74,  'Condition Damage': 110 },
+        Accessory2: { Power: 74,  Precision: 74,  'Condition Damage': 110 },
+        Back:       { Power: 40,  Precision: 40,  'Condition Damage': 63 },
+        Weapon1:    { Power: 90,  Precision: 90,  'Condition Damage': 125 },
+        Weapon2:    { Power: 90,  Precision: 90,  'Condition Damage': 125 },
+    },
+    'Celestial': {
+        Helm:       { Power: 30, Precision: 30, Ferocity: 30, Concentration: 30, 'Condition Damage': 30, Expertise: 30, Toughness: 30 },
+        Shoulders:  { Power: 22, Precision: 22, Ferocity: 22, Concentration: 22, 'Condition Damage': 22, Expertise: 22, Toughness: 22 },
+        Chest:      { Power: 67, Precision: 67, Ferocity: 67, Concentration: 67, 'Condition Damage': 67, Expertise: 67, Toughness: 67 },
+        Gloves:     { Power: 22, Precision: 22, Ferocity: 22, Concentration: 22, 'Condition Damage': 22, Expertise: 22, Toughness: 22 },
+        Leggins:    { Power: 44, Precision: 44, Ferocity: 44, Concentration: 44, 'Condition Damage': 44, Expertise: 44, Toughness: 44 },
+        Boots:      { Power: 22, Precision: 22, Ferocity: 22, Concentration: 22, 'Condition Damage': 22, Expertise: 22, Toughness: 22 },
+        Amulet:     { Power: 72, Precision: 72, Ferocity: 72, Concentration: 72, 'Condition Damage': 72, Expertise: 72, Toughness: 72 },
+        Ring1:      { Power: 57, Precision: 57, Ferocity: 57, Concentration: 57, 'Condition Damage': 57, Expertise: 57, Toughness: 57 },
+        Ring2:      { Power: 57, Precision: 57, Ferocity: 57, Concentration: 57, 'Condition Damage': 57, Expertise: 57, Toughness: 57 },
+        Accessory1: { Power: 50, Precision: 50, Ferocity: 50, Concentration: 50, 'Condition Damage': 50, Expertise: 50, Toughness: 50 },
+        Accessory2: { Power: 50, Precision: 50, Ferocity: 50, Concentration: 50, 'Condition Damage': 50, Expertise: 50, Toughness: 50 },
+        Back:       { Power: 28, Precision: 28, Ferocity: 28, Concentration: 28, 'Condition Damage': 28, Expertise: 28, Toughness: 28 },
+        Weapon1:    { Power: 59, Precision: 59, Ferocity: 59, Concentration: 59, 'Condition Damage': 59, Expertise: 59, Toughness: 59 },
+        Weapon2:    { Power: 59, Precision: 59, Ferocity: 59, Concentration: 59, 'Condition Damage': 59, Expertise: 59, Toughness: 59 },
+    },
+    "Dragon's": {
+        Helm:       { Power: 54,  Precision: 30,  Ferocity: 54,  Vitality: 30 },
+        Shoulders:  { Power: 40,  Precision: 22,  Ferocity: 40,  Vitality: 22 },
+        Chest:      { Power: 121, Precision: 67,  Ferocity: 121, Vitality: 67 },
+        Gloves:     { Power: 40,  Precision: 22,  Ferocity: 40,  Vitality: 22 },
+        Leggins:    { Power: 81,  Precision: 44,  Ferocity: 81,  Vitality: 44 },
+        Boots:      { Power: 40,  Precision: 22,  Ferocity: 40,  Vitality: 22 },
+        Amulet:     { Power: 133, Precision: 71,  Ferocity: 133, Vitality: 71 },
+        Ring1:      { Power: 106, Precision: 56,  Ferocity: 106, Vitality: 56 },
+        Ring2:      { Power: 106, Precision: 56,  Ferocity: 106, Vitality: 56 },
+        Accessory1: { Power: 92,  Precision: 49,  Ferocity: 92,  Vitality: 49 },
+        Accessory2: { Power: 92,  Precision: 49,  Ferocity: 92,  Vitality: 49 },
+        Back:       { Power: 52,  Precision: 27,  Ferocity: 52,  Vitality: 27 },
+        Weapon1:    { Power: 108, Precision: 59,  Ferocity: 108, Vitality: 59 },
+        Weapon2:    { Power: 108, Precision: 59,  Ferocity: 108, Vitality: 59 },
+    },
+};
+
+export const PREFIXES = Object.keys(GEAR_STATS);
+
+// ─── Base Stats (level 80) ────────────────────────────────────────────────────
+export const BASE_STATS = {
+    Power: 1000, Precision: 1000, Toughness: 1000, Vitality: 1000,
+};
+
+// ─── Jade Bot Core ────────────────────────────────────────────────────────────
+// Tier 10 JBC adds Vitality. In-game this IS included in the conversion pool
+// (trait conversions like Elements of Rage operate on full stats including JBC).
+export const JBC_BONUS = { Vitality: 235 };
+
+// ─── Infusions ────────────────────────────────────────────────────────────────
+export const INFUSION_BONUS = 5;
+export const INFUSION_STATS = [
+    'Power', 'Precision', 'Condition Damage', 'Expertise',
+    'Concentration', 'Healing Power', 'Vitality', 'Toughness',
+];
+
+// ─── Rune Data ────────────────────────────────────────────────────────────────
+// stats: flat attribute bonuses (feed into conversion pool, treated as "converted")
+// durations: percentage bonuses stored as numbers (e.g. 25 = 25%)
+export const RUNE_DATA = {
+    // ── Power ──
+    'Fireworks':    { stats: { Power: 175 },                                  durations: { 'Boon Duration': 25 } },
+    'Pack':         { stats: { Power: 175, Precision: 125 },                  durations: { 'Boon Duration': 15 } },
+    'Strength':     { stats: { Power: 175 },                                  durations: { 'Might Duration': 50 } },
+    'Fire':         { stats: { Power: 175 },                                  durations: { 'Burning Duration': 20, 'Might Duration': 30 } },
+    'Mad King':     { stats: { Power: 175 },                                  durations: { 'Bleeding Duration': 40, 'Condition Duration': 5 } },
+    'Flame Legion': { stats: { Power: 175 },                                  durations: { 'Burning Duration': 50 } },
+    'Baelfire':     { stats: { Power: 175 },                                  durations: { 'Condition Duration': 10, 'Burning Duration': 30 } },
+    'Elementalist': { stats: { Power: 175, 'Condition Damage': 225 },         durations: {} },
+    'Scholar':      { stats: { Power: 175, Ferocity: 225 },                   durations: {} },
+    'Deadeye':      { stats: { Power: 175, Precision: 125, Ferocity: 100 },   durations: {} },
+    'Infiltration': { stats: { Power: 175, Precision: 225 },                  durations: {} },
+    // ── Precision ──
+    'Thief':        { stats: { Precision: 300, 'Condition Damage': 100 },     durations: {} },
+    'Eagle':        { stats: { Precision: 175, Ferocity: 225 },               durations: {} },
+    // ── Condition ──
+    'Aristocracy':  { stats: { 'Condition Damage': 175 },                     durations: { 'Might Duration': 50 } },
+    'Firebrand':    { stats: { 'Condition Damage': 175 },                     durations: { 'Boon Duration': 10, 'Quickness Duration': 30 } },
+    'Trapper':      { stats: { 'Condition Damage': 300 },                     durations: { 'Condition Duration': 15 } },
+    'Krait':        { stats: { 'Condition Damage': 175 },                     durations: { 'Bleeding Duration': 50 } },
+    'Balthazar':    { stats: { 'Condition Damage': 175 },                     durations: { 'Burning Duration': 50 } },
+    'Perplexity':   { stats: { 'Condition Damage': 175 },                     durations: { 'Confusion Duration': 50 } },
+    'Thorns':       { stats: { 'Condition Damage': 175 },                     durations: { 'Poison Duration': 50 } },
+    'Afflicted':    { stats: { 'Condition Damage': 175 },                     durations: { 'Condition Duration': 10, 'Bleeding Duration': 20, 'Poison Duration': 10 } },
+    'Tormenting':   { stats: { 'Condition Damage': 175 },                     durations: { 'Torment Duration': 50 } },
+    'Renegade':     { stats: { Ferocity: 100, 'Condition Damage': 300 },      durations: {} },
+    'Berserker':    { stats: { Power: 100, 'Condition Damage': 300 },         durations: {} },
+    'Adventurer':   { stats: { Power: 225, 'Condition Damage': 175 },         durations: {} },
+    // ── Ferocity ──
+    'Rage':         { stats: { Ferocity: 300 },                               durations: { 'Fury Duration': 30 } },
+    'Dragonhunter': { stats: { Power: 100, Ferocity: 300 },                   durations: {} },
+    'Golemancer':   { stats: { Precision: 100, Ferocity: 300 },               durations: {} },
+    // ── Misc ──
+    'Leadership':   { stats: { Power: 36, Precision: 36, Ferocity: 36, Concentration: 36, 'Condition Damage': 36, Expertise: 36, Toughness: 36, Vitality: 36 }, durations: { 'Boon Duration': 25 } },
+    'Tempest':      { stats: { Power: 36, Precision: 36, Ferocity: 36, Concentration: 36, 'Condition Damage': 36, Expertise: 36, Toughness: 36, Vitality: 36 }, durations: { 'Condition Duration': 25 } },
+    'Weaver':       { stats: { Power: 36, Precision: 36, Ferocity: 36, Concentration: 36, 'Condition Damage': 36, Expertise: 36, Toughness: 36, Vitality: 36 }, durations: { 'Condition Duration': 10, 'Burning Duration': 10 } },
+    'Divinity':     { stats: { Power: 78, Precision: 78, Ferocity: 78, Concentration: 78, 'Condition Damage': 78, Expertise: 78, Toughness: 78, Vitality: 78 }, durations: {} },
+};
+
+export const RUNE_NAMES = Object.keys(RUNE_DATA);
+
+// ─── Food Data ────────────────────────────────────────────────────────────────
+// isConverted: true  → stats feed into the conversion pool (subject to utility/trait conversions)
+// isConverted: false → stats applied after conversions as flat buffs
+// durations: percentage bonuses stored as numbers
+export const FOOD_DATA = {
+    'Plate of Jerk Poultry':                          { isConverted: true,  stats: { Power: 150 },                                    durations: {} },
+    'Plate of Truffle Steak':                         { isConverted: true,  stats: { Power: 100, Ferocity: 70 },                      durations: {} },
+    'Plate of Fire Flank Steak':                      { isConverted: true,  stats: { Power: 100, 'Condition Damage': 70 },            durations: {} },
+    'Bowl of Sweet and Spicy Butternut Squash Soup':  { isConverted: true,  stats: { Power: 100, Ferocity: 70 },                      durations: {} },
+    'Bowl of Sawgill Mushroom Risotto':               { isConverted: true,  stats: { Precision: 150 },                               durations: {} },
+    'Bowl of Fancy Potato and Leek Soup':             { isConverted: true,  stats: { Precision: 100, 'Condition Damage': 70 },        durations: {} },
+    'Bowl of Curry Butternut Squash Soup':            { isConverted: true,  stats: { Ferocity: 70, Precision: 100 },                  durations: {} },
+    'Soul Pastry':                                    { isConverted: true,  stats: { Power: 70, Concentration: 100 },                 durations: {} },
+    'Plate of Eggs Benedict':                         { isConverted: true,  stats: { Expertise: 70, Concentration: 100 },             durations: {} },
+    'Bowl of Truffle Risotto':                        { isConverted: true,  stats: { Ferocity: 70, 'Condition Damage': 100 },         durations: {} },
+    'Plate of Beef Rendang':                          { isConverted: true,  stats: { 'Condition Damage': 100, Expertise: 70 },        durations: {} },
+    'Bowl of Sweet and Spicy Beans':                  { isConverted: true,  stats: { Power: 70, 'Condition Damage': 100 },            durations: {} },
+    'Rare Veggie Pizza':                              { isConverted: true,  stats: { 'Condition Damage': 70, Expertise: 100 },        durations: {} },
+    'Fishy Rice Bowl':                                { isConverted: true,  stats: { 'Condition Damage': 70 },                        durations: { 'Burning Duration': 15 } },
+    'Bowl of Kimchi Tofu Stew':                       { isConverted: true,  stats: { 'Condition Damage': 70 },                        durations: { 'Poison Duration': 15 } },
+    'Meaty Asparagus Skewer':                         { isConverted: true,  stats: { 'Condition Damage': 70 },                        durations: { 'Torment Duration': 15 } },
+    'Meaty Rice Bowl':                                { isConverted: true,  stats: { 'Condition Damage': 70 },                        durations: { 'Bleeding Duration': 15 } },
+    'Plate of Kimchi Pancakes':                       { isConverted: true,  stats: { 'Condition Damage': 70 },                        durations: { 'Confusion Duration': 15 } },
+    "Dragon's Revelry Starcake":                      { isConverted: false, stats: { Power: 45, Ferocity: 45, Precision: 45, 'Condition Damage': 45, Expertise: 45, Vitality: 45, Toughness: 45, Concentration: 45 }, durations: {} },
+};
+
+export const FOOD_NAMES = Object.keys(FOOD_DATA);
+
+// ─── Utility Conversions ─────────────────────────────────────────────────────
+// Percentage of the source stat (from conversion base pool) added to target stat.
+// Rates come from Utility_conversions.csv.
+export const UTILITY_CONVERSION_RATES = {
+    Power:              3,
+    Precision:          3,
+    Toughness:          3,
+    Vitality:           3,
+    'Condition Damage': 6,
+    Ferocity:           6,
+    'Healing Power':    6,
+    Concentration:      8,
+    Expertise:          8,
+};
+
+// UTILITY_DATA[name] → array of { to, from } conversion pairs
+export const UTILITY_DATA = {
+    'Toxic Tuning Crystal':     [ { to: 'Condition Damage', from: 'Power' },      { to: 'Condition Damage', from: 'Precision' } ],
+    'Potent Lucent Oil':        [ { to: 'Concentration',    from: 'Power' },       { to: 'Concentration',    from: 'Precision' } ],
+    'Toxic Maintenance Oil':    [ { to: 'Concentration',    from: 'Power' },       { to: 'Concentration',    from: 'Condition Damage' } ],
+    'Toxic Sharpening Stone':   [ { to: 'Power',            from: 'Condition Damage' }, { to: 'Power',       from: 'Expertise' } ],
+    'Furious Sharpening Stone': [ { to: 'Power',            from: 'Precision' },   { to: 'Ferocity',         from: 'Precision' } ],
+    'Furious Tuning Crystal':   [ { to: 'Condition Damage', from: 'Precision' },   { to: 'Expertise',        from: 'Precision' } ],
+    'Superior Sharpening Stone':[ { to: 'Power',            from: 'Precision' },   { to: 'Power',            from: 'Ferocity' } ],
+    'Tuning Icicle':            [ { to: 'Condition Damage', from: 'Precision' },   { to: 'Condition Damage', from: 'Expertise' } ],
+};
+
+export const UTILITY_NAMES = Object.keys(UTILITY_DATA);
+
+// ─── Weapon Data ──────────────────────────────────────────────────────────────
+// wielding: 1 = main-hand/off-hand, 2 = two-handed, '-' = special
+export const WEAPON_DATA = {
+    Axe:                 { wielding: '1', weaponStrength: 1000 },
+    Dagger:              { wielding: '1', weaponStrength: 1000 },
+    Mace:                { wielding: '1', weaponStrength: 1000 },
+    Pistol:              { wielding: '1', weaponStrength: 1000 },
+    Sword:               { wielding: '1', weaponStrength: 1000 },
+    Scepter:             { wielding: '1', weaponStrength: 1000 },
+    Focus:               { wielding: '1', weaponStrength: 900 },
+    Shield:              { wielding: '1', weaponStrength: 900 },
+    Torch:               { wielding: '1', weaponStrength: 900 },
+    Warhorn:             { wielding: '1', weaponStrength: 900 },
+    Greatsword:          { wielding: '2', weaponStrength: 1100 },
+    Hammer:              { wielding: '2', weaponStrength: 1100 },
+    Longbow:             { wielding: '2', weaponStrength: 1050 },
+    Rifle:               { wielding: '2', weaponStrength: 1150 },
+    'Short bow':         { wielding: '2', weaponStrength: 1000 },
+    Staff:               { wielding: '2', weaponStrength: 1100 },
+    Spear:               { wielding: '2', weaponStrength: 1000 },
+    Unequipped:          { wielding: '-', weaponStrength: 690.5 },
+    'Profession mechanic': { wielding: '-', weaponStrength: 1100 },
+    'Conjured Weapon':   { wielding: '2', weaponStrength: 968.5 },
+};
+
+// ─── Sigil Data ───────────────────────────────────────────────────────────────
+// Stat values are percentages stored as numbers (e.g. 7 = 7%).
+// Only non-zero fields are listed; all others default to 0 when accessed with ||0.
+// Sigils with no stat effect (proc-only: Air, Blight, Earth, Torment, Doom,
+// Energy, Geomancy, Hydromancy) are included for the dropdown but have no fields.
+export const SIGIL_DATA = {
+    Accuracy:   { criticalChance: 7 },
+    Force:      { strikeDamageM: 5 },
+    Bursting:   { conditionDamageM: 5 },
+    Malice:     { conditionDuration: 10 },
+    Agony:      { bleedingDuration: 20 },
+    Smoldering: { burningDuration: 20 },
+    Venom:      { poisonDuration: 20 },
+    Demons:     { tormentDuration: 20 },
+    Impact:     { strikeDamageA: 3 },
+    Air:        {},
+    Blight:     {},
+    Earth:      {},
+    Torment:    {},
+    Doom:       {},
+    Energy:     {},
+    Geomancy:   {},
+    Hydromancy: {},
+};
+
+export const SIGIL_NAMES = Object.keys(SIGIL_DATA);
+
+// ─── Relic Data ───────────────────────────────────────────────────────────────
+// Proc logic is hardcoded in simulation.js (RELIC_PROCS).
+// This list is used for the dropdown only.
+export const RELIC_DATA = {
+    Akeem:         { trigger: 'CC enemy with 5+ Torment/Confusion stacks',  cooldown: 10 },
+    Fireworks:     { trigger: 'Use weapon skill (CD ≥20s)',                  cooldown: 0  },
+    'Mount Balrior':{ trigger: 'Use elite skill',                            cooldown: 30 },
+    Peitha:        { trigger: 'Shadowstep or deception skill',              cooldown: 4  },
+    Aristocracy:   { trigger: 'Apply weakness or vulnerability',             cooldown: 1  },
+    Blightbringer: { trigger: '6th poison application on enemy',            cooldown: 8  },
+    Brawler:       { trigger: 'Gain protection or resolution',              cooldown: 8  },
+    Claw:          { trigger: 'CC enemy',                                   cooldown: 0  },
+    Dragonhunter:  { trigger: 'Use trap skill',                             cooldown: 0  },
+    Eagle:         { trigger: 'Enemy below 50% HP',                         cooldown: 0  },
+    Fractal:       { trigger: 'Apply bleeding on enemy with 6+ bleed stacks', cooldown: 20 },
+    Krait:         { trigger: 'Use elite skill',                             cooldown: 30 },
+    Thief:         { trigger: 'Use weapon skill with CD or resource cost',   cooldown: 0  },
+    Weaver:        { trigger: 'Use stance skill',                            cooldown: 0  },
+    Fire:          { trigger: 'Use healing skill (grants Fire Aura 4s)',     cooldown: 20 },
+};
+
+export const RELIC_NAMES = Object.keys(RELIC_DATA);

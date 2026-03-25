@@ -1,0 +1,2881 @@
+import {
+    strikeDamage, expectedCritMultiplier,
+    conditionTickDamage, getConditionDurationBonus, getBoonDurationBonus,
+} from './damage.js';
+
+const DAMAGING_CONDITIONS = new Set([
+    'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
+]);
+const BOONS = new Set([
+    'Aegis', 'Alacrity', 'Fury', 'Might', 'Protection', 'Quickness',
+    'Regeneration', 'Resistance', 'Resolution', 'Stability', 'Swiftness', 'Vigor',
+    'Superspeed',
+]);
+const SIGIL_STAT_MAP = {
+    criticalChance: 'Critical Chance',
+    conditionDuration: 'Condition Duration',
+    bleedingDuration: 'Bleeding Duration',
+    burningDuration: 'Burning Duration',
+    poisonDuration: 'Poison Duration',
+    tormentDuration: 'Torment Duration',
+};
+const SIGIL_PROCS = {
+    Air: {
+        trigger: 'crit', icd: 3000, effect: 'strike', coeff: 1.1, ws: 690.5, canCrit: false,
+        icon: 'https://render.guildwars2.com/file/C337CC61DF2F5EE44B7D053EFF33059111024444/220676.png'
+    },
+    Torment: {
+        trigger: 'crit', icd: 5000, effect: 'condition', cond: 'Torment', stacks: 2, dur: 5,
+        icon: 'https://render.guildwars2.com/file/E42EB6198022E5B4D71C5EE41465DD4EB84A0465/665778.png'
+    },
+    Earth: {
+        trigger: 'crit', icd: 2000, effect: 'condition', cond: 'Bleeding', stacks: 1, dur: 6,
+        icon: 'https://render.guildwars2.com/file/251EE3B8B5ADB8D7F7A35DBAEFABA35AEACDF51B/220677.png'
+    },
+    Blight: {
+        trigger: 'crit', icd: 8000, effect: 'condition', cond: 'Poisoned', stacks: 2, dur: 4,
+        icon: 'https://render.guildwars2.com/file/AE0A1C7816B56296FEA527E1D01376491374195A/941026.png'
+    },
+    Doom: {
+        trigger: 'swap', icd: 9000, effect: 'doom', cond: 'Poisoned', stacks: 3, dur: 8,
+        icon: 'https://render.guildwars2.com/file/6CE4D1D6E5392C4CC8BACA595E3393EBF208BEED/220686.png'
+    },
+    Hydromancy: {
+        trigger: 'swap', icd: 9000, effect: 'strike_cond', coeff: 1.0, ws: 690.5, canCrit: true,
+        cond: 'Chilled', stacks: 1, dur: 2,
+        icon: 'https://render.guildwars2.com/file/B5F3E2021863079919299707290698504B5C7E90/220689.png'
+    },
+    Geomancy: {
+        trigger: 'swap', icd: 9000, effect: 'condition', cond: 'Bleeding', stacks: 1, dur: 8,
+        icon: 'https://render.guildwars2.com/file/B79B430645DDF54E6792909A52F5CA40A4911407/220687.png'
+    },
+};
+const RELIC_PROCS = {
+    Akeem: {
+        trigger: 'cc_5torment_confusion', icd: 10000, strikeDmgM: 0, effectDuration: 0,
+        conditions: { Confusion: { stacks: 2, dur: 10 }, Torment: { stacks: 2, dur: 10 } },
+        icon: 'https://render.guildwars2.com/file/594C437E9606A167F4F372BCEB0C2B7C7828037B/3122330.png',
+    },
+    Fireworks: {
+        trigger: 'weapon_recharge20', icd: 0, strikeDmgM: 0.07, effectDuration: 6000,
+        conditions: null,
+        icon: 'https://render.guildwars2.com/file/2999CCF7C94267B2EE3DDA7459050864622927C9/3122349.png',
+    },
+    'Mount Balrior': {
+        trigger: 'elite_delayed', icd: 30000, delay: 1000, strikeDmgM: 0.15, effectDuration: 6000,
+        conditions: null,
+        icon: 'https://render.guildwars2.com/file/49A8520BDB6C5A7BA90832DB9406677473A6932F/3441973.png',
+    },
+    Peitha: {
+        trigger: 'polaric_leap', icd: 4000, strikeDmgM: 0.10, effectDuration: 4000,
+        conditions: { Torment: { stacks: 2, dur: 7 } },
+        icon: 'https://render.guildwars2.com/file/949A6A4179F514FCDEF3AC3D9C292B38D5E0047D/3122365.png',
+    },
+    Claw: {
+        trigger: 'cc_any', icd: 0, strikeDmgM: 0.07, effectDuration: 8000,
+        conditions: null, icon: null,
+    },
+    Aristocracy: {
+        trigger: 'apply_weakness_vuln', icd: 0, strikeDmgM: 0, effectDuration: 8000,
+        maxStacks: 5, condDurPerStack: 3,
+        conditions: null,
+        icon: 'https://render.guildwars2.com/file/BCC01F0B6616FE26ED4BE159532A6A6FBD0EA2D8/3122332.png',
+    },
+    Blightbringer: {
+        trigger: 'poison_6th', icd: 8000, strikeDmgM: 0, effectDuration: 0,
+        poisonCountNeeded: 6,
+        conditions: { Poisoned: { stacks: 3, dur: 10 }, Cripple: { stacks: 1, dur: 5 }, Weakness: { stacks: 1, dur: 5 } },
+        icon: 'https://render.guildwars2.com/file/286C60AC6FA239B0070293039091A44476A35E90/3375219.png',
+    },
+    Brawler: {
+        trigger: 'gain_protection_resolution', icd: 8000, strikeDmgM: 0.10, effectDuration: 4000,
+        conditions: null,
+        icon: 'https://render.guildwars2.com/file/2B5297A932F55DA3BDDD0A39C9CB0D9CF70244A1/3122334.png',
+    },
+    Dragonhunter: {
+        trigger: 'trap_skill', icd: 0, strikeDmgM: 0.10, effectDuration: 5000,
+        uncappedCondDur: 10,
+        conditions: null, icon: null,
+    },
+    Eagle: {
+        trigger: 'eagle_below50', icd: 0, strikeDmgM: 0.10, effectDuration: 0,
+        conditions: null,
+        icon: 'https://render.guildwars2.com/file/DFF4EB43AD0803F60D105658052321A0BE1AF02C/3592832.png',
+    },
+    Fractal: {
+        trigger: 'bleed_6stacks', icd: 20000, strikeDmgM: 0, effectDuration: 0,
+        conditions: { Burning: { stacks: 2, dur: 8 }, Torment: { stacks: 3, dur: 8 } },
+        icon: 'https://render.guildwars2.com/file/B2D409644147BF18935A95A52505ABCB9EECE142/3122351.png',
+    },
+    Krait: {
+        trigger: 'elite_delayed', icd: 30000, delay: 1000, strikeDmgM: 0, effectDuration: 0,
+        strikeCoeff: 0.5, strikeWs: 690.5,
+        conditions: { Bleeding: { stacks: 1, dur: 8 }, Poisoned: { stacks: 1, dur: 8 }, Torment: { stacks: 1, dur: 8 } },
+        icon: 'https://render.guildwars2.com/file/645EFCBFFBB7B1C6630CBB7C0FB268CA27B703AC/3122355.png',
+    },
+    Thief: {
+        trigger: 'weapon_recharge_hit', icd: 0, strikeDmgM: 0, effectDuration: 6000,
+        stackDmgPer: 0.01, maxStacks: 5,
+        conditions: null,
+        icon: 'https://render.guildwars2.com/file/3523AC08EB04347CF371E9A91F4B985D12FB4ED3/3122371.png',
+    },
+    Weaver: {
+        trigger: 'stance_skill', icd: 0, strikeDmgM: 0.10, effectDuration: 4000,
+        conditions: null,
+        icon: 'https://render.guildwars2.com/file/12997110B0509463DD9F1364A92493B2C4309BE1/3122377.png',
+    },
+    Fire: {
+        // On healing skill (ICD 20s): grant Fire Aura 4s.
+        // While Fire Aura is active: +7% strike damage (multiplicative).
+        trigger: 'heal_skill', icd: 20000, strikeDmgM: 0.07, effectDuration: 4000,
+        conditions: null, icon: null,
+    },
+};
+const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
+const OFF_ATT_CD = 1500;
+const OVERLOAD_DWELL = 6000;
+const WEAVER_SWAP_CD = 4000;
+const CATALYST_ENERGY_MAX = 30;
+const CATALYST_SPHERE_COST = 10;
+const CONJURE_WEAPONS = new Set(['Frost Bow', 'Lightning Hammer', 'Fiery Greatsword']);
+const CONJURE_MAP = {
+    'Conjure Frost Bow': 'Frost Bow',
+    'Conjure Lightning Hammer': 'Lightning Hammer',
+    'Conjure Fiery Greatsword': 'Fiery Greatsword',
+};
+const CONJURE_PICKUP_DURATION = 30000;
+const FIRE_FIELD_SKILLS = new Set([
+    'Lava Font', 'Pyroclastic Blast', 'Burning Retreat', 'Burning Speed',
+    'Flamewall', 'Wildfire', 'Flame Uprising',
+]);
+const EVOKER_FAMILIAR_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
+const EVOKER_ELEMENT_MAP = {
+    Ignite: 'Fire', Splash: 'Water', Zap: 'Air', Calcify: 'Earth',
+    Conflagration: 'Fire', 'Buoyant Deluge': 'Water', 'Lightning Blitz': 'Air', 'Seismic Impact': 'Earth'
+};
+
+function insertSorted(arr, ev) {
+    let lo = 0, hi = arr.length;
+    while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (arr[mid].time <= ev.time) lo = mid + 1;
+        else hi = mid;
+    }
+    arr.splice(lo, 0, ev);
+}
+
+export class SimulationEngine {
+    constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits }) {
+        this.skills = skills;
+        this.skillHits = skillHits;
+        this.weapons = weapons;
+        this.attributes = attributes;
+        this.sigils = sigils || {};
+        this.relics = relics || {};
+        this.activeTraitNames = new Set((activeTraits || []).map(t => t.name));
+        this.rotation = [];
+        this.results = null;
+    }
+
+    _hasTrait(name) { return this.activeTraitNames.has(name); }
+
+    addSkill(name) { this.rotation.push(name); }
+    removeSkill(idx) { this.rotation.splice(idx, 1); }
+    moveSkill(from, to) {
+        const [item] = this.rotation.splice(from, 1);
+        this.rotation.splice(to, 0, item);
+    }
+    clearRotation() { this.rotation = []; this.results = null; }
+
+    _skill(name) { return this.skills.find(s => s.name === name); }
+
+    _skillInContext(name, S) {
+        const matches = this.skills.filter(s => s.name === name);
+        if (matches.length <= 1) return matches[0] || null;
+        if (S.conjureEquipped) {
+            return matches.find(s => s.weapon === S.conjureEquipped)
+                || matches.find(s => !CONJURE_WEAPONS.has(s.weapon))
+                || matches[0];
+        }
+        return matches.find(s => !CONJURE_WEAPONS.has(s.weapon)) || matches[0];
+    }
+
+    _cdKey(sk) {
+        if (CONJURE_WEAPONS.has(sk.weapon)) return `${sk.name}::${sk.weapon}`;
+        if (sk.type === 'Jade Sphere') return sk.name;
+        const base = sk.name.replace(/\s*\((?:Fire|Water|Air|Earth)\)$/, '');
+        return (base !== sk.name && sk.attunement) ? base : sk.name;
+    }
+
+    _adjCastTime(S, csvCastMs, castStart) {
+        if (csvCastMs <= 0) return { castMs: 0, scaleOff: off => off };
+
+        const hasQ = S.quicknessUntil > castStart;
+
+        if (!hasQ) {
+            const castMs = Math.round(csvCastMs * 4 / 3);
+            return { castMs, scaleOff: off => Math.round(off * 4 / 3) };
+        }
+
+        if (S.quicknessUntil >= castStart + csvCastMs) {
+            return { castMs: csvCastMs, scaleOff: off => off };
+        }
+
+        const quickDur = S.quicknessUntil - castStart;
+        const remainCsv = csvCastMs - quickDur;
+        const castMs = quickDur + Math.round(remainCsv * 4 / 3);
+
+        return {
+            castMs,
+            scaleOff: off => {
+                if (off <= quickDur) return off;
+                return quickDur + Math.round((off - quickDur) * 4 / 3);
+            },
+        };
+    }
+
+    _alaCd(S, baseCdMs, cdStart) {
+        if (baseCdMs <= 0) return 0;
+
+        const alaEnd = S.alacrityUntil;
+
+        if (alaEnd <= cdStart) return baseCdMs;
+
+        const readyIfFull = Math.round(baseCdMs / 1.25);
+        if (alaEnd >= cdStart + readyIfFull) return readyIfFull;
+
+        const alaRealMs = alaEnd - cdStart;
+        const alaProgress = alaRealMs * 1.25;
+        const remaining = baseCdMs - alaProgress;
+        return Math.round(alaRealMs + remaining);
+    }
+
+    _catchUpCharges(S, key, sk) {
+        const ch = S.charges[key];
+        if (!ch) return;
+        const baseMs = this._pyroRechargeMs(S, sk, Math.round(sk.countRecharge * 1000));
+        while (ch.count < sk.maximumCount && ch.nextChargeAt <= S.t) {
+            const gainedAt = ch.nextChargeAt;
+            ch.count++;
+            if (ch.count < sk.maximumCount) {
+                ch.nextChargeAt = gainedAt + this._alaCd(S, baseMs, gainedAt);
+            } else {
+                ch.nextChargeAt = Infinity;
+            }
+        }
+    }
+
+    _initCharges(S, key, sk) {
+        if (!S.charges[key]) {
+            S.charges[key] = { count: sk.maximumCount, nextChargeAt: Infinity };
+        }
+    }
+
+    _getEliteSpec() {
+        const specs = this.attributes.specializations || [];
+        const elites = new Set(['Tempest', 'Weaver', 'Catalyst', 'Evoker']);
+        const found = specs.find(s => elites.has(s.name || s));
+        return found ? (found.name || found) : null;
+    }
+
+    _detectAACarryover(S) {
+        const mh = this.attributes.weapons?.[0] || '';
+        const candidates = this.skills.filter(s =>
+            s.slot === '1' && s.weapon === mh && s.attunement === S.att && s.chainSkill
+        );
+        if (candidates.length === 0) return null;
+        const targets = new Set(candidates.map(s => s.chainSkill));
+        const root = candidates.find(s => !targets.has(s.name));
+        const rootName = root ? root.name : candidates[0].name;
+        const next = S.chainState[rootName];
+        if (next && next !== rootName) return { root: rootName, att: S.att };
+        return null;
+    }
+
+    _ws(skill) {
+        const w = skill.weapon;
+        if (w === 'Profession mechanic') return this.weapons['Profession mechanic']?.weaponStrength || 1100;
+        if (['Frost Bow', 'Lightning Hammer', 'Fiery Greatsword'].includes(w))
+            return this.weapons['Conjured Weapon']?.weaponStrength || 968.5;
+        if (['Healing', 'Utility', 'Elite'].includes(skill.slot))
+            return this.weapons['Unequipped']?.weaponStrength || 690.5;
+        if (w && this.weapons[w]) return this.weapons[w].weaponStrength;
+        const eq = this.attributes.weapons;
+        return (eq?.[0] && this.weapons[eq[0]]?.weaponStrength) || 1000;
+    }
+
+    _attOK(sk, S) {
+        const req = sk.attunement;
+        if (!req) return true;
+
+        if (S.eliteSpec === 'Weaver') {
+            if (req.includes('+')) {
+                const [a, b] = req.split('+');
+                return (a === S.att && b === S.att2) || (b === S.att && a === S.att2);
+            }
+            const slotNum = parseInt(sk.slot);
+            if (!isNaN(slotNum) && slotNum >= 4) return req === S.att2;
+            return req === S.att;
+        }
+
+        if (req === S.att) return true;
+        if (req.includes('+')) return req.split('+').includes(S.att);
+        return false;
+    }
+
+    run(startAtt = 'Fire', startAtt2 = null, startEvokerElement = null, permaBoons = {}, disabled = null, targetHP = 0) {
+        const a = this.attributes.attributes;
+
+        const disSigil = disabled?.startsWith('Sigil:') ? disabled.slice(6) : null;
+        const disRelic = disabled?.startsWith('Relic:') ? disabled.slice(6) : null;
+        const disTrait = disabled?.startsWith('Trait:') ? disabled.slice(6) : null;
+        const dsStat = disSigil ? (this.sigils[disSigil] || {}) : {};
+        const statAdj = {};
+        if (disSigil) {
+            for (const [sk, an] of Object.entries(SIGIL_STAT_MAP)) {
+                const v = dsStat[sk];
+                if (v && a[an]) { a[an].final -= v; statAdj[an] = v; }
+            }
+        }
+        // Stat-based trait disables: subtract the flat bonus before base stats are read
+        if (disTrait) {
+            const activeTraits = this.attributes.activeTraits || [];
+            const traitObj = name => activeTraits.find(t => t.name === name);
+            const subStat = (stat, val) => {
+                if (val && a[stat]) { a[stat].final -= val; statAdj[stat] = (statAdj[stat] || 0) + val; }
+            };
+            if (disTrait === 'Burning Rage') subStat('Condition Damage', traitObj('Burning Rage')?.conditionDamage);
+            if (disTrait === "Aeromancer's Training") subStat('Ferocity', traitObj("Aeromancer's Training")?.ferocity);
+            if (disTrait === "Zephyr's Speed") subStat('Critical Chance', traitObj("Zephyr's Speed")?.criticalChance);
+            if (disTrait === 'Serrated Stones') subStat('Bleeding Duration', traitObj('Serrated Stones')?.bleedingDuration);
+            // Concentration traits: must subtract both Concentration and the derived Boon Duration
+            // (getBoonDurationBonus reads a['Boon Duration'].final, not re-deriving from concentration)
+            if (disTrait === 'Gathered Focus' || disTrait === 'Elemental Enchantment') {
+                const name = disTrait;
+                const delta = traitObj(name)?.concentration || 0;
+                subStat('Concentration', delta);
+                subStat('Boon Duration', delta / 15);
+            }
+        }
+
+        const basePower = a['Power']?.final ?? 1000;
+        const baseCondDmg = a['Condition Damage']?.final ?? 0;
+        const baseCritCh = a['Critical Chance']?.final ?? 0;
+        const critDmg = a['Critical Damage']?.final ?? 150;
+
+        const sigilMuls = this._computeSigilMuls(disSigil);
+        this._activeProcSigils = (this.attributes.sigils || [])
+            .filter(name => name !== disSigil && SIGIL_PROCS[name]);
+
+        const activeRelic = (disRelic === this.attributes.relic) ? null : (this.attributes.relic || null);
+        const relicProc = activeRelic ? (RELIC_PROCS[activeRelic] || null) : null;
+
+        const eliteSpec = this._getEliteSpec();
+        const realStartAtt = ATTUNEMENTS.includes(startAtt) ? startAtt : 'Fire';
+        const realStartAtt2 = eliteSpec === 'Weaver'
+            ? (ATTUNEMENTS.includes(startAtt2) ? startAtt2 : realStartAtt)
+            : null;
+
+        const S = {
+            t: 0,
+            castUntil: 0,
+            att: realStartAtt,
+            att2: realStartAtt2,
+            attEnteredAt: -999999,
+            attCD: {},
+            skillCD: {},
+            charges: {},
+            chainState: {},
+            eq: [],
+            condState: {},
+            fields: [],
+            comboAccum: {},
+            auras: [],
+            boons: {},
+            log: [],
+            steps: [],
+            allCondStacks: [],
+            conjureEquipped: null,
+            conjurePickups: [],
+            energy: eliteSpec === 'Catalyst' ? CATALYST_ENERGY_MAX : null,
+            sphereActiveUntil: 0,
+            evokerElement: (eliteSpec === 'Evoker' && startEvokerElement) ? startEvokerElement : null,
+            evokerCharges: eliteSpec === 'Evoker' ? 6 : 0,
+            evokerEmpowered: 0,
+            igniteStep: 0,
+            igniteLastUse: -Infinity,
+            weaveSelfUntil: 0,
+            weaveSelfVisited: new Set(),
+            perfectWeaveUntil: 0,
+            aaCarryover: null,
+            quicknessUntil: 0,
+            alacrityUntil: 0,
+            arcaneEchoUntil: 0,
+            overloadAirBonusPending: false,
+            sphereExpiry: { Fire: 0, Water: 0, Air: 0, Earth: 0 },
+            sigilICD: {},
+            sigilCritAccum: 0,
+            sigilDoomPending: false,
+            relicICD: {},
+            relicBuffUntil: 0,
+            activeRelic: activeRelic,
+            relicProc: relicProc,
+            relicAristocracyStacks: 0,
+            relicAristocracyUntil: 0,
+            relicAristocracyLastTrigger: null,
+            relicBlightbringerCount: 0,
+            relicBlightbringerTrackedCasts: new Set(),
+            relicThiefStacks: 0,
+            relicThiefUntil: 0,
+            totalStrike: 0,
+            totalCond: 0,
+            firstHitTime: null,
+            lastHitTime: null,
+            perSkill: {},
+            eliteSpec,
+            _hasEmpoweringFlame: this._hasTrait('Empowering Flame'),
+            _hasBurningPrecision: this._hasTrait('Burning Precision'),
+            _hasConjurer: this._hasTrait('Conjurer'),
+            _hasSunspot: this._hasTrait('Sunspot'),
+            _hasBurningRage: this._hasTrait('Burning Rage'),
+            _hasSmothering: this._hasTrait('Smothering Auras'),
+            _hasPowerOverwhelming: this._hasTrait('Power Overwhelming'),
+            _hasPyroTraining: this._hasTrait("Pyromancer's Training"),
+            _hasPersistingFlames: this._hasTrait('Persisting Flames'),
+            _hasPyroPuissance: this._hasTrait("Pyromancer's Puissance"),
+            _hasInferno: this._hasTrait('Inferno'),
+            _hasZephyrsBoon: this._hasTrait("Zephyr's Boon"),
+            _hasOneWithAir: this._hasTrait('One with Air'),
+            _hasElectricDischarge: this._hasTrait('Electric Discharge'),
+            _hasInscription: this._hasTrait('Inscription'),
+            _hasRagingStorm: this._hasTrait('Raging Storm'),
+            _hasStormsoul: this._hasTrait('Stormsoul'),
+            _hasAeroTraining: this._hasTrait("Aeromancer's Training"),
+            _hasBoltToHeart: this._hasTrait('Bolt to the Heart'),
+            _hasFreshAir: this._hasTrait('Fresh Air'),
+            _hasLightningRod: this._hasTrait('Lightning Rod'),
+            _hasEarthsEmbrace: this._hasTrait("Earth's Embrace"),
+            _hasSerratedStones: this._hasTrait('Serrated Stones'),
+            _hasElementalShielding: this._hasTrait('Elemental Shielding'),
+            _hasEarthenBlast: this._hasTrait('Earthen Blast'),
+            _hasStrengthOfStone: this._hasTrait('Strength of Stone'),
+            _hasRockSolid: this._hasTrait('Rock Solid'),
+            _hasGeoTraining: this._hasTrait("Geomancer's Training"),
+            _hasWrittenInStone: this._hasTrait('Written in Stone'),
+            _hasGaleSong: this._hasTrait('Gale Song'),
+            _hasLatentStamina: this._hasTrait('Latent Stamina'),
+            _hasUnstableConduit: this._hasTrait('Unstable Conduit'),
+            _hasTempestuousAria: this._hasTrait('Tempestuous Aria'),
+            _hasHarmoniousConduit: this._hasTrait('Harmonious Conduit'),
+            _hasInvigoratingTorrents: this._hasTrait('Invigorating Torrents'),
+            _hasHardyConduit: this._hasTrait('Hardy Conduit'),
+            _hasTranscendentTempest: this._hasTrait('Transcendent Tempest'),
+            _hasLucidSingularity: this._hasTrait('Lucid Singularity'),
+            _hasElementalBastion: this._hasTrait('Elemental Bastion'),
+            _hasSuperiorElements: this._hasTrait('Superior Elements'),
+            _hasElementalPursuit: this._hasTrait('Elemental Pursuit'),
+            _hasWeaversProwess: this._hasTrait("Weaver's Prowess"),
+            _hasSwiftRevenge: this._hasTrait('Swift Revenge'),
+            _hasBolsteredElements: this._hasTrait('Bolstered Elements'),
+            _hasElemPolyphony: this._hasTrait('Elemental Polyphony'),
+            _hasElementsOfRage: this._hasTrait('Elements of Rage'),
+            _hasInvigoratingStrikes: this._hasTrait('Invigorating Strikes'),
+            _hasViciousEmpowerment: this._hasTrait('Vicious Empowerment'),
+            _hasEnergizedElements: this._hasTrait('Energized Elements'),
+            _hasElemEmpowermentTrait: this._hasTrait('Elemental Empowerment'),
+            _hasEmpoweringAuras: this._hasTrait('Empowering Auras'),
+            _hasSpectacularSphere: this._hasTrait('Spectacular Sphere'),
+            _hasElemEpitome: this._hasTrait('Elemental Epitome'),
+            _hasElemSynergy: this._hasTrait('Elemental Synergy'),
+            _hasEmpoweredEmpowerment: this._hasTrait('Empowered Empowerment'),
+            _hasSphereSpecialist: this._hasTrait('Sphere Specialist'),
+            _hasFieryMight: this._hasTrait('Fiery Might'),
+            _hasAltruisticAspect: this._hasTrait('Altruistic Aspect'),
+            _hasEnhancedPotency: this._hasTrait('Enhanced Potency'),
+            _hasFamiliarsProwess: this._hasTrait("Familiar's Prowess"),
+            _hasFamiliarsFocus: this._hasTrait("Familiar's Focus"),
+            _hasFamiliarsBlessing: this._hasTrait("Familiar's Blessing"),
+            _hasElemDynamo: this._hasTrait('Elemental Dynamo'),
+            _hasGalvanicEnchantment: this._hasTrait('Galvanic Enchantment'),
+            _hasElemBalance: this._hasTrait('Elemental Balance'),
+            _hasSpecializedElements: this._hasTrait('Specialized Elements'),
+            signetFirePassiveLostUntil: 0,
+            attTimeline: [{ t: 0, att: realStartAtt, att2: realStartAtt2 }],
+            traitICD: {},
+            traitBurnPrecAccum: 0,
+            traitRagingStormAccum: 0,
+            freshAirAccum: 0,
+            electricEnchantmentStacks: 0,
+            elemBalanceCount: 0,
+            elemBalanceActive: false,
+            elemBalanceExpiry: 0,
+            _mightCondDmgBonus: 30,
+            _furyCritBonus: 25,
+        };
+        // Flag-based trait disables for contribution analysis
+        if (disTrait) {
+            const TRAIT_FLAGS = {
+                'Empowering Flame': '_hasEmpoweringFlame',
+                'Power Overwhelming': '_hasPowerOverwhelming',
+                "Aeromancer's Training": '_hasAeroTraining',
+                'Raging Storm': '_hasRagingStorm',
+                'Fresh Air': '_hasFreshAir',
+                'Elemental Polyphony': '_hasElemPolyphony',
+                'Elemental Empowerment': '_hasElemEmpowermentTrait',
+                'Enhanced Potency': '_hasEnhancedPotency',
+                'Superior Elements': '_hasSuperiorElements',
+                "Weaver's Prowess": '_hasWeaversProwess',
+                'Burning Precision': '_hasBurningPrecision',
+                'Persisting Flames': '_hasPersistingFlames',
+                "Pyromancer's Training": '_hasPyroTraining',
+                'Stormsoul': '_hasStormsoul',
+                'Bolt to the Heart': '_hasBoltToHeart',
+                'Transcendent Tempest': '_hasTranscendentTempest',
+                'Elements of Rage': '_hasElementsOfRage',
+                'Swift Revenge': '_hasSwiftRevenge',
+                'Empowering Auras': '_hasEmpoweringAuras',
+                "Familiar's Prowess": '_hasFamiliarsProwess',
+                'Fiery Might': '_hasFieryMight',
+                'Lightning Rod': '_hasLightningRod',
+                'Burning Rage': '_hasBurningRage',
+                'Serrated Stones': '_hasSerratedStones',
+            };
+            const flag = TRAIT_FLAGS[disTrait];
+            if (flag) S[flag] = false;
+        }
+        if (S._hasEnhancedPotency && S.evokerElement === 'Fire') S._mightCondDmgBonus = 35;
+        if (S._hasEnhancedPotency && S.evokerElement === 'Air') S._furyCritBonus = 40;
+        if (S._hasSpecializedElements && S.evokerElement) {
+            S.att = S.evokerElement;
+            S.attTimeline = [{ t: 0, att: S.evokerElement, att2: realStartAtt2 }];
+        }
+
+        const PERMA_EXPIRY = 999999999;
+        for (const [effect, val] of Object.entries(permaBoons)) {
+            if (!val) continue;
+            const count = typeof val === 'number' ? val : 1;
+            for (let i = 0; i < count; i++) {
+                S.allCondStacks.push({ t: 0, cond: effect, expiresAt: PERMA_EXPIRY, perma: true });
+            }
+        }
+        if (permaBoons.Quickness) S.quicknessUntil = PERMA_EXPIRY;
+        if (permaBoons.Alacrity) S.alacrityUntil = PERMA_EXPIRY;
+        S.permaBoons = permaBoons;
+
+        S._empPool = {};
+        if (eliteSpec === 'Catalyst') {
+            for (const stat of ['Power', 'Precision', 'Ferocity', 'Condition Damage', 'Expertise', 'Concentration']) {
+                const s = a[stat] || {};
+                S._empPool[stat] = (s.base || 0) + (s.gear || 0) + (s.runes || 0) + (s.infusions || 0) + (s.food || 0);
+            }
+        }
+        if (S._hasElemEmpowermentTrait) {
+            for (let i = 0; i < 3; i++) {
+                S.allCondStacks.push({ t: 0, cond: 'Elemental Empowerment', expiresAt: PERMA_EXPIRY, perma: true });
+            }
+        }
+
+        for (let ri = 0; ri < this.rotation.length; ri++) {
+            const item = this.rotation[ri];
+
+            // Orphaned concurrent item (no preceding non-instant anchor) — treat sequentially
+            if (typeof item === 'object' && item.offset !== undefined) {
+                S._ri = ri;
+                this._step(S, item.name);
+                continue;
+            }
+
+            const name = typeof item === 'string' ? item : item.name;
+
+            // Collect consecutive concurrent items that should fire during this skill's cast
+            const concurrents = [];
+            let j = ri + 1;
+            while (j < this.rotation.length) {
+                const nxt = this.rotation[j];
+                if (typeof nxt !== 'object' || nxt.offset === undefined) break;
+                concurrents.push({ name: nxt.name, offset: nxt.offset, _ri: j });
+                j++;
+            }
+
+            S._ri = ri;
+            this._step(S, name, false, concurrents);
+            ri = j - 1; // skip already-processed concurrent items
+        }
+        const rotEnd = S.t;
+
+        const skipMight = disabled === 'Might';
+        const skipFury = disabled === 'Fury';
+        const skipVuln = disabled === 'Vulnerability';
+
+        const tgtHP = targetHP > 0 ? targetHP : Infinity;
+        let deathTime = null;
+
+        S.eq.sort((a, b) => a.time - b.time);
+        while (S.eq.length > 0) {
+            const ev = S.eq.shift();
+            if (deathTime !== null && ev.time > deathTime) break;
+
+            // Track when damage is first and last dealt.
+            // firstHitTime → DPS window start (mirrors GW2 golem benchmarks: timer begins at
+            //   the first damaging hit, not at the start of the first cast animation).
+            // lastHitTime  → DPS window end, so skills with long-lasting ticks/pulses that
+            //   extend beyond the cast time (e.g. Glyph of Storms) are measured over their
+            //   full damage duration rather than just the cast window.
+            if ((ev.type === 'hit' && ev.dmg > 0) || ev.type === 'ctick') {
+                if (S.firstHitTime === null) S.firstHitTime = ev.time;
+                S.lastHitTime = ev.time;
+            }
+
+            if (ev.type === 'relic_activate') {
+                const rp = RELIC_PROCS[ev.relic];
+                if (rp && rp.effectDuration > 0) {
+                    S.relicBuffUntil = Math.max(S.relicBuffUntil, ev.time + rp.effectDuration);
+                }
+                if (ev.applyEffects && rp) {
+                    if (rp.conditions) {
+                        for (const [c, v] of Object.entries(rp.conditions)) {
+                            if (DAMAGING_CONDITIONS.has(c)) {
+                                this._applyCondition(S, c, v.stacks, v.dur, ev.time, `Relic of ${ev.relic}`);
+                            } else {
+                                this._trackEffect(S, c, v.stacks, v.dur, ev.time);
+                            }
+                        }
+                    }
+                    if (rp.strikeCoeff) {
+                        insertSorted(S.eq, {
+                            time: ev.time, type: 'hit',
+                            skill: `Relic of ${ev.relic}`, hitIdx: 1, sub: 1, totalSubs: 1,
+                            dmg: rp.strikeCoeff, ws: rp.strikeWs,
+                            isField: false, cc: false, conds: null,
+                            isRelicProc: true, noCrit: false, att: S.att,
+                        });
+                    }
+                }
+                S.log.push({ t: ev.time, type: 'relic_proc', relic: ev.relic, skill: `Relic of ${ev.relic}` });
+                S.steps.push({ skill: `Relic of ${ev.relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: rp?.icon });
+                continue;
+            }
+
+            const might = skipMight ? 0 : this._mightStacksAt(S, ev.time);
+            const empMul = this._getEmpMul(S, ev.time);
+            const condDmg = baseCondDmg + might * S._mightCondDmgBonus
+                + Math.round((S._empPool?.['Condition Damage'] || 0) * empMul);
+            const vulnMul = skipVuln ? 1 : 1 + this._vulnStacksAt(S, ev.time) * 0.01;
+
+            if (ev.type === 'hit') {
+                const hitAtt = ev.att;
+                const hitAtt2 = ev.att2 || null;
+                // For Weaver, "attuned to X" means X is either primary or secondary attunement
+                const empFlame = (S._hasEmpoweringFlame && hitAtt === 'Fire') ? 150 : 0;
+                let powOvr = 0;
+                if (S._hasPowerOverwhelming && might >= 10) powOvr = hitAtt === 'Fire' ? 300 : 150;
+                let polyPow = 0, polyFer = 0;
+                if (S._hasElemPolyphony) {
+                    // Set deduplicates Fire/Fire → only +200 Power once
+                    const atts = hitAtt2 !== null ? new Set([hitAtt, hitAtt2]) : new Set([hitAtt]);
+                    if (atts.has('Fire')) polyPow = 200;
+                    if (atts.has('Air')) polyFer = 200 / 15;
+                }
+                const empPow = Math.round((S._empPool?.Power || 0) * empMul);
+                const empCritCh = (S._empPool?.Precision || 0) * empMul / 21;
+                const empCritDmg = (S._empPool?.Ferocity || 0) * empMul / 15;
+
+                // Conjured weapon flat stat bonuses (no conversions, active while equipped)
+                const conjurePow = ev.conjure === 'Fiery Greatsword' ? 260 : 0;
+                const conjureCondDmgBonus = ev.conjure === 'Fiery Greatsword' ? 180 : 0;
+                const conjureFer = ev.conjure === 'Lightning Hammer' ? 75 / 15 : 0;
+                const conjurePrec = ev.conjure === 'Lightning Hammer' ? 180 / 21 : 0;
+                const hitCondDmg = condDmg + conjureCondDmgBonus;
+
+                const power = basePower + might * 30 + empFlame + powOvr + polyPow + empPow + conjurePow;
+
+                const fury = skipFury ? false : this._hasFuryAt(S, ev.time);
+                const ragingFerocity = (S._hasRagingStorm && fury) ? 12 : 0;
+                const aeroFerocity = (S._hasAeroTraining && hitAtt === 'Air') ? 10 : 0;
+                const freshAirActive = S._hasFreshAir
+                    && this._effectStacksAt(S, 'Fresh Air', ev.time) > 0;
+                const freshAirFerocity = freshAirActive ? (250 / 15) : 0;
+                const zapPassiveFer = (S.evokerElement === 'Air' && fury) ? 75 / 15 : 0;
+                const effectiveCritDmg = critDmg + ragingFerocity + aeroFerocity
+                    + freshAirFerocity + polyFer + empCritDmg + conjureFer + zapPassiveFer + (ev.bonusCritDmg || 0);
+                const signetFireLost = S.signetFirePassiveLostUntil > ev.time ? (180 / 21) : 0;
+                const supElemCrit = (S._hasSuperiorElements
+                    && this._effectStacksAt(S, 'Weakness', ev.time) > 0) ? 15 : 0;
+                const cc = ev.noCrit ? 0 : Math.min(
+                    baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit + empCritCh + conjurePrec, 100);
+                const critMult = expectedCritMultiplier(cc, effectiveCritDmg);
+                const zapBuff = S.evokerElement === 'Air' && this._effectStacksAt(S, 'Zap Buff', ev.time) > 0;
+                const relicStrikeMul = this._getRelicStrikeMul(S, ev, tgtHP);
+
+                const pfStacks = S._hasPersistingFlames
+                    ? Math.min(this._effectStacksAt(S, 'Persisting Flames', ev.time), 5) : 0;
+                const tempAriaUp = S._hasTempestuousAria
+                    && this._effectStacksAt(S, 'Tempestuous Aria', ev.time) > 0;
+                const transcTempUp = S._hasTranscendentTempest
+                    && this._effectStacksAt(S, 'Transcendent Tempest', ev.time) > 0;
+                const elemRageUp = S._hasElementsOfRage
+                    && this._effectStacksAt(S, 'Elements of Rage', ev.time) > 0;
+                const hasSpeed = S._hasSwiftRevenge
+                    && (this._effectStacksAt(S, 'Swiftness', ev.time) > 0
+                        || this._effectStacksAt(S, 'Superspeed', ev.time) > 0);
+                const weaversProwessUp = S._hasWeaversProwess && hitAtt2 !== null && hitAtt !== hitAtt2;
+                const empAurasStacks = S._hasEmpoweringAuras
+                    ? Math.min(this._effectStacksAt(S, 'Empowering Auras', ev.time), 5) : 0;
+                const famProwessUp = S._hasFamiliarsProwess
+                    && this._effectStacksAt(S, "Familiar's Prowess", ev.time) > 0;
+                const fpPct = famProwessUp ? (S._hasFamiliarsFocus ? 0.10 : 0.05) : 0;
+                const fpStrike = (famProwessUp && S.evokerElement === 'Air') ? fpPct : 0;
+                const fpCond = (famProwessUp && S.evokerElement === 'Fire') ? fpPct : 0;
+                const relentlessFireUp = this._effectStacksAt(S, 'Relentless Fire', ev.time) > 0;
+                const wsFireBonus = (S.weaveSelfVisited.has('Fire') && ev.time < S.weaveSelfUntil)
+                    || ev.time < S.perfectWeaveUntil;
+                const wsAirBonus = (S.weaveSelfVisited.has('Air') && ev.time < S.weaveSelfUntil)
+                    || ev.time < S.perfectWeaveUntil;
+                const addStrike = pfStacks * 0.02
+                    + (tempAriaUp ? 0.10 : 0)
+                    + (transcTempUp ? 0.20 : 0)
+                    + (elemRageUp ? 0.07 : 0)   // strike bonus unchanged by patch (only cond was reduced)
+                    + (hasSpeed ? 0.07 : 0)
+                    + empAurasStacks * 0.01
+                    + (relentlessFireUp ? 0.10 : 0)
+                    + (wsAirBonus ? 0.10 : 0)
+                    + fpStrike;
+                const addCond = (tempAriaUp ? 0.05 : 0)
+                    + (transcTempUp ? 0.20 : 0)
+                    + (elemRageUp ? 0.05 : 0)
+                    + empAurasStacks * 0.01
+                    + (wsFireBonus ? 0.20 : 0)
+                    + fpCond;
+                const baseStrike = (1 + sigilMuls.strikeAdd + addStrike) * sigilMuls.strikeMul;
+                const baseCond = (1 + sigilMuls.condAdd + addCond) * sigilMuls.condMul;
+
+                const targetHasBurning = (S._hasPyroTraining || S._hasFieryMight)
+                    ? (S.condState['Burning']?.stacks.some(s => s.expiresAt > ev.time) || false) : false;
+                const pyroMul = (S._hasPyroTraining && targetHasBurning) ? 1.07 : 1;
+                const fieryMightMul = (S._hasFieryMight && targetHasBurning) ? 1.05 : 1;
+                const hasBleeding = S._hasSerratedStones
+                    && (S.condState['Bleeding']?.stacks.some(s => s.expiresAt > ev.time) || false);
+                const serratedMul = hasBleeding ? 1.05 : 1;
+                const stormsoulMul = S._hasStormsoul ? 1.07 : 1;
+                const boltMul = (S._hasBoltToHeart && tgtHP < Infinity
+                    && (S.totalStrike + S.totalCond) >= tgtHP * 0.5) ? 1.20 : 1;
+
+                const zapMul = zapBuff ? 1.03 : 1;
+                const strikeMul = baseStrike * vulnMul * relicStrikeMul
+                    * pyroMul * fieryMightMul * serratedMul * stormsoulMul * boltMul * zapMul;
+                const cMul = baseCond * vulnMul;
+
+                // Primordial Stance: apply conditions based on attunements at hit time (not cast time)
+                let procEv = ev;
+                if (ev.skill.startsWith('Primordial Stance')) {
+                    procEv = { ...ev, conds: null };
+                    const psAtt1 = this._attAt(S, ev.time);
+                    const psAtt2 = this._att2At(S, ev.time);
+                    this._applyPrimordialStance(S, psAtt1, psAtt2, ev.time);
+                }
+                this._procHit(S, procEv, power, hitCondDmg, critMult, strikeMul, cMul);
+
+                if (!ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc && !ev.isField && ev.dmg > 0 && ev.ws > 0) {
+                    this._checkOnCritSigils(S, ev.time, cc);
+                    if (S._hasBurningPrecision) this._checkBurningPrecision(S, ev.time, cc);
+                    if (S._hasRagingStorm) this._checkRagingStorm(S, ev.time, cc);
+                    if (S._hasFreshAir) this._checkFreshAir(S, ev.time, cc);
+                }
+
+                if (S._hasLightningRod && ev.cc && !ev.isTraitProc && !ev.isSigilProc && !ev.isRelicProc) {
+                    this._triggerLightningRod(S, ev.time);
+                }
+
+                if (S._hasStrengthOfStone && !ev.isTraitProc && !ev.isSigilProc && !ev.isRelicProc
+                    && this._effectStacksAt(S, 'Immobilize', ev.time) > 0
+                    && ev.time >= (S.traitICD['StrengthOfStone'] || 0)) {
+                    S.traitICD['StrengthOfStone'] = ev.time + 3000;
+                    this._applyCondition(S, 'Bleeding', 3, 10, ev.time, 'Strength of Stone');
+                    S.log.push({ t: ev.time, type: 'trait_proc', trait: 'Strength of Stone', skill: 'Strength of Stone' });
+                }
+
+                if (S._hasLucidSingularity && ev.skill.startsWith('Overload ')) {
+                    if (ev.hitIdx >= 1 && ev.hitIdx <= 4) this._trackEffect(S, 'Alacrity', 1, 1, ev.time);
+                    else if (ev.hitIdx === 5) this._trackEffect(S, 'Alacrity', 1, 4.5, ev.time);
+                }
+
+                if (S._hasViciousEmpowerment && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc
+                    && ev.cc && ev.time >= (S.traitICD['ViciousEmp'] || 0)) {
+                    S.traitICD['ViciousEmp'] = ev.time + 250;
+                    this._grantElemEmpowerment(S, 2, ev.time);
+                    this._trackEffect(S, 'Might', 2, 10, ev.time);
+                }
+
+                if (!ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc) {
+                    this._checkCombo(S, ev);
+                }
+
+                // Overload Air: first real hit after cast triggers the bonus strike
+                if (S.overloadAirBonusPending
+                    && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc
+                    && !ev.isField && ev.dmg > 0 && ev.ws > 0) {
+                    S.overloadAirBonusPending = false;
+                    insertSorted(S.eq, {
+                        time: ev.time, type: 'hit',
+                        skill: 'Overload Air Bonus', hitIdx: 1, sub: 1, totalSubs: 1,
+                        dmg: 1.32, ws: 690.5,
+                        isField: false, cc: false, conds: null,
+                        noCrit: true, att: ev.att, isTraitProc: true,
+                    });
+                    S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Overload Air Bonus' });
+                }
+
+                // Shattering Ice buff: proc an additional strike with 1s ICD
+                if (this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
+                    && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc
+                    && !ev.isField && ev.dmg > 0 && ev.ws > 0
+                    && ev.time >= (S.traitICD['ShatteringIce'] || 0)) {
+                    S.traitICD['ShatteringIce'] = ev.time + 1000;
+                    insertSorted(S.eq, {
+                        time: ev.time, type: 'hit',
+                        skill: 'Shattering Ice Proc', hitIdx: 1, sub: 1, totalSubs: 1,
+                        dmg: 0.6, ws: 690.5,
+                        isField: false, cc: false,
+                        conds: { Chilled: { stacks: 1, duration: 1 } },
+                        noCrit: false, att: ev.att, isTraitProc: true,
+                    });
+                    S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Shattering Ice Proc' });
+                }
+
+                if (S.sigilDoomPending && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc && !ev.isField && ev.dmg > 0) {
+                    const dp = SIGIL_PROCS.Doom;
+                    this._applyCondition(S, dp.cond, dp.stacks, dp.dur, ev.time, 'Sigil of Doom');
+                    S.sigilDoomPending = false;
+                    S.log.push({ t: ev.time, type: 'sigil_proc', sigil: 'Doom', skill: 'Sigil of Doom' });
+                    S.steps.push({ skill: 'Sigil of Doom', start: ev.time, end: ev.time, att: S.att, type: 'sigil_proc', ri: -1, icon: dp.icon });
+                }
+
+                if (S.electricEnchantmentStacks > 0
+                    && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc
+                    && !ev.isField && ev.dmg > 0 && ev.ws > 0) {
+                    S.electricEnchantmentStacks--;
+                    insertSorted(S.eq, {
+                        time: ev.time, type: 'hit',
+                        skill: 'Electric Enchantment', hitIdx: 1, sub: 1, totalSubs: 1,
+                        dmg: 0.4, ws: 690.5,
+                        isField: false, cc: false,
+                        conds: { Burning: { stacks: 1, duration: 1.5 } },
+                        isTraitProc: true, noCrit: false, att: S.att,
+                    });
+                    S.log.push({ t: ev.time, type: 'trait_proc', trait: 'Electric Enchantment' });
+                    S.steps.push({
+                        skill: 'Electric Enchantment', start: ev.time, end: ev.time,
+                        att: S.att, type: 'trait_proc', ri: -1,
+                        icon: 'https://render.guildwars2.com/file/00A93FDC4F99D29749B27C4D73C5A1644A0F3726/104675.png',
+                    });
+                }
+
+                if (activeRelic && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc) {
+                    this._checkRelicOnHit(S, ev);
+                }
+            } else if (ev.type === 'ctick') {
+                let infernoPower = 0;
+                if (S._hasInferno && ev.cond === 'Burning') {
+                    const tickAtt = this._attAt(S, ev.time);
+                    const empF = (S._hasEmpoweringFlame && tickAtt === 'Fire') ? 150 : 0;
+                    let powO = 0;
+                    if (S._hasPowerOverwhelming && might >= 10) powO = tickAtt === 'Fire' ? 300 : 150;
+                    let polyP = 0;
+                    if (S._hasElemPolyphony) {
+                        const tickAtt2 = this._att2At(S, ev.time);
+                        const atts = tickAtt2 !== null ? new Set([tickAtt, tickAtt2]) : new Set([tickAtt]);
+                        if (atts.has('Fire')) polyP = 200;
+                    }
+                    const empP = Math.round((S._empPool?.Power || 0) * empMul);
+                    infernoPower = basePower + might * 30 + empF + powO + polyP + empP;
+                }
+                const tickTempAria = S._hasTempestuousAria
+                    && this._effectStacksAt(S, 'Tempestuous Aria', ev.time) > 0 ? 0.05 : 0;
+                const tickTranscT = S._hasTranscendentTempest
+                    && this._effectStacksAt(S, 'Transcendent Tempest', ev.time) > 0 ? 0.20 : 0;
+                const tickElemRage = S._hasElementsOfRage
+                    && this._effectStacksAt(S, 'Elements of Rage', ev.time) > 0 ? 0.05 : 0;
+                const tickEmpAuras = S._hasEmpoweringAuras
+                    ? Math.min(this._effectStacksAt(S, 'Empowering Auras', ev.time), 5) * 0.01 : 0;
+                const tickFP = (S._hasFamiliarsProwess && S.evokerElement === 'Fire'
+                    && this._effectStacksAt(S, "Familiar's Prowess", ev.time) > 0)
+                    ? (S._hasFamiliarsFocus ? 0.10 : 0.05) : 0;
+                const tickCondMul = (1 + sigilMuls.condAdd + tickTempAria + tickTranscT
+                    + tickElemRage + tickEmpAuras + tickFP) * sigilMuls.condMul * vulnMul;
+                this._procCondTick(S, ev, condDmg, tickCondMul, infernoPower);
+            }
+
+            if (deathTime === null && (S.totalStrike + S.totalCond) >= tgtHP) {
+                deathTime = ev.time;
+            }
+        }
+
+        const total = S.totalStrike + S.totalCond;
+        // Use actual total damage (not the fixed tgtHP cap) so that builds with higher
+        // effective DPS show measurably higher numbers even when they kill at the same
+        // rotation hit.  In-game DPS meters count real damage, not boss max-HP.
+        const effectiveDmg = total;
+        // DPS window: [firstHitTime, effectiveEnd]
+        //   start — first damaging hit (mirrors GW2 golem benchmark; excludes pre-cast time)
+        //   end   — whichever is latest: rotation end OR last damaging hit (so skills with
+        //           long ticks/pulses beyond the cast, e.g. Glyph of Storms, are measured
+        //           over their full damage duration, not just the cast window)
+        const dpsStart = S.firstHitTime ?? 0;
+        const effectiveEnd = deathTime !== null
+            ? deathTime
+            : Math.max(rotEnd, S.lastHitTime ?? rotEnd);
+        const dpsWindowMs = effectiveEnd - dpsStart;
+        this.results = {
+            rotationMs: rotEnd,
+            dpsWindowMs,
+            totalDamage: effectiveDmg,
+            totalStrike: S.totalStrike,
+            totalCondition: S.totalCond,
+            dps: dpsWindowMs > 0 ? effectiveDmg / (dpsWindowMs / 1000) : 0,
+            deathTime,
+            targetHP: targetHP > 0 ? targetHP : null,
+            perSkill: S.perSkill,
+            log: S.log,
+            steps: S.steps,
+            allCondStacks: S.allCondStacks,
+            endState: {
+                time: rotEnd,
+                att: S.att,
+                att2: S.att2,
+                attEnteredAt: S.attEnteredAt,
+                attCD: { ...S.attCD },
+                skillCD: { ...S.skillCD },
+                charges: JSON.parse(JSON.stringify(S.charges)),
+                chainState: { ...S.chainState },
+                conjureEquipped: S.conjureEquipped,
+                conjurePickups: S.conjurePickups.filter(p => p.expiresAt > rotEnd).map(p => ({ ...p })),
+                eliteSpec: S.eliteSpec,
+                energy: S.energy,
+                sphereActiveUntil: S.sphereActiveUntil,
+                evokerElement: S.evokerElement,
+                evokerCharges: S.evokerCharges,
+                evokerEmpowered: S.evokerEmpowered,
+                aaCarryover: S.aaCarryover ? { ...S.aaCarryover } : null,
+                quicknessUntil: S.quicknessUntil,
+                alacrityUntil: S.alacrityUntil,
+                weaveSelfUntil: S.weaveSelfUntil,
+                weaveSelfVisited: [...S.weaveSelfVisited],
+                perfectWeaveUntil: S.perfectWeaveUntil,
+                permaBoons: S.permaBoons || {},
+            },
+        };
+
+        for (const [an, v] of Object.entries(statAdj)) {
+            a[an].final += v;
+        }
+
+        return this.results;
+    }
+
+    computeContributions(startAtt, startAtt2, evokerElement, permaBoons, targetHP = 0) {
+        // Full run WITH target HP — used for the displayed DPS/kill-time results.
+        this.run(startAtt, startAtt2, evokerElement, permaBoons, null, targetHP);
+        const fullResults = this.results;
+
+        // Separate no-cap run for contributions baseline.  Using the same hp-free window for
+        // both "with" and "without" each modifier keeps the comparison symmetric.
+        this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
+        const fullDps = this.results.dps;
+
+        const modifiers = [];
+        const ht = name => this.activeTraitNames.has(name);
+
+        if (permaBoons.Might || fullResults.allCondStacks.some(s => s.cond === 'Might'))
+            modifiers.push({ id: 'Might', name: 'Might' });
+        if (permaBoons.Fury || fullResults.allCondStacks.some(s => s.cond === 'Fury'))
+            modifiers.push({ id: 'Fury', name: 'Fury' });
+        if (permaBoons.Vulnerability || fullResults.allCondStacks.some(s => s.cond === 'Vulnerability'))
+            modifiers.push({ id: 'Vulnerability', name: 'Vulnerability' });
+
+        for (const name of (this.attributes.sigils || [])) {
+            const s = this.sigils[name];
+            const hasStatEffect = s && (s.strikeDamageM || s.strikeDamageA
+                || s.conditionDamageM || s.conditionDamageA
+                || s.criticalChance || s.conditionDuration
+                || s.bleedingDuration || s.burningDuration
+                || s.poisonDuration || s.tormentDuration);
+            const hasProcEffect = !!SIGIL_PROCS[name];
+            if (hasStatEffect || hasProcEffect)
+                modifiers.push({ id: `Sigil:${name}`, name: `Sigil of ${name}` });
+        }
+
+        const relic = this.attributes.relic;
+        if (relic && RELIC_PROCS[relic])
+            modifiers.push({ id: `Relic:${relic}`, name: `Relic of ${relic}` });
+
+        // ── Trait contributions ──
+        // Stat-based (flat bonus subtracted from attributes before running)
+        if (ht('Burning Rage')) modifiers.push({ id: 'Trait:Burning Rage', name: 'Burning Rage' });
+        if (ht("Zephyr's Speed")) modifiers.push({ id: "Trait:Zephyr's Speed", name: "Zephyr's Speed" });
+        if (ht('Gathered Focus')) modifiers.push({ id: 'Trait:Gathered Focus', name: 'Gathered Focus' });
+        if (ht('Elemental Enchantment')) modifiers.push({ id: 'Trait:Elemental Enchantment', name: 'Elemental Enchantment' });
+        if (ht('Serrated Stones')) modifiers.push({ id: 'Trait:Serrated Stones', name: 'Serrated Stones' });
+        // Per-hit power / ferocity bonuses (flag-based)
+        if (ht("Aeromancer's Training")) modifiers.push({ id: "Trait:Aeromancer's Training", name: "Aeromancer's Training" });
+        if (ht('Empowering Flame')) modifiers.push({ id: 'Trait:Empowering Flame', name: 'Empowering Flame' });
+        if (ht('Power Overwhelming')) modifiers.push({ id: 'Trait:Power Overwhelming', name: 'Power Overwhelming' });
+        if (ht('Raging Storm')) modifiers.push({ id: 'Trait:Raging Storm', name: 'Raging Storm' });
+        if (ht('Fresh Air')) modifiers.push({ id: 'Trait:Fresh Air', name: 'Fresh Air' });
+        if (ht('Elemental Polyphony')) modifiers.push({ id: 'Trait:Elemental Polyphony', name: 'Elemental Polyphony' });
+        if (ht('Elemental Empowerment')) modifiers.push({ id: 'Trait:Elemental Empowerment', name: 'Elemental Empowerment' });
+        if (ht('Enhanced Potency') && (permaBoons.Fury || permaBoons.Might))
+            modifiers.push({ id: 'Trait:Enhanced Potency', name: 'Enhanced Potency' });
+        if (ht('Superior Elements')) modifiers.push({ id: 'Trait:Superior Elements', name: 'Superior Elements' });
+        if (ht('Burning Precision')) modifiers.push({ id: 'Trait:Burning Precision', name: 'Burning Precision' });
+        // Weaver's Prowess no longer grants any damage bonus (patch removed cond dmg)
+        // Damage multiplier traits (flag-based)
+        if (ht('Persisting Flames')) modifiers.push({ id: 'Trait:Persisting Flames', name: 'Persisting Flames' });
+        if (ht("Pyromancer's Training")) modifiers.push({ id: "Trait:Pyromancer's Training", name: "Pyromancer's Training" });
+        if (ht('Fiery Might')) modifiers.push({ id: 'Trait:Fiery Might', name: 'Fiery Might' });
+        if (ht('Stormsoul')) modifiers.push({ id: 'Trait:Stormsoul', name: 'Stormsoul' });
+        if (ht('Bolt to the Heart')) modifiers.push({ id: 'Trait:Bolt to the Heart', name: 'Bolt to the Heart' });
+        if (ht('Transcendent Tempest')) modifiers.push({ id: 'Trait:Transcendent Tempest', name: 'Transcendent Tempest' });
+        if (ht('Elements of Rage')) modifiers.push({ id: 'Trait:Elements of Rage', name: 'Elements of Rage (proc)' });
+        if (ht('Swift Revenge')) modifiers.push({ id: 'Trait:Swift Revenge', name: 'Swift Revenge' });
+        if (ht('Empowering Auras')) modifiers.push({ id: 'Trait:Empowering Auras', name: 'Empowering Auras' });
+        if (ht("Familiar's Prowess")) modifiers.push({ id: "Trait:Familiar's Prowess", name: "Familiar's Prowess" });
+        if (ht('Lightning Rod')) modifiers.push({ id: 'Trait:Lightning Rod', name: 'Lightning Rod' });
+
+        // Contribution sub-runs intentionally ignore targetHP (run to end of rotation without
+        // a kill cap). When targetHP is set, a modifier can cause the golem to die in one run
+        // but not the other, producing asymmetric DPS windows and wildly inflated percentages.
+        // Using a consistent no-cap window gives accurate "how much damage does this add" values.
+        const contributions = [];
+        for (const mod of modifiers) {
+            this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, 0);
+            const withoutDps = this.results.dps;
+            const increase = fullDps - withoutDps;
+            contributions.push({
+                id: mod.id,
+                name: mod.name,
+                dpsIncrease: increase,
+                pctIncrease: withoutDps > 0 ? (increase / withoutDps) * 100 : 0,
+            });
+        }
+
+        contributions.sort((a, b) => b.dpsIncrease - a.dpsIncrease);
+
+        this.results = fullResults;
+        this.results.contributions = contributions;
+        return this.results;
+    }
+
+    _step(S, name, skipCastUntil = false, concurrents = []) {
+        if (!skipCastUntil && S.t < S.castUntil) S.t = S.castUntil;
+
+        if (name === '__drop_bundle') {
+            if (S.conjureEquipped) {
+                S.log.push({ t: S.t, type: 'drop', weapon: S.conjureEquipped });
+                S.steps.push({ skill: name, start: S.t, end: S.t, att: S.att, type: 'drop', ri: S._ri });
+                S.conjureEquipped = null;
+                this._procOnSwapSigils(S, S.t);
+            }
+            return;
+        }
+        if (name.startsWith('__pickup_')) {
+            const weapon = name.slice(9);
+            const pi = S.conjurePickups.findIndex(p => p.weapon === weapon && S.t <= p.expiresAt);
+            if (pi !== -1) {
+                S.conjureEquipped = weapon;
+                S.conjurePickups.splice(pi, 1);
+                S.log.push({ t: S.t, type: 'pickup', weapon });
+                S.steps.push({ skill: name, start: S.t, end: S.t, att: S.att, type: 'pickup', ri: S._ri });
+                this._procOnSwapSigils(S, S.t);
+                if (S._hasConjurer) this._applyAura(S, 'Fire Aura', 4000, S.t, 'Conjurer');
+            } else {
+                S.log.push({ t: S.t, type: 'err', msg: `No ${weapon} pickup available` });
+            }
+            return;
+        }
+
+        const sk = this._skillInContext(name, S);
+        if (!sk) { S.log.push({ t: S.t, type: 'err', msg: `Unknown: ${name}` }); return; }
+
+        // Weave Self natural expiry: if expired without visiting all 4 attunements, reset the chain
+        if (S.weaveSelfUntil > 0 && S.t >= S.weaveSelfUntil && S.perfectWeaveUntil <= S.t) {
+            S.weaveSelfUntil = 0;
+            S.weaveSelfVisited = new Set();
+            S.chainState['Weave Self'] = 'Weave Self';
+            S.log.push({ t: S.t, type: 'skill_proc', skill: 'Weave Self', detail: 'expired - chain reset' });
+        }
+
+        // Tailored Victory requires an active Perfect Weave window
+        if (name === 'Tailored Victory' && S.perfectWeaveUntil <= S.t) {
+            S.log.push({ t: S.t, type: 'err', msg: 'Tailored Victory requires Perfect Weave to be active' });
+            return;
+        }
+
+        if (sk.type === 'Attunement' && !sk.name.startsWith('Overload')) {
+            this._doSwap(S, sk);
+            return;
+        }
+
+        if (sk.name.startsWith('Overload')) {
+            this._doOverload(S, sk);
+            return;
+        }
+
+        if (CONJURE_WEAPONS.has(sk.weapon) && S.conjureEquipped !== sk.weapon) {
+            S.log.push({ t: S.t, type: 'err', msg: `Need ${sk.weapon} equipped for ${name}` });
+            return;
+        }
+        if (S.conjureEquipped && sk.type === 'Weapon skill' && !CONJURE_WEAPONS.has(sk.weapon)) {
+            S.log.push({ t: S.t, type: 'err', msg: `Cannot use ${name} while wielding ${S.conjureEquipped}` });
+            return;
+        }
+
+        if (sk.type === 'Jade Sphere') {
+            this._doJadeSphere(S, sk);
+            return;
+        }
+
+        if (sk.type === 'Familiar') {
+            this._doFamiliar(S, sk);
+            return;
+        }
+
+        let isAACarryover = false;
+        if (S.aaCarryover && sk.slot === '1') {
+            const expected = S.chainState[S.aaCarryover.root];
+            if (name === expected) isAACarryover = true;
+        }
+
+        if (!isAACarryover && sk.attunement && !this._attOK(sk, S)) {
+            const inDesc = S.eliteSpec === 'Weaver' ? `${S.att}/${S.att2}` : S.att;
+            S.log.push({ t: S.t, type: 'err', msg: `Wrong attunement for ${name} (need ${sk.attunement}, in ${inDesc})` });
+            return;
+        }
+
+        if (sk.chainSkill) {
+            const chainRoot = this._getChainRoot(sk);
+            const expected = S.chainState[chainRoot] || chainRoot;
+            if (name !== expected) {
+                S.log.push({ t: S.t, type: 'err', msg: `Chain: need ${expected}, got ${name}` });
+                return;
+            }
+        }
+
+        const key = this._cdKey(sk);
+        const isCharged = sk.maximumCount > 0 && sk.countRecharge > 0;
+
+        if (isCharged) {
+            this._initCharges(S, key, sk);
+
+            const cdReady = S.skillCD[key] || 0;
+            if (S.t < cdReady) S.t = cdReady;
+
+            this._catchUpCharges(S, key, sk);
+            const ch = S.charges[key];
+
+            if (ch.count <= 0) {
+                if (ch.nextChargeAt > S.t) S.t = ch.nextChargeAt;
+                ch.count++;
+                const baseMs = this._pyroRechargeMs(S, sk, Math.round(sk.countRecharge * 1000));
+                ch.nextChargeAt = ch.count < sk.maximumCount ? S.t + this._alaCd(S, baseMs, S.t) : Infinity;
+            }
+            ch.count--;
+            if (ch.nextChargeAt === Infinity && ch.count < sk.maximumCount) {
+                const baseMs = this._pyroRechargeMs(S, sk, Math.round(sk.countRecharge * 1000));
+                ch.nextChargeAt = S.t + this._alaCd(S, baseMs, S.t);
+            }
+        } else {
+            const cdReady = S.skillCD[key] || 0;
+            if (S.t < cdReady) S.t = cdReady;
+        }
+
+        const csvCastMs = Math.round(sk.castTime * 1000);
+        const { castMs, scaleOff } = this._adjCastTime(S, csvCastMs, S.t);
+        const start = S.t;
+        const end = start + castMs;
+
+        S.log.push({ t: start, type: 'cast', skill: name, att: S.att, dur: castMs });
+        this._scheduleHits(S, sk, start, scaleOff);
+        this._trackField(S, sk, end);
+        this._trackAura(S, sk, end);
+
+        // Fire instant skills that overlap with this cast window
+        for (const c of concurrents) {
+            const fireAt = start + (c.offset || 0);
+            S.t = Math.max(fireAt, start); // clamp to cast start; _step handles own CD wait
+            S._ri = c._ri;
+            this._step(S, c.name, true /* skipCastUntil */);
+            // S.t is now at the concurrent's actual fire time (< end); reset below
+        }
+
+        if (castMs > 0) S.castUntil = end;
+        S.t = end;
+        S.log.push({ t: end, type: 'cast_end', skill: name });
+
+        if (sk.recharge > 0) {
+            let finalCd;
+            if (S.arcaneEchoUntil > end && sk.type === 'Weapon skill') {
+                // Arcane Echo: reduce the next weapon skill recharge to exactly 1s
+                finalCd = end + 1000;
+                S.arcaneEchoUntil = 0;
+                S.log.push({ t: end, type: 'skill_proc', skill: 'Arcane Echo', detail: `${name} CD → 1s` });
+            } else {
+                let baseCdMs = this._pyroRechargeMs(S, sk, Math.round(sk.recharge * 1000));
+                if (S.elemBalanceActive && end <= S.elemBalanceExpiry
+                    && sk.type === 'Weapon skill') {
+                    baseCdMs = Math.round(baseCdMs * 0.34);
+                    S.elemBalanceActive = false;
+                }
+                // Ride the Lightning halves its own recharge when it hits (always assumed to hit).
+                // The CSV recharge stays at 20s so relic procs (weapon_recharge20) trigger correctly.
+                // _pyroRechargeMs already applied Aeromancer's Training (×0.8), giving 16s → 8s,
+                // or 20s → 10s without the trait.
+                if (name === 'Ride the Lightning') baseCdMs = Math.round(baseCdMs / 2);
+                finalCd = end + this._alaCd(S, baseCdMs, end);
+            }
+            S.skillCD[key] = finalCd;
+            if (!isCharged) this._propagateChainCD(S, sk, finalCd);
+        }
+
+        if (sk.chainSkill) {
+            const chainRoot = this._getChainRoot(sk);
+            S.chainState[chainRoot] = sk.chainSkill;
+        }
+
+        if (S.aaCarryover) {
+            if (isAACarryover) {
+                if (sk.chainSkill === S.aaCarryover.root) S.aaCarryover = null;
+            } else if (sk.slot === '1' && this._attOK(sk, S)) {
+                S.aaCarryover = null;
+            }
+        }
+
+        this._resetChainsOnCast(S, sk);
+
+        this._ensurePerSkill(S, name);
+        S.perSkill[name].casts++;
+        S.perSkill[name].castTimeMs += castMs;
+        S.steps.push({ skill: name, start, end, att: S.att, type: 'skill', ri: S._ri });
+
+        if (sk.type === 'Conjure') {
+            const cw = CONJURE_MAP[sk.name];
+            if (cw) {
+                S.conjureEquipped = cw;
+                const existing = S.conjurePickups.findIndex(p => p.weapon === cw);
+                if (existing !== -1) S.conjurePickups.splice(existing, 1);
+                S.conjurePickups.push({ weapon: cw, expiresAt: end + CONJURE_PICKUP_DURATION });
+                S.log.push({ t: end, type: 'conjure', weapon: cw, pickupExpires: end + CONJURE_PICKUP_DURATION });
+                if (S._hasConjurer) this._applyAura(S, 'Fire Aura', 4000, end, 'Conjurer');
+            }
+        }
+
+        if (S.eliteSpec === 'Evoker' && S.evokerElement) {
+            const slotNum = parseInt(sk.slot);
+            if (!isNaN(slotNum) && slotNum >= 2 && slotNum <= 5 && !CONJURE_WEAPONS.has(sk.weapon)) {
+                const skillAtt = sk.attunement ? sk.attunement.split('+') : [];
+                const bonus = skillAtt.includes(S.evokerElement) ? 2 : 1;
+                const maxCh = S._hasSpecializedElements ? 4 : 6;
+                S.evokerCharges = Math.min(maxCh, S.evokerCharges + bonus);
+            }
+        }
+
+        this._checkRelicOnCast(S, sk, start, end);
+
+        if (S._hasPyroPuissance && S.att === 'Fire') {
+            this._trackEffect(S, 'Might', 1, 15, end);
+        }
+
+        if (S._hasGaleSong && sk.type === 'Healing skill') {
+            this._trackEffect(S, 'Protection', 1, 3, end);
+        }
+
+        if (S._hasTempestuousAria && sk.type === 'Shout') {
+            this._trackEffect(S, 'Might', 2, 10, end);
+        }
+
+        if (S._hasAltruisticAspect && sk.type === 'Meditation') {
+            if (sk.name === "Fox's Fury") this._trackEffect(S, 'Might', 3, 10, end);
+            else if (sk.name === "Hare's Agility") this._trackEffect(S, 'Fury', 1, 5, end);
+            else if (sk.name === "Toad's Fortitude") this._trackEffect(S, 'Stability', 1, 5, end);
+            else if (sk.name === 'Elemental Procession') this._trackEffect(S, 'Resistance', 1, 5, end);
+        }
+
+        if (S._hasEarthsEmbrace && sk.type === 'Healing skill'
+            && end >= (S.traitICD['EarthsEmbrace'] || 0)) {
+            S.traitICD['EarthsEmbrace'] = end + 15000;
+            this._trackEffect(S, 'Resistance', 1, 4, end);
+            S.log.push({ t: end, type: 'trait_proc', trait: "Earth's Embrace", skill: "Earth's Embrace" });
+        }
+
+        if (sk.type === 'Signet') {
+            if (S._hasWrittenInStone) {
+                if (sk.name === 'Signet of Restoration') this._applyAura(S, 'Frost Aura', 4000, end, 'Written in Stone');
+                else if (sk.name === 'Signet of Fire') this._applyAura(S, 'Fire Aura', 4000, end, 'Written in Stone');
+                else if (sk.name === 'Signet of Earth') this._applyAura(S, 'Magnetic Aura', 3000, end, 'Written in Stone');
+            }
+            if (sk.name === 'Signet of Fire' && !S._hasWrittenInStone) {
+                S.signetFirePassiveLostUntil = S.skillCD[key] || 0;
+            }
+        }
+
+        if (S._hasInscription && sk.type === 'Glyph') {
+            const att = S.att;
+            if (att === 'Fire') this._trackEffect(S, 'Might', 1, 10, end);
+            else if (att === 'Water') this._trackEffect(S, 'Regeneration', 1, 10, end);
+            else if (att === 'Air') this._trackEffect(S, 'Swiftness', 1, 10, end);
+            else if (att === 'Earth') this._trackEffect(S, 'Protection', 1, 3, end);
+        }
+
+        if (S._hasBolsteredElements && sk.type === 'Stance') {
+            this._trackEffect(S, 'Protection', 1, 3, end);
+        }
+
+        const isDual = sk.slot === '3' && sk.attunement && sk.attunement.includes('+');
+        if (isDual) {
+            if (S._hasSuperiorElements && end >= (S.traitICD['SuperiorElements'] || 0)) {
+                S.traitICD['SuperiorElements'] = end + 4000;
+                this._trackEffect(S, 'Weakness', 1, 5, end);
+            }
+            if (S._hasSwiftRevenge) this._trackEffect(S, 'Swiftness', 1, 4, end);
+            if (S._hasInvigoratingStrikes) this._trackEffect(S, 'Vigor', 1, 3, end);
+        }
+
+        // ── Skill-specific post-cast effects ──────────────────────────────────
+
+        if (sk.name === 'Arcane Echo') {
+            S.arcaneEchoUntil = end + (sk.duration || 10) * 1000;
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Arcane Echo', detail: 'armed' });
+        }
+
+        if (sk.name === 'Relentless Fire') {
+            const durMs = (S.sphereExpiry.Fire > end) ? 8000 : 5000;
+            S.allCondStacks.push({ t: end, cond: 'Relentless Fire', expiresAt: end + durMs });
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Relentless Fire', detail: `${durMs / 1000}s` });
+        }
+
+        if (sk.name === 'Shattering Ice') {
+            const durMs = (S.sphereExpiry.Water > end) ? 8000 : 5000;
+            S.allCondStacks.push({ t: end, cond: 'Shattering Ice', expiresAt: end + durMs });
+            // ICD starts at cast-end so the on-cast hit (< end) doesn't trigger the proc
+            S.traitICD['ShatteringIce'] = end;
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Shattering Ice', detail: `${durMs / 1000}s` });
+        }
+
+        if (sk.name === 'Elemental Celerity') {
+            // Reset cooldowns for all weapon skills belonging to the current attunement
+            for (const wsk of this.skills) {
+                if (wsk.type !== 'Weapon skill' || wsk.recharge <= 0) continue;
+                if (!wsk.attunement) continue;
+                if (!wsk.attunement.split('+').includes(S.att)) continue;
+                S.skillCD[this._cdKey(wsk)] = 0;
+            }
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Elemental Celerity', detail: `${S.att} CDs reset` });
+
+            // Boons from each active Jade Sphere
+            if ((S.sphereExpiry.Fire > end)) this._trackEffect(S, 'Might', 5, 6, end);
+            if ((S.sphereExpiry.Water > end)) this._trackEffect(S, 'Vigor', 1, 6, end);
+            if ((S.sphereExpiry.Air > end)) this._trackEffect(S, 'Fury', 1, 6, end);
+            if ((S.sphereExpiry.Earth > end)) this._trackEffect(S, 'Protection', 1, 4, end);
+        }
+
+        // ── Evoker meditation post-cast effects ───────────────────────────────
+
+        if (sk.name === "Hare's Agility") {
+            S.electricEnchantmentStacks += 5;
+            S.log.push({ t: end, type: 'skill_proc', skill: "Hare's Agility", detail: '+5 electric enchantment' });
+        }
+
+        if (sk.name === "Toad's Fortitude" && S.evokerElement === 'Earth') {
+            this._trackEffect(S, 'Resistance', 1, 4, end);
+        }
+
+        if (sk.name === "Fox's Fury") {
+            // Determine damage tier from Might count at cast start (before Fox's Fury grants)
+            const preFuryMight = this._mightStacksAt(S, start);
+            const foxTier = preFuryMight >= 20 ? 2 : preFuryMight >= 10 ? 1 : 0;
+            const foxCoeffs = [1.5, 2.25, 3.0];
+            const foxBurnStacks = [1, 2, 3];
+            const foxBurnDurs = [3, 5, 7];
+            insertSorted(S.eq, {
+                time: start + scaleOff(560), type: 'hit',
+                skill: "Fox's Fury", hitIdx: 1, sub: 1, totalSubs: 1,
+                dmg: foxCoeffs[foxTier], ws: this._ws(sk),
+                isField: false, cc: false,
+                conds: { Burning: { stacks: foxBurnStacks[foxTier], duration: foxBurnDurs[foxTier] } },
+                att: S.att, att2: S.att2, castStart: start,
+                conjure: S.conjureEquipped || null,
+            });
+            // Grant Might + Fury at cast end
+            const foxMightCount = 8 + (S.evokerElement === 'Fire' ? 3 : 0);
+            this._trackEffect(S, 'Might', foxMightCount, 10, end);
+            this._trackEffect(S, 'Fury', 1, 10, end);
+            S.log.push({ t: end, type: 'skill_proc', skill: "Fox's Fury", detail: `tier ${foxTier}, ${foxMightCount} Might` });
+        }
+
+        if (sk.name === 'Elemental Procession') {
+            // Summon all 4 empowered familiars; they cast autonomously (no player cast time)
+            for (const ename of ['Conflagration', 'Lightning Blitz', 'Seismic Impact']) {
+                const fsk = this._skill(ename);
+                if (fsk) this._scheduleHits(S, fsk, end, x => x);
+            }
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Elemental Procession', detail: 'empowered familiars released' });
+        }
+
+        if (sk.name === 'Rejuvenate') {
+            const chargesNeeded = S._hasSpecializedElements ? 4 : 6;
+            S.evokerCharges = chargesNeeded;
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Rejuvenate', detail: `charges → ${chargesNeeded}` });
+        }
+
+        if (sk.name === 'Weave Self') {
+            S.weaveSelfUntil = end + 20000;
+            S.weaveSelfVisited = new Set([S.att]);
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Weave Self', detail: `armed, starting in ${S.att}` });
+        }
+
+        if (sk.name === 'Tailored Victory') {
+            S.perfectWeaveUntil = 0;
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Tailored Victory', detail: 'Perfect Weave consumed' });
+        }
+    }
+
+    _doSwap(S, sk) {
+        const target = sk.name.replace(' Attunement', '');
+
+        if (S.eliteSpec === 'Weaver') {
+            this._doWeaverSwap(S, sk, target);
+            return;
+        }
+
+        if (S._hasSpecializedElements) {
+            S.log.push({ t: S.t, type: 'err', msg: 'Cannot swap attunement with Specialized Elements' });
+            return;
+        }
+
+        if (target === S.att) {
+            S.log.push({ t: S.t, type: 'err', msg: `Already in ${target}` });
+            return;
+        }
+
+        S.aaCarryover = this._detectAACarryover(S);
+
+        const cdReady = S.attCD[target] || 0;
+        if (S.t < cdReady) S.t = cdReady;
+
+        const prev = S.att;
+        S.att = target;
+        S.attEnteredAt = S.t;
+
+        const isEvoker = S.eliteSpec === 'Evoker';
+        const evoEl = S.evokerElement;
+        const prevBaseCd = (isEvoker && prev === evoEl) ? OFF_ATT_CD : Math.round(sk.recharge * 1000);
+        const existingCD = S.attCD[prev] || 0;
+        S.attCD[prev] = Math.max(existingCD, S.t + this._alaCd(S, prevBaseCd, S.t));
+
+        for (const other of ATTUNEMENTS) {
+            if (other === target || other === prev) continue;
+            const existingOther = S.attCD[other] || 0;
+            S.attCD[other] = Math.max(existingOther, S.t + this._alaCd(S, OFF_ATT_CD, S.t));
+        }
+
+        this._scheduleHits(S, sk, S.t);
+        this._procOnSwapSigils(S, S.t);
+        if (S._hasEnergizedElements) {
+            if (S.energy !== null) S.energy = Math.min(CATALYST_ENERGY_MAX, S.energy + 2);
+            this._trackEffect(S, 'Fury', 1, 2, S.t);
+        }
+        if (target === 'Fire') this._triggerSunspot(S, S.t);
+        if (prev === 'Fire' && target !== 'Fire') this._triggerFlameExpulsion(S, S.t);
+        if (target === 'Air') {
+            this._triggerElectricDischarge(S, S.t);
+            if (S._hasOneWithAir) this._trackEffect(S, 'Superspeed', 1, 3, S.t);
+            if (S._hasInscription) this._trackEffect(S, 'Resistance', 1, 3, S.t);
+            if (S._hasFreshAir) this._applyFreshAirBuff(S, S.t);
+        }
+        if (target === 'Water') {
+            if (S._hasLatentStamina && S.t >= (S.traitICD['LatentStamina'] || 0)) {
+                S.traitICD['LatentStamina'] = S.t + 10000;
+                this._trackEffect(S, 'Vigor', 1, 3, S.t);
+            }
+        }
+        if (target === 'Earth') {
+            this._triggerEarthenBlast(S, S.t);
+            if (S._hasRockSolid) this._grantRockSolid(S, S.t);
+        }
+        if (S._hasElemDynamo && target === S.evokerElement) {
+            const maxCh = S._hasSpecializedElements ? 4 : 6;
+            S.evokerCharges = Math.min(maxCh, S.evokerCharges + 1);
+        }
+        if (S._hasElemBalance && target === S.evokerElement) {
+            S.elemBalanceCount++;
+            if (S.elemBalanceCount % 2 === 0) {
+                S.elemBalanceActive = true;
+                S.elemBalanceExpiry = S.t + 5000;
+            }
+        }
+        S.attTimeline.push({ t: S.t, att: target });
+
+        S.log.push({ t: S.t, type: 'swap', from: prev, to: target });
+        S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri });
+    }
+
+    _doWeaverSwap(S, sk, target) {
+        if (target === S.att && target === S.att2) {
+            S.log.push({ t: S.t, type: 'err', msg: `Already in ${target}/${target}` });
+            return;
+        }
+
+        S.aaCarryover = this._detectAACarryover(S);
+
+        const cdReady = S.attCD[target] || 0;
+        if (S.t < cdReady) S.t = cdReady;
+
+        const prevPrimary = S.att;
+        const prevSecondary = S.att2;
+        S.att2 = prevPrimary;
+        S.att = target;
+        S.attEnteredAt = S.t;
+
+        // Capture before the expiry logic below can clear weaveSelfUntil
+        const weaveSelfWasActive = S.weaveSelfUntil > S.t;
+
+        // Weave Self: track visited attunements; trigger Perfect Weave when all 4 visited
+        if (weaveSelfWasActive) {
+            S.weaveSelfVisited.add(target);
+            if (S.weaveSelfVisited.size >= 4) {
+                // The 4th swap ends Weave Self — but this swap still benefits from the 2s CD
+                S.weaveSelfUntil = 0;
+                S.weaveSelfVisited = new Set();
+                S.perfectWeaveUntil = S.t + 10000;
+                S.log.push({ t: S.t, type: 'skill_proc', skill: 'Perfect Weave', detail: '10s' });
+            }
+        }
+
+        // The 4th swap that ends Weave Self still gets the 2s cooldown (weaveSelfWasActive)
+        const weaveSelfSwapCD = weaveSelfWasActive ? 2000 : WEAVER_SWAP_CD;
+        for (const a of ATTUNEMENTS) {
+            S.attCD[a] = S.t + this._alaCd(S, weaveSelfSwapCD, S.t);
+        }
+
+        this._scheduleHits(S, sk, S.t);
+        this._procOnSwapSigils(S, S.t);
+        if (target === 'Fire') this._triggerSunspot(S, S.t);
+        if (prevPrimary === 'Fire' && target !== 'Fire') this._triggerFlameExpulsion(S, S.t);
+        if (target === 'Air') {
+            this._triggerElectricDischarge(S, S.t);
+            if (S._hasOneWithAir) this._trackEffect(S, 'Superspeed', 1, 3, S.t);
+            if (S._hasInscription) this._trackEffect(S, 'Resistance', 1, 3, S.t);
+            if (S._hasFreshAir && prevPrimary !== 'Air') this._applyFreshAirBuff(S, S.t);
+        }
+        if (target === 'Water') {
+            if (S._hasLatentStamina && S.t >= (S.traitICD['LatentStamina'] || 0)) {
+                S.traitICD['LatentStamina'] = S.t + 10000;
+                this._trackEffect(S, 'Vigor', 1, 3, S.t);
+            }
+        }
+        if (target === 'Earth') {
+            this._triggerEarthenBlast(S, S.t);
+            if (S._hasRockSolid) this._grantRockSolid(S, S.t);
+        }
+        if (S._hasElementsOfRage && target === prevPrimary) {
+            this._refreshEffect(S, 'Elements of Rage', 8, S.t);
+        }
+        S.attTimeline.push({ t: S.t, att: target, att2: prevPrimary });
+
+        S.log.push({ t: S.t, type: 'swap', from: `${prevPrimary}/${prevSecondary}`, to: `${target}/${prevPrimary}` });
+        S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri });
+    }
+
+    _doOverload(S, sk) {
+        if (S.eliteSpec !== 'Tempest') {
+            S.log.push({ t: S.t, type: 'err', msg: `Overloads require Tempest specialization` });
+            return;
+        }
+        const olAtt = sk.attunement;
+        if (olAtt !== S.att) {
+            S.log.push({ t: S.t, type: 'err', msg: `Need ${olAtt} for ${sk.name}` });
+            return;
+        }
+
+        const cdReady = S.skillCD[sk.name] || 0;
+        if (S.t < cdReady) S.t = cdReady;
+
+        const baseDwell = S._hasTranscendentTempest
+            ? Math.round(OVERLOAD_DWELL * 0.67) : OVERLOAD_DWELL;
+        const dwellEffMs = this._alaCd(S, baseDwell, S.attEnteredAt);
+        const dwellReady = S.attEnteredAt + dwellEffMs;
+        if (S.t < dwellReady) S.t = dwellReady;
+
+        const csvCastMs = Math.round(sk.castTime * 1000);
+        const { castMs, scaleOff } = this._adjCastTime(S, csvCastMs, S.t);
+        const start = S.t;
+        const end = start + castMs;
+
+        if (S._hasHarmoniousConduit) {
+            this._trackEffect(S, 'Swiftness', 1, 8, start);
+            this._trackEffect(S, 'Stability', 1, 4, start);
+        }
+        if (S._hasHardyConduit) {
+            this._trackEffect(S, 'Protection', 1, 3, start);
+        }
+
+        S.log.push({ t: start, type: 'cast', skill: sk.name, att: S.att, dur: castMs });
+        this._scheduleHits(S, sk, start, scaleOff);
+        this._trackField(S, sk, end);
+        this._trackAura(S, sk, end);
+        if (sk.attunement === 'Fire') this._triggerSunspot(S, start);
+
+        S.castUntil = end;
+        S.t = end;
+        S.log.push({ t: end, type: 'cast_end', skill: sk.name });
+
+        const olBaseCd = Math.round(sk.recharge * 1000);
+        const olEffCd = this._alaCd(S, olBaseCd, end);
+        S.attCD[olAtt] = end + olEffCd;
+        S.skillCD[sk.name] = end + olEffCd;
+
+        this._resetChainsOnCast(S, sk);
+
+        this._ensurePerSkill(S, sk.name);
+        S.perSkill[sk.name].casts++;
+        S.perSkill[sk.name].castTimeMs += castMs;
+        S.steps.push({ skill: sk.name, start, end, att: S.att, type: 'overload', ri: S._ri });
+
+        if (S._hasUnstableConduit) {
+            const auraMap = { Fire: 'Fire Aura', Water: 'Frost Aura', Air: 'Shocking Aura', Earth: 'Magnetic Aura' };
+            const aura = auraMap[olAtt];
+            if (aura) this._applyAura(S, aura, 4000, end, 'Unstable Conduit');
+        }
+
+        if (S._hasPyroPuissance && S.att === 'Fire') {
+            this._trackEffect(S, 'Might', 1, 15, end);
+        }
+        if (sk.attunement === 'Fire') this._triggerFlameExpulsion(S, end);
+        if (sk.attunement === 'Air') this._triggerElectricDischarge(S, start);
+        if (sk.attunement === 'Earth') this._triggerEarthenBlast(S, start);
+
+        if (S._hasTranscendentTempest) {
+            this._refreshEffect(S, 'Transcendent Tempest', 7, end);
+        }
+
+        if (sk.attunement === 'Air') {
+            S.overloadAirBonusPending = true;
+        }
+    }
+
+    _doJadeSphere(S, sk) {
+        if (S.eliteSpec !== 'Catalyst') {
+            S.log.push({ t: S.t, type: 'err', msg: `Jade Sphere requires Catalyst specialization` });
+            return;
+        }
+        if (sk.attunement !== S.att) {
+            S.log.push({ t: S.t, type: 'err', msg: `Need ${sk.attunement} for ${sk.name}` });
+            return;
+        }
+        if (S.energy < CATALYST_SPHERE_COST) {
+            S.log.push({ t: S.t, type: 'err', msg: `Not enough energy (${S.energy}/${CATALYST_SPHERE_COST})` });
+            return;
+        }
+        const cdKey = this._cdKey(sk);
+        const cdReady = S.skillCD[cdKey] || 0;
+        if (S.t < cdReady) S.t = cdReady;
+
+        S.energy -= CATALYST_SPHERE_COST;
+        const durMs = Math.round((sk.duration || 5) * 1000);
+        S.sphereActiveUntil = Math.max(S.sphereActiveUntil, S.t + durMs);
+        S.sphereExpiry[sk.attunement] = Math.max(S.sphereExpiry[sk.attunement] || 0, S.t + durMs);
+
+        this._trackField(S, sk, S.t);
+
+        if (sk.recharge > 0) {
+            const baseCdMs = Math.round(sk.recharge * 1000);
+            S.skillCD[cdKey] = S.t + this._alaCd(S, baseCdMs, S.t);
+        }
+
+        S.log.push({ t: S.t, type: 'jade_sphere', skill: sk.name, att: sk.attunement, energy: S.energy, durMs });
+        this._ensurePerSkill(S, sk.name);
+        S.perSkill[sk.name].casts++;
+        S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: S.att, type: 'jade_sphere', ri: S._ri });
+
+        if (S._hasSpectacularSphere) {
+            const durMul = S._hasSphereSpecialist ? 1.5 : 1;
+            this._trackEffect(S, 'Quickness', 1, 1.5 * durMul, S.t);
+            const att = sk.attunement;
+            if (att === 'Fire') this._trackEffect(S, 'Might', 5, 10 * durMul, S.t);
+            else if (att === 'Water') this._trackEffect(S, 'Vigor', 1, 5 * durMul, S.t);
+            else if (att === 'Air') this._trackEffect(S, 'Fury', 1, 5 * durMul, S.t);
+            else if (att === 'Earth') this._trackEffect(S, 'Aegis', 1, 3 * durMul, S.t);
+        }
+
+        if (S._hasPyroPuissance && S.att === 'Fire') {
+            this._trackEffect(S, 'Might', 1, 15, S.t);
+        }
+    }
+
+    _doFamiliar(S, sk) {
+        if (S.eliteSpec !== 'Evoker') {
+            S.log.push({ t: S.t, type: 'err', msg: `Familiar skills require Evoker specialization` });
+            return;
+        }
+        const famElement = EVOKER_ELEMENT_MAP[sk.name];
+        if (!famElement) {
+            S.log.push({ t: S.t, type: 'err', msg: `Unknown familiar: ${sk.name}` });
+            return;
+        }
+
+        if (S.evokerElement !== famElement) {
+            S.log.push({ t: S.t, type: 'err', msg: `Need ${famElement} familiar selected for ${sk.name} (have ${S.evokerElement || 'none'})` });
+            return;
+        }
+
+        const isBasic = EVOKER_FAMILIAR_SELECTORS.has(sk.name);
+
+        const chargesNeeded = S._hasSpecializedElements ? 4 : 6;
+        if (isBasic) {
+            if (S.evokerEmpowered >= 3) {
+                S.log.push({ t: S.t, type: 'err', msg: `Empowered skill ready — cannot use ${sk.name}` });
+                return;
+            }
+            if (S.evokerCharges < chargesNeeded) {
+                S.log.push({ t: S.t, type: 'err', msg: `Need ${chargesNeeded} familiar charges for ${sk.name} (have ${S.evokerCharges})` });
+                return;
+            }
+        } else {
+            if (S.evokerEmpowered < 3) {
+                S.log.push({ t: S.t, type: 'err', msg: `Need 3 empowered charges for ${sk.name} (have ${S.evokerEmpowered})` });
+                return;
+            }
+        }
+
+        const cdReady = S.skillCD[sk.name] || 0;
+        if (S.t < cdReady) S.t = cdReady;
+
+        const csvCastMs = Math.round(sk.castTime * 1000);
+        const { castMs, scaleOff } = this._adjCastTime(S, csvCastMs, S.t);
+        const start = S.t;
+        const end = start + castMs;
+
+        if (castMs > 0) {
+            S.log.push({ t: start, type: 'cast', skill: sk.name, att: S.att, dur: castMs });
+            S.castUntil = end;
+        }
+        if (sk.name === 'Ignite') {
+            // Cycling burn durations: 2s / 0.5s / 1s / 1.5s; resets if unused for 15s
+            if (start - S.igniteLastUse > 15000) S.igniteStep = 0;
+            const IGNITE_DURS = [2, 0.5, 1, 1.5];
+            const burnDur = IGNITE_DURS[Math.min(S.igniteStep, 3)];
+            S.igniteStep = Math.min(S.igniteStep + 1, 3);
+            S.igniteLastUse = start;
+            insertSorted(S.eq, {
+                time: start, type: 'hit',
+                skill: 'Ignite', hitIdx: 1, sub: 1, totalSubs: 1,
+                dmg: 0.63, ws: this._ws(sk),
+                isField: false, cc: false,
+                conds: { Burning: { stacks: 1, duration: burnDur } },
+                att: S.att, att2: S.att2, castStart: start,
+                conjure: S.conjureEquipped || null,
+            });
+        } else {
+            this._scheduleHits(S, sk, start, scaleOff);
+        }
+        S.t = end;
+        if (castMs > 0) S.log.push({ t: end, type: 'cast_end', skill: sk.name });
+
+        if (isBasic) {
+            S.evokerCharges = 0;
+            S.evokerEmpowered++;
+            S.log.push({ t: end, type: 'familiar_basic', skill: sk.name, empowered: S.evokerEmpowered });
+        } else {
+            S.evokerEmpowered = 0;
+            S.log.push({ t: end, type: 'familiar_empowered', skill: sk.name });
+        }
+
+        if (sk.recharge > 0) {
+            const baseCdMs = Math.round(sk.recharge * 1000);
+            S.skillCD[sk.name] = end + this._alaCd(S, baseCdMs, end);
+        }
+
+        this._ensurePerSkill(S, sk.name);
+        S.perSkill[sk.name].casts++;
+        S.perSkill[sk.name].castTimeMs += castMs;
+        S.steps.push({ skill: sk.name, start, end, att: S.att, type: 'familiar', ri: S._ri });
+
+        if (S._hasPyroPuissance && S.att === 'Fire') {
+            this._trackEffect(S, 'Might', 1, 15, end);
+        }
+
+        if (S._hasFamiliarsProwess) {
+            this._grantFamiliarProwess(S, end);
+        }
+        if (S._hasFamiliarsBlessing) {
+            if (famElement === 'Fire' || famElement === 'Air') {
+                this._trackEffect(S, 'Quickness', 1, 3, end);
+            } else {
+                this._trackEffect(S, 'Alacrity', 1, 4, end);
+            }
+        }
+        if (S._hasGalvanicEnchantment) {
+            S.electricEnchantmentStacks += 2;
+        }
+
+        // Lightning Blitz always grants 1 electric enchantment stack (independent of traits)
+        if (sk.name === 'Lightning Blitz') {
+            S.electricEnchantmentStacks++;
+        }
+
+        // Zap active: 3% additive crit strike bonus for 10s
+        if (sk.name === 'Zap') {
+            this._trackEffect(S, 'Zap Buff', 1, 5, end);
+            S.log.push({ t: end, type: 'skill_proc', skill: 'Zap', detail: 'Zap Buff 10s' });
+        }
+
+        if (S._hasSpecializedElements) {
+            const pct = isBasic ? 0.10 : 0.50;
+            this._rechargeWeaponSkills(S, pct, end);
+            if (!isBasic) {
+                this._triggerAttunementEnterEffects(S, S.evokerElement, end);
+            }
+        }
+    }
+
+    _getChainRoot(sk) {
+        const slot = sk.slot;
+        const att = sk.attunement;
+        const weapon = sk.weapon;
+        const candidates = this.skills.filter(s =>
+            s.slot === slot && s.attunement === att && s.weapon === weapon && s.chainSkill
+        );
+        if (candidates.length === 0) return sk.name;
+        const targets = new Set(candidates.map(s => s.chainSkill));
+        const root = candidates.find(s => !targets.has(s.name));
+        return root ? root.name : candidates[0].name;
+    }
+
+    _resetChainsOnCast(S, sk) {
+        if (Math.round((sk.castTime || 0) * 1000) === 0) return;
+        const ownRoot = sk.chainSkill ? this._getChainRoot(sk) : null;
+        const carryRoot = S.aaCarryover?.root || null;
+        for (const key of Object.keys(S.chainState)) {
+            if (key === ownRoot || key === carryRoot) continue;
+            if (S.chainState[key] !== key) {
+                S.chainState[key] = key;
+            }
+        }
+    }
+
+    _propagateChainCD(S, sk, cdTime) {
+        let chain = sk.chainSkill;
+        const visited = new Set([sk.name]);
+        while (chain && !visited.has(chain)) {
+            const cs = this._skill(chain);
+            if (!cs) break;
+            S.skillCD[this._cdKey(cs)] = cdTime;
+            visited.add(chain);
+            chain = cs.chainSkill;
+        }
+    }
+
+    _trackField(S, sk, castEnd) {
+        if (!sk.comboField || sk.duration <= 0) return;
+        let dur = sk.duration * 1000;
+        if (S._hasPersistingFlames && FIRE_FIELD_SKILLS.has(sk.name)) dur += 2000;
+        S.fields.push({ type: sk.comboField, start: castEnd, end: castEnd + dur, skill: sk.name });
+        S.log.push({ t: castEnd, type: 'field', field: sk.comboField, skill: sk.name, dur });
+    }
+
+    _applyAura(S, auraName, durMs, time, skill) {
+        if (S._hasSmothering) durMs = Math.round(durMs * 1.33);
+        S.auras.push({ type: auraName, end: time + durMs, skill });
+        S.allCondStacks.push({ t: time, cond: auraName, expiresAt: time + durMs });
+        S.log.push({ t: time, type: 'aura', aura: auraName, skill, dur: durMs });
+        if (S._hasZephyrsBoon) {
+            this._trackEffect(S, 'Fury', 1, 5, time);
+            this._trackEffect(S, 'Swiftness', 1, 5, time);
+        }
+        if (S._hasElementalShielding) {
+            this._trackEffect(S, 'Protection', 1, 3, time);
+        }
+        if (S._hasInvigoratingTorrents) {
+            this._trackEffect(S, 'Vigor', 1, 5, time);
+            this._trackEffect(S, 'Regeneration', 1, 5, time);
+        }
+        if (S._hasTempestuousAria) {
+            this._refreshEffect(S, 'Tempestuous Aria', 5, time);
+        }
+        if (S._hasElementalBastion) {
+            this._trackEffect(S, 'Alacrity', 1, 4, time);
+        }
+        if (S._hasEmpoweringAuras) {
+            this._grantEmpoweringAuras(S, time);
+        }
+        if (S._hasElemEpitome) {
+            this._grantElemEmpowerment(S, 1, time);
+        }
+    }
+
+    _refreshEffect(S, effectName, durSec, time) {
+        for (const s of S.allCondStacks) {
+            if (s.cond === effectName && s.expiresAt > time) s.expiresAt = time;
+        }
+        this._trackEffect(S, effectName, 1, durSec, time);
+    }
+
+    _grantFamiliarProwess(S, time) {
+        const existing = S.allCondStacks.find(
+            s => s.cond === "Familiar's Prowess" && s.expiresAt > time && !s.perma);
+        if (existing) {
+            existing.expiresAt = Math.min(existing.expiresAt + 5000, time + 15000);
+        } else {
+            S.allCondStacks.push({ t: time, cond: "Familiar's Prowess", expiresAt: time + 5000 });
+        }
+    }
+
+    _rechargeWeaponSkills(S, pct, time) {
+        for (const sk of this.skills) {
+            if (sk.type !== 'Weapon skill') continue;
+            const key = this._cdKey(sk);
+            const cdTime = S.skillCD[key];
+            if (!cdTime || cdTime <= time) continue;
+            const remaining = cdTime - time;
+            S.skillCD[key] = time + Math.round(remaining * (1 - pct));
+        }
+    }
+
+    _triggerAttunementEnterEffects(S, element, time) {
+        if (element === 'Fire') this._triggerSunspot(S, time);
+        if (element === 'Air') {
+            this._triggerElectricDischarge(S, time);
+            if (S._hasOneWithAir) this._trackEffect(S, 'Superspeed', 1, 3, time);
+            if (S._hasInscription) this._trackEffect(S, 'Resistance', 1, 3, time);
+            if (S._hasFreshAir) this._applyFreshAirBuff(S, time);
+        }
+        if (element === 'Water') {
+            if (S._hasLatentStamina && time >= (S.traitICD['LatentStamina'] || 0)) {
+                S.traitICD['LatentStamina'] = time + 10000;
+                this._trackEffect(S, 'Vigor', 1, 3, time);
+            }
+        }
+        if (element === 'Earth') {
+            this._triggerEarthenBlast(S, time);
+            if (S._hasRockSolid) this._grantRockSolid(S, time);
+        }
+        if (S._hasElemDynamo && element === S.evokerElement) {
+            const maxCh = S._hasSpecializedElements ? 4 : 6;
+            S.evokerCharges = Math.min(maxCh, S.evokerCharges + 1);
+        }
+        if (S._hasElemBalance && element === S.evokerElement) {
+            S.elemBalanceCount++;
+            if (S.elemBalanceCount % 2 === 0) {
+                S.elemBalanceActive = true;
+                S.elemBalanceExpiry = time + 5000;
+            }
+        }
+    }
+
+    _getEmpMul(S, time) {
+        const stacks = Math.min(this._effectStacksAt(S, 'Elemental Empowerment', time), 10);
+        if (stacks === 0) return 0;
+        if (S._hasEmpoweredEmpowerment) return stacks === 10 ? 0.20 : stacks * 0.015;
+        return stacks * 0.01;
+    }
+
+    _grantElemEmpowerment(S, stacks, time) {
+        const current = Math.min(this._effectStacksAt(S, 'Elemental Empowerment', time), 10);
+        const toAdd = Math.min(stacks, 10 - current);
+        for (let i = 0; i < toAdd; i++) {
+            S.allCondStacks.push({ t: time, cond: 'Elemental Empowerment', expiresAt: time + 15000 });
+        }
+    }
+
+    _grantEmpoweringAuras(S, time) {
+        const durMs = 10000;
+        const existing = S.allCondStacks.filter(
+            s => s.cond === 'Empowering Auras' && s.expiresAt > time && !s.perma);
+        for (const s of existing) s.expiresAt = time + durMs;
+        if (existing.length < 5) {
+            S.allCondStacks.push({ t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
+        }
+    }
+
+    _checkCombo(S, ev) {
+        if (!ev.finType) return;
+        const activeField = S.fields.find(f => f.end > ev.time);
+        if (!activeField) return;
+        const att = ev.att;
+
+        if (S._hasElemEpitome) {
+            const icdKey = `EpitomeCombo_${att}`;
+            if (ev.time >= (S.traitICD[icdKey] || 0)) {
+                S.traitICD[icdKey] = ev.time + 10000;
+                const auraMap = {
+                    Fire: ['Fire Aura', 4000], Water: ['Frost Aura', 4000],
+                    Air: ['Shocking Aura', 3000], Earth: ['Magnetic Aura', 3000]
+                };
+                const a = auraMap[att];
+                if (a) this._applyAura(S, a[0], a[1], ev.time, 'Elemental Epitome');
+            }
+        }
+        if (S._hasElemSynergy) {
+            const icdKey = `SynergyCombo_${att}`;
+            if (ev.time >= (S.traitICD[icdKey] || 0)) {
+                S.traitICD[icdKey] = ev.time + 10000;
+                if (att === 'Fire') this._trackEffect(S, 'Might', 6, 10, ev.time);
+                else if (att === 'Earth') this._trackEffect(S, 'Stability', 2, 6, ev.time);
+            }
+        }
+
+        const fieldType = activeField.type;
+        const finType = ev.finType;
+        const finVal = ev.finVal;
+
+        if (finType === 'Blast' || finType === 'Leap') {
+            this._applyComboEffect(S, fieldType, finType, ev.time, ev.skill);
+        } else if (finType === 'Projectile') {
+            // Accumulator gives deterministic expected-value procs for fractional chances
+            S.comboAccum.Projectile = (S.comboAccum.Projectile || 0) + finVal;
+            if (S.comboAccum.Projectile >= 1) {
+                S.comboAccum.Projectile -= 1;
+                this._applyComboEffect(S, fieldType, finType, ev.time, ev.skill);
+            }
+        } else if (finType === 'Whirl') {
+            // Each unit of finVal is an independent 100% proc
+            for (let i = 0; i < finVal; i++) {
+                this._applyComboEffect(S, fieldType, finType, ev.time, ev.skill);
+            }
+        }
+    }
+
+    _applyComboEffect(S, fieldType, finType, time, skill) {
+        const src = `Combo (${fieldType}/${finType})`;
+
+        if (fieldType === 'Fire') {
+            if (finType === 'Blast') {
+                this._trackEffect(S, 'Might', 3, 20, time);
+            } else if (finType === 'Leap') {
+                this._applyAura(S, 'Fire Aura', 5000, time, src);
+            } else {
+                this._applyCondition(S, 'Burning', 1, 1, time, src);
+            }
+        } else if (fieldType === 'Ice') {
+            if (finType === 'Blast') {
+                this._applyAura(S, 'Frost Aura', 3000, time, src);
+            } else if (finType === 'Leap') {
+                this._applyAura(S, 'Frost Aura', 5000, time, src);
+            } else {
+                this._trackEffect(S, 'Chilled', 1, 1, time);
+            }
+        } else if (fieldType === 'Lightning') {
+            if (finType === 'Blast') {
+                this._trackEffect(S, 'Swiftness', 1, 10, time);
+            } else if (finType === 'Leap') {
+                // Daze/CC — no DPS impact, logged only
+                S.log.push({ t: time, type: 'combo', field: fieldType, finisher: finType, effect: 'CC', skill });
+                return;
+            } else {
+                this._trackEffect(S, 'Vulnerability', 2, 5, time);
+            }
+        } else if (fieldType === 'Poison') {
+            if (finType === 'Blast') {
+                this._trackEffect(S, 'Weakness', 1, 3, time);
+            } else if (finType === 'Leap') {
+                this._trackEffect(S, 'Weakness', 1, 8, time);
+            } else {
+                this._applyCondition(S, 'Poisoned', 1, 2, time, src);
+            }
+        } else if (fieldType === 'Water') {
+            if (finType === 'Projectile') {
+                this._trackEffect(S, 'Regeneration', 1, 2, time);
+            } else {
+                // Blast/Leap/Whirl produce healing — not tracked
+                return;
+            }
+        } else {
+            return;
+        }
+
+        S.log.push({ t: time, type: 'combo', field: fieldType, finisher: finType, skill });
+    }
+
+    _applyBoonExtension(S, durSec, time) {
+        const extMs = Math.round(durSec * 1000);
+        for (const s of S.allCondStacks) {
+            if (BOONS.has(s.cond) && s.expiresAt > time) {
+                s.expiresAt += extMs;
+            }
+        }
+        // Keep the explicit Quickness/Alacrity expiry fields in sync
+        if (S.quicknessUntil > time) S.quicknessUntil += extMs;
+        if (S.alacrityUntil > time) S.alacrityUntil += extMs;
+        S.log.push({ t: time, type: 'boon_extension', extMs });
+    }
+
+    _applyPrimordialStance(S, att1, att2, time) {
+        const STANCE_CONDS = {
+            Fire: () => this._applyCondition(S, 'Burning', 1, 2, time, 'Primordial Stance'),
+            Water: () => this._trackEffect(S, 'Chilled', 1, 1, time),
+            Air: () => this._trackEffect(S, 'Vulnerability', 8, 3, time),
+            Earth: () => this._applyCondition(S, 'Bleeding', 2, 6, time, 'Primordial Stance'),
+        };
+        // Apply for primary and (if Weaver) secondary attunement independently
+        // Dual same-element (Fire/Fire) applies the effect twice
+        const attunements = att2 !== null ? [att1, att2] : [att1];
+        for (const att of attunements) {
+            STANCE_CONDS[att]?.();
+        }
+    }
+
+    _trackAura(S, sk, castEnd) {
+        if (!sk.aura) return;
+        const parts = sk.aura.split('|');
+        const aType = parts[0];
+        const aDur = (parseFloat(parts[1]) || 0) * 1000;
+        if (aDur > 0) this._applyAura(S, aType + ' Aura', aDur, castEnd, sk.name);
+    }
+
+    _triggerSunspot(S, time) {
+        if (!S._hasSunspot) return;
+        if (S.eliteSpec === 'Evoker' && time < (S.traitICD['Sunspot'] || 0)) return;
+        if (S.eliteSpec === 'Evoker') S.traitICD['Sunspot'] = time + 5000;
+
+        this._applyAura(S, 'Fire Aura', 3000, time, 'Sunspot');
+
+        insertSorted(S.eq, {
+            time, type: 'hit',
+            skill: 'Sunspot', hitIdx: 1, sub: 1, totalSubs: 1,
+            dmg: 0.6, ws: 690.5,
+            isField: false, cc: false, conds: null,
+            noCrit: true, att: S.att, isTraitProc: true,
+        });
+
+        if (S._hasBurningRage) {
+            this._applyCondition(S, 'Burning', 2, 4, time, 'Sunspot');
+        }
+
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Sunspot', skill: 'Sunspot' });
+        S.steps.push({
+            skill: 'Sunspot', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1,
+            icon: 'https://render.guildwars2.com/file/1405047ED70DE30F80B1F6304A787B215BB50878/1012316.png',
+        });
+    }
+
+    _triggerFlameExpulsion(S, time) {
+        if (!S._hasPyroPuissance) return;
+        if (S.eliteSpec === 'Evoker' && time < (S.traitICD['FlameExpulsion'] || 0)) return;
+        if (S.eliteSpec === 'Evoker') S.traitICD['FlameExpulsion'] = time + 5000;
+
+        const might = this._mightStacksAt(S, time);
+        const capped = Math.min(might, 10);
+        const coeff = 1.0 + 0.05 * capped;
+        const burnDur = Math.min(2 + 0.5 * capped, 7);
+
+        insertSorted(S.eq, {
+            time, type: 'hit',
+            skill: 'Flame Expulsion', hitIdx: 1, sub: 1, totalSubs: 1,
+            dmg: coeff, ws: 690.5,
+            isField: false, cc: false, conds: null,
+            noCrit: false, att: S.att, isTraitProc: true,
+        });
+
+        this._applyCondition(S, 'Burning', 1, burnDur, time, 'Flame Expulsion');
+
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Flame Expulsion', skill: 'Flame Expulsion' });
+        S.steps.push({
+            skill: 'Flame Expulsion', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1,
+            icon: 'https://render.guildwars2.com/file/998095CB1FD2CF0164B8A36BABFDB911DF08DB02/1012313.png',
+        });
+    }
+
+    _attAt(S, t) {
+        let att = S.attTimeline[0].att;
+        for (const e of S.attTimeline) {
+            if (e.t > t) break;
+            att = e.att;
+        }
+        return att;
+    }
+
+    _att2At(S, t) {
+        let att2 = S.attTimeline[0].att2 || null;
+        for (const e of S.attTimeline) {
+            if (e.t > t) break;
+            if (e.att2 !== undefined) att2 = e.att2;
+        }
+        return att2;
+    }
+
+    _pyroRechargeMs(S, sk, baseMs) {
+        // Read directly from activeTraitNames (not S._has* flags) so CDR is never stripped
+        // by the contribution analysis, which only disables the damage multiplier portion.
+        if (sk.type === 'Weapon skill') {
+            if (this._hasTrait("Pyromancer's Training") && sk.attunement === 'Fire') baseMs = Math.round(baseMs * 0.8);
+            if (this._hasTrait("Aeromancer's Training") && sk.attunement === 'Air') baseMs = Math.round(baseMs * 0.8);
+            if (this._hasTrait("Geomancer's Training") && sk.attunement === 'Earth') baseMs = Math.round(baseMs * 0.8);
+        }
+        return baseMs;
+    }
+
+    _triggerEarthenBlast(S, time) {
+        if (!S._hasEarthenBlast) return;
+        if (S.eliteSpec === 'Evoker' && time < (S.traitICD['EarthenBlast'] || 0)) return;
+        if (S.eliteSpec === 'Evoker') S.traitICD['EarthenBlast'] = time + 5000;
+
+        insertSorted(S.eq, {
+            time, type: 'hit',
+            skill: 'Earthen Blast', hitIdx: 1, sub: 1, totalSubs: 1,
+            dmg: 0.36, ws: 690.5,
+            isField: false, cc: false, conds: null,
+            noCrit: true, att: S.att, isTraitProc: true,
+        });
+
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Earthen Blast', skill: 'Earthen Blast' });
+        S.steps.push({ skill: 'Earthen Blast', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
+    }
+
+    _grantRockSolid(S, time) {
+        if (S.eliteSpec === 'Evoker' && time < (S.traitICD['RockSolid'] || 0)) return;
+        if (S.eliteSpec === 'Evoker') S.traitICD['RockSolid'] = time + 5000;
+        this._trackEffect(S, 'Stability', 1, 3, time);
+    }
+
+    _triggerElectricDischarge(S, time) {
+        if (!S._hasElectricDischarge) return;
+
+        insertSorted(S.eq, {
+            time, type: 'hit',
+            skill: 'Electric Discharge', hitIdx: 1, sub: 1, totalSubs: 1,
+            dmg: 0.35, ws: 690.5,
+            isField: false, cc: false,
+            conds: { Vulnerability: { stacks: 1, duration: 8 } },
+            noCrit: false, att: S.att, isTraitProc: true,
+            bonusCritDmg: 100,
+        });
+
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Electric Discharge', skill: 'Electric Discharge' });
+        S.steps.push({
+            skill: 'Electric Discharge', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1,
+            icon: 'https://render.guildwars2.com/file/F4622EE8300028599369D4084EA7A2774D250DEA/1012280.png',
+        });
+    }
+
+    _checkFreshAir(S, time, critChancePct) {
+        if (critChancePct <= 0) return;
+        S.freshAirAccum += critChancePct / 100;
+        if (S.freshAirAccum >= 1) {
+            S.freshAirAccum -= 1;
+            S.attCD['Air'] = 0;
+        }
+    }
+
+    _applyFreshAirBuff(S, time) {
+        S.allCondStacks.push({ t: time, cond: 'Fresh Air', expiresAt: time + 5000 });
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air' });
+    }
+
+    _triggerLightningRod(S, time) {
+        insertSorted(S.eq, {
+            time, type: 'hit',
+            skill: 'Lightning Rod', hitIdx: 1, sub: 1, totalSubs: 1,
+            dmg: 1.5, ws: 690.5,
+            isField: false, cc: false,
+            conds: { Weakness: { stacks: 1, duration: 4 } },
+            noCrit: false, att: S.att, isTraitProc: true,
+        });
+
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Lightning Rod', skill: 'Lightning Rod' });
+        S.steps.push({
+            skill: 'Lightning Rod', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1,
+            icon: 'https://render.guildwars2.com/file/00A93FDC4F99D29749B27C4D73C5A1644A0F3726/104675.png',
+        });
+    }
+
+    _checkRagingStorm(S, time, critChancePct) {
+        if (critChancePct <= 0) return;
+        S.traitRagingStormAccum += critChancePct / 100;
+        if (S.traitRagingStormAccum < 1) return;
+        if (time < (S.traitICD['RagingStorm'] || 0)) return;
+        S.traitRagingStormAccum -= 1;
+        S.traitICD['RagingStorm'] = time + 8000;
+        this._trackEffect(S, 'Fury', 1, 4, time);
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Raging Storm', skill: 'Raging Storm' });
+    }
+
+    _grantPersistingFlames(S, time) {
+        const active = this._effectStacksAt(S, 'Persisting Flames', time);
+        if (active >= 5) return;
+        S.allCondStacks.push({ t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
+    }
+
+    _scheduleHits(S, sk, castStart, scaleOff = off => off) {
+        const rows = this.skillHits[sk.name] || [];
+        const ws = this._ws(sk);
+
+        for (const h of rows) {
+            const off = scaleOff(h.startOffsetMs || 0);
+            const rep = h.repeatOffsetMs || 0;
+            let count = 1;
+            let durBased = false;
+            const raw = h.numberOfImpacts;
+
+            if (raw === 'Duration') {
+                durBased = true;
+                let effectiveDur = h.duration || 1;
+                if (S._hasPersistingFlames && FIRE_FIELD_SKILLS.has(sk.name) && h.isFieldTick) {
+                    effectiveDur += 2;
+                }
+                count = Math.floor(effectiveDur / (h.interval || 1)) || 1;
+            } else {
+                const n = parseInt(raw) || 1;
+                if (n > 1) count = n;
+            }
+
+            const perHit = durBased ? h.damage : (count > 1 ? h.damage / count : h.damage);
+            const effectiveRep = rep > 0 ? rep : (durBased && count > 1 ? (h.interval || 1) * 1000 : 0);
+
+            for (let i = 0; i < count; i++) {
+                const t = castStart + off + (effectiveRep > 0 && count > 1 ? i * effectiveRep : 0);
+                insertSorted(S.eq, {
+                    time: t, type: 'hit',
+                    skill: sk.name, hitIdx: h.hit, sub: i + 1, totalSubs: count,
+                    dmg: perHit, ws, isField: h.isFieldTick, cc: h.cc,
+                    conds: h.conditions,
+                    finType: h.finisherType, finVal: h.finisherValue,
+                    att: S.att, att2: S.att2, castStart,
+                    conjure: S.conjureEquipped || null,
+                });
+            }
+        }
+    }
+
+    _checkOnCritSigils(S, time, critChancePct) {
+        const critSigils = this._activeProcSigils.filter(n => SIGIL_PROCS[n].trigger === 'crit');
+        if (critSigils.length === 0 || critChancePct <= 0) return;
+
+        S.sigilCritAccum += critChancePct / 100;
+        if (S.sigilCritAccum < 1) return;
+        S.sigilCritAccum -= 1;
+
+        for (const name of critSigils) {
+            const proc = SIGIL_PROCS[name];
+            if (time < (S.sigilICD[name] || 0)) continue;
+            S.sigilICD[name] = time + proc.icd;
+
+            if (proc.effect === 'strike') {
+                insertSorted(S.eq, {
+                    time, type: 'hit',
+                    skill: `Sigil of ${name}`, hitIdx: 1, sub: 1, totalSubs: 1,
+                    dmg: proc.coeff, ws: proc.ws,
+                    isField: false, cc: false, conds: null,
+                    isSigilProc: true, noCrit: !proc.canCrit, att: S.att,
+                });
+            } else if (proc.effect === 'condition') {
+                this._applyCondition(S, proc.cond, proc.stacks, proc.dur, time, `Sigil of ${name}`);
+            }
+            S.log.push({ t: time, type: 'sigil_proc', sigil: name, skill: `Sigil of ${name}` });
+            S.steps.push({ skill: `Sigil of ${name}`, start: time, end: time, att: S.att, type: 'sigil_proc', ri: -1, icon: proc.icon });
+        }
+    }
+
+    _checkBurningPrecision(S, time, critChancePct) {
+        if (critChancePct <= 0) return;
+        S.traitBurnPrecAccum += (critChancePct / 100) * 0.33;
+        if (S.traitBurnPrecAccum < 1) return;
+        if (time < (S.traitICD['BurningPrecision'] || 0)) return;
+        S.traitBurnPrecAccum -= 1;
+        S.traitICD['BurningPrecision'] = time + 5000;
+        this._applyCondition(S, 'Burning', 1, 3, time, 'Burning Precision');
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Burning Precision', skill: 'Burning Precision' });
+        S.steps.push({ skill: 'Burning Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
+    }
+
+    _procOnSwapSigils(S, time) {
+        const swapSigils = this._activeProcSigils.filter(n => SIGIL_PROCS[n].trigger === 'swap');
+        for (const name of swapSigils) {
+            const proc = SIGIL_PROCS[name];
+            if (time < (S.sigilICD[name] || 0)) continue;
+            S.sigilICD[name] = time + proc.icd;
+
+            if (proc.effect === 'doom') {
+                S.sigilDoomPending = true;
+            } else if (proc.effect === 'strike_cond') {
+                insertSorted(S.eq, {
+                    time, type: 'hit',
+                    skill: `Sigil of ${name}`, hitIdx: 1, sub: 1, totalSubs: 1,
+                    dmg: proc.coeff, ws: proc.ws,
+                    isField: false, cc: false,
+                    conds: { [proc.cond]: { stacks: proc.stacks, duration: proc.dur } },
+                    isSigilProc: true, noCrit: !proc.canCrit, att: S.att,
+                });
+            } else if (proc.effect === 'condition') {
+                this._applyCondition(S, proc.cond, proc.stacks, proc.dur, time, `Sigil of ${name}`);
+            }
+            S.log.push({ t: time, type: 'sigil_proc', sigil: name, skill: `Sigil of ${name}` });
+            S.steps.push({ skill: `Sigil of ${name}`, start: time, end: time, att: S.att, type: 'sigil_proc', ri: -1, icon: proc.icon });
+        }
+    }
+
+    _procHit(S, ev, power, condDmg, critMult, strikeMul, condMul) {
+        let strike = 0;
+        if (ev.dmg > 0 && ev.ws > 0) {
+            strike = strikeDamage(ev.dmg, ev.ws, power) * critMult * strikeMul;
+            S.totalStrike += strike;
+
+            if (S.energy !== null && (ev.time >= S.sphereActiveUntil || S._hasSphereSpecialist)) {
+                S.energy = Math.min(CATALYST_ENERGY_MAX, S.energy + 1);
+            }
+        }
+        this._ensurePerSkill(S, ev.skill);
+        S.perSkill[ev.skill].strike += strike;
+
+        if (ev.conds) {
+            const sphereDoubleBoons = S._hasSphereSpecialist
+                && ev.skill.startsWith('Deploy Jade Sphere');
+            // Frost Bow: +20% condition duration while equipped (flat, added to bonus pool)
+            const frostBowCondDur = ev.conjure === 'Frost Bow' ? 20 : 0;
+            for (const [cond, val] of Object.entries(ev.conds)) {
+                if (!val || val.stacks <= 0 || val.duration <= 0) continue;
+                if (cond === 'Boon Extension') {
+                    this._applyBoonExtension(S, val.duration, ev.time);
+                    S.log.push({ t: ev.time, type: 'apply', effect: 'Boon Extension', dur: val.duration, skill: ev.skill });
+                    continue;
+                }
+                const dur = (sphereDoubleBoons && BOONS.has(cond)) ? val.duration * 2 : val.duration;
+                if (DAMAGING_CONDITIONS.has(cond)) {
+                    this._applyCondition(S, cond, val.stacks, dur, ev.time, ev.skill, ev.castStart, frostBowCondDur);
+                } else {
+                    this._trackEffect(S, cond, val.stacks, dur, ev.time);
+                }
+                S.log.push({
+                    t: ev.time, type: 'apply', effect: cond,
+                    stacks: val.stacks, dur: val.duration, skill: ev.skill,
+                });
+            }
+        }
+
+        if (S._hasPersistingFlames && ev.isField && FIRE_FIELD_SKILLS.has(ev.skill)) {
+            this._grantPersistingFlames(S, ev.time);
+        }
+
+        S.log.push({
+            t: ev.time, type: 'hit', skill: ev.skill,
+            hit: ev.hitIdx, sub: ev.sub, totalSubs: ev.totalSubs,
+            strike: Math.round(strike), coeff: ev.dmg,
+            isField: ev.isField, cc: ev.cc, finisher: ev.finType, att: ev.att,
+        });
+    }
+
+    _applyCondition(S, cond, stacks, durSec, time, skillName, castStart = null, extraCondDurPct = 0) {
+        const attrs = this.attributes.attributes;
+        let bonus = getConditionDurationBonus(cond, attrs) + extraCondDurPct;
+        if (S._hasWeaversProwess) {
+            const a1 = this._attAt(S, time);
+            const a2 = this._att2At(S, time);
+            if (a2 !== null && a1 !== a2) bonus += 20;
+        }
+        if (S._empPool?.Expertise) {
+            bonus += (S._empPool.Expertise * this._getEmpMul(S, time)) / 15;
+        }
+        if (S.activeRelic === 'Aristocracy' && S.relicAristocracyStacks > 0 && S.relicAristocracyUntil > time) {
+            bonus += S.relicAristocracyStacks * RELIC_PROCS.Aristocracy.condDurPerStack;
+        }
+        let uncapped = 0;
+        if (S.activeRelic === 'Dragonhunter' && S.relicBuffUntil > time) {
+            uncapped = RELIC_PROCS.Dragonhunter.uncappedCondDur;
+        }
+        const adjMs = Math.round(durSec * 1000 * (1 + Math.min(bonus / 100, 1) + uncapped / 100));
+
+        if (!S.condState[cond]) {
+            S.condState[cond] = { stacks: [], tickActive: false, nextTick: null };
+        }
+        const cs = S.condState[cond];
+
+        for (let i = 0; i < stacks; i++) {
+            cs.stacks.push({ expiresAt: time + adjMs, appliedBy: skillName });
+            S.allCondStacks.push({ t: time, cond, expiresAt: time + adjMs });
+        }
+
+        if (!cs.tickActive) {
+            cs.tickActive = true;
+            cs.nextTick = time + 1000;
+            insertSorted(S.eq, { time: time + 1000, type: 'ctick', cond });
+        }
+
+        S.log.push({
+            t: time, type: 'cond_apply', cond, stacks, durMs: adjMs,
+            total: cs.stacks.length, skill: skillName,
+        });
+
+        if (S.activeRelic === 'Blightbringer' && (cond === 'Poisoned' || cond === 'Poison')) {
+            this._trackBlightbringerPoison(S, time, skillName, castStart);
+        }
+
+        if (S._hasPersistingFlames && cond === 'Burning') {
+            this._grantPersistingFlames(S, time);
+        }
+
+        // Ignite passive: 1 Might (6s) whenever Burning is applied (1s ICD)
+        if (S.evokerElement === 'Fire' && cond === 'Burning'
+            && time >= (S.traitICD['IgnitePassive'] || 0)) {
+            S.traitICD['IgnitePassive'] = time + 1000;
+            this._trackEffect(S, 'Might', 1, 6, time);
+        }
+
+        if (S.activeRelic === 'Fractal' && cond === 'Bleeding' && time >= (S.relicICD.Fractal || 0)) {
+            const activeStacks = cs.stacks.filter(s => s.expiresAt > time).length;
+            if (activeStacks >= 6) {
+                S.relicICD.Fractal = time + RELIC_PROCS.Fractal.icd;
+                const fp = RELIC_PROCS.Fractal;
+                for (const [fc, fv] of Object.entries(fp.conditions)) {
+                    this._applyCondition(S, fc, fv.stacks, fv.dur, time, 'Relic of Fractal');
+                }
+                S.log.push({ t: time, type: 'relic_proc', relic: 'Fractal', skill: 'Relic of Fractal' });
+                S.steps.push({ skill: 'Relic of Fractal', start: time, end: time, att: S.att, type: 'relic_proc', ri: -1, icon: fp.icon });
+            }
+        }
+
+    }
+
+    _trackEffect(S, effect, stacks, durSec, time) {
+        const attrs = this.attributes.attributes;
+        let bonus;
+        let uncapped = 0;
+        if (BOONS.has(effect)) {
+            bonus = getBoonDurationBonus(effect, attrs);
+            if (S._empPool?.Concentration) {
+                bonus += (S._empPool.Concentration * this._getEmpMul(S, time)) / 15;
+            }
+            // Weave Self / Perfect Weave: Water attunement bonus +20% boon duration
+            if ((S.weaveSelfVisited.has('Water') && time < S.weaveSelfUntil)
+                || time < S.perfectWeaveUntil) {
+                bonus += 20;
+            }
+        } else {
+            bonus = getConditionDurationBonus(effect, attrs);
+            if (S._hasWeaversProwess) {
+                const a1 = this._attAt(S, time);
+                const a2 = this._att2At(S, time);
+                if (a2 !== null && a1 !== a2) bonus += 20;
+            }
+            if (S._empPool?.Expertise) {
+                bonus += (S._empPool.Expertise * this._getEmpMul(S, time)) / 15;
+            }
+            if (S.activeRelic === 'Aristocracy' && S.relicAristocracyStacks > 0 && S.relicAristocracyUntil > time) {
+                bonus += S.relicAristocracyStacks * RELIC_PROCS.Aristocracy.condDurPerStack;
+            }
+            if (S.activeRelic === 'Dragonhunter' && S.relicBuffUntil > time) {
+                uncapped = RELIC_PROCS.Dragonhunter.uncappedCondDur;
+            }
+        }
+        const adjMs = Math.round(durSec * 1000 * (1 + Math.min(bonus / 100, 1) + uncapped / 100));
+
+        for (let i = 0; i < stacks; i++) {
+            S.allCondStacks.push({ t: time, cond: effect, expiresAt: time + adjMs });
+        }
+
+        if (effect === 'Quickness') {
+            S.quicknessUntil = Math.max(S.quicknessUntil, time + adjMs);
+        } else if (effect === 'Alacrity') {
+            S.alacrityUntil = Math.max(S.alacrityUntil, time + adjMs);
+        }
+
+        if (S._hasElementalPursuit
+            && (effect === 'Immobilize' || effect === 'Chilled' || effect === 'Crippled')
+            && time >= (S.traitICD['ElemPursuit'] || 0)) {
+            S.traitICD['ElemPursuit'] = time + 10000;
+            this._trackEffect(S, 'Superspeed', 1, 2.5, time);
+        }
+
+        if (S._hasViciousEmpowerment && effect === 'Immobilize'
+            && time >= (S.traitICD['ViciousEmp'] || 0)) {
+            S.traitICD['ViciousEmp'] = time + 250;
+            this._grantElemEmpowerment(S, 2, time);
+            this._trackEffect(S, 'Might', 2, 10, time);
+        }
+    }
+
+    _mightStacksAt(S, t) {
+        let count = 0;
+        for (const s of S.allCondStacks) {
+            if (s.cond === 'Might' && s.t <= t && s.expiresAt > t) count++;
+        }
+        return Math.min(count, 25);
+    }
+
+    _hasFuryAt(S, t) {
+        for (const s of S.allCondStacks) {
+            if (s.cond === 'Fury' && s.t <= t && s.expiresAt > t) return true;
+        }
+        return false;
+    }
+
+    _vulnStacksAt(S, t) {
+        let count = 0;
+        for (const s of S.allCondStacks) {
+            if (s.cond === 'Vulnerability' && s.t <= t && s.expiresAt > t) count++;
+        }
+        return Math.min(count, 25);
+    }
+
+    _effectStacksAt(S, effect, t) {
+        let count = 0;
+        for (const s of S.allCondStacks) {
+            if (s.cond === effect && s.t <= t && s.expiresAt > t) count++;
+        }
+        return count;
+    }
+
+    _getRelicStrikeMul(S, ev, tgtHP) {
+        const proc = S.relicProc;
+        if (!proc) return 1;
+
+        if (proc.trigger === 'eagle_below50') {
+            const dealt = S.totalStrike + S.totalCond;
+            return (tgtHP < Infinity && dealt >= tgtHP * 0.5) ? (1 + proc.strikeDmgM) : 1;
+        }
+        if (proc.trigger === 'weapon_recharge_hit') {
+            return (S.relicThiefStacks > 0 && S.relicThiefUntil > ev.time)
+                ? (1 + S.relicThiefStacks * proc.stackDmgPer) : 1;
+        }
+        if (proc.trigger === 'heal_skill') {
+            return this._effectStacksAt(S, 'Fire Aura', ev.time) > 0 ? (1 + proc.strikeDmgM) : 1;
+        }
+        return (proc.strikeDmgM > 0 && S.relicBuffUntil > ev.time) ? (1 + proc.strikeDmgM) : 1;
+    }
+
+    _checkRelicOnHit(S, ev) {
+        const relic = S.activeRelic;
+        const proc = S.relicProc;
+        if (!relic || !proc) return;
+
+        switch (proc.trigger) {
+            case 'cc_5torment_confusion':
+                if (ev.cc && ev.time >= (S.relicICD[relic] || 0)) {
+                    const confusion = this._effectStacksAt(S, 'Confusion', ev.time);
+                    const torment = this._effectStacksAt(S, 'Torment', ev.time);
+                    if (confusion >= 5 || torment >= 5) {
+                        S.relicICD[relic] = ev.time + proc.icd;
+                        for (const [cond, v] of Object.entries(proc.conditions)) {
+                            this._applyCondition(S, cond, v.stacks, v.dur, ev.time, `Relic of ${relic}`);
+                        }
+                        S.log.push({ t: ev.time, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                        S.steps.push({ skill: `Relic of ${relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+                    }
+                }
+                break;
+
+            case 'cc_any':
+                if (ev.cc) {
+                    if (proc.icd > 0 && ev.time < (S.relicICD[relic] || 0)) break;
+                    if (proc.icd > 0) S.relicICD[relic] = ev.time + proc.icd;
+                    if (proc.effectDuration > 0) {
+                        const wasActive = S.relicBuffUntil > ev.time;
+                        S.relicBuffUntil = Math.max(S.relicBuffUntil, ev.time + proc.effectDuration);
+                        if (!wasActive) {
+                            S.log.push({ t: ev.time, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                            S.steps.push({ skill: `Relic of ${relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+                        }
+                    }
+                }
+                break;
+
+            case 'weapon_recharge20':
+                if (ev.dmg > 0 && ev.ws > 0) {
+                    const sk = this._skill(ev.skill);
+                    if (sk) {
+                        const isWeapon = sk.type === 'Weapon skill' && !CONJURE_WEAPONS.has(sk.weapon);
+                        const isOverload = sk.name.startsWith('Overload');
+                        if ((isWeapon || isOverload) && sk.recharge >= 20) {
+                            const wasActive = S.relicBuffUntil > ev.time;
+                            S.relicBuffUntil = Math.max(S.relicBuffUntil, ev.time + proc.effectDuration);
+                            if (!wasActive) {
+                                S.log.push({ t: ev.time, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                                S.steps.push({ skill: `Relic of ${relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case 'apply_weakness_vuln':
+                if (ev.conds) {
+                    const hasWV = Object.keys(ev.conds).some(k =>
+                        (k === 'Weakness' || k === 'Vulnerability') && ev.conds[k]?.stacks > 0 && ev.conds[k]?.duration > 0
+                    );
+                    if (hasWV) {
+                        const trigKey = `${ev.skill}_${ev.time}`;
+                        if (trigKey !== S.relicAristocracyLastTrigger) {
+                            S.relicAristocracyLastTrigger = trigKey;
+                            if (S.relicAristocracyUntil <= ev.time) S.relicAristocracyStacks = 0;
+                            const wasZero = S.relicAristocracyStacks === 0;
+                            S.relicAristocracyStacks = Math.min(S.relicAristocracyStacks + 1, proc.maxStacks);
+                            S.relicAristocracyUntil = ev.time + proc.effectDuration;
+                            if (wasZero) {
+                                S.log.push({ t: ev.time, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                                S.steps.push({ skill: `Relic of ${relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case 'gain_protection_resolution':
+                if (ev.conds && ev.time >= (S.relicICD[relic] || 0)) {
+                    const hasPR = Object.keys(ev.conds).some(k =>
+                        (k === 'Protection' || k === 'Resolution') && ev.conds[k]?.stacks > 0 && ev.conds[k]?.duration > 0
+                    );
+                    if (hasPR) {
+                        S.relicICD[relic] = ev.time + proc.icd;
+                        S.relicBuffUntil = Math.max(S.relicBuffUntil, ev.time + proc.effectDuration);
+                        S.log.push({ t: ev.time, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                        S.steps.push({ skill: `Relic of ${relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+                    }
+                }
+                break;
+
+            case 'trap_skill':
+                if (ev.dmg > 0 || (ev.conds && Object.keys(ev.conds).length > 0)) {
+                    const sk = this._skill(ev.skill);
+                    if (sk && sk.type === 'Trap') {
+                        const wasActive = S.relicBuffUntil > ev.time;
+                        S.relicBuffUntil = Math.max(S.relicBuffUntil, ev.time + proc.effectDuration);
+                        if (!wasActive) {
+                            S.log.push({ t: ev.time, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                            S.steps.push({ skill: `Relic of ${relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+                        }
+                    }
+                }
+                break;
+
+            case 'weapon_recharge_hit':
+                if (ev.dmg > 0 && ev.ws > 0) {
+                    const sk = this._skill(ev.skill);
+                    if (sk && sk.type === 'Weapon skill' && sk.recharge > 0) {
+                        if (S.relicThiefUntil <= ev.time) S.relicThiefStacks = 0;
+                        const wasZero = S.relicThiefStacks === 0;
+                        S.relicThiefStacks = Math.min(S.relicThiefStacks + 1, proc.maxStacks);
+                        S.relicThiefUntil = ev.time + proc.effectDuration;
+                        if (wasZero) {
+                            S.log.push({ t: ev.time, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                            S.steps.push({ skill: `Relic of ${relic}`, start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
+    _checkRelicOnCast(S, sk, start, end) {
+        const relic = S.activeRelic;
+        const proc = S.relicProc;
+        if (!relic || !proc) return;
+
+        if (proc.trigger === 'polaric_leap' && sk.name === 'Polaric Leap') {
+            if (end >= (S.relicICD[relic] || 0)) {
+                S.relicICD[relic] = end + proc.icd;
+                insertSorted(S.eq, { time: end, type: 'relic_activate', relic, applyEffects: true });
+            }
+        }
+
+        if (proc.trigger === 'elite_delayed' && sk.type === 'Elite skill') {
+            if (end >= (S.relicICD[relic] || 0)) {
+                S.relicICD[relic] = end + proc.icd;
+                insertSorted(S.eq, { time: end + (proc.delay || 0), type: 'relic_activate', relic, applyEffects: true });
+            }
+        }
+
+        if (proc.trigger === 'stance_skill' && sk.type === 'Stance') {
+            insertSorted(S.eq, { time: end, type: 'relic_activate', relic, applyEffects: true });
+        }
+
+        if (proc.trigger === 'heal_skill' && sk.type === 'Healing skill') {
+            if (end >= (S.relicICD[relic] || 0)) {
+                S.relicICD[relic] = end + proc.icd;
+                this._applyAura(S, 'Fire Aura', proc.effectDuration, end, `Relic of ${relic}`);
+                S.log.push({ t: end, type: 'relic_proc', relic, skill: `Relic of ${relic}` });
+                S.steps.push({ skill: `Relic of ${relic}`, start: end, end, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
+            }
+        }
+    }
+
+    _trackBlightbringerPoison(S, time, skillName, castStart) {
+        const key = castStart != null ? `${skillName}_${castStart}` : `${skillName}_${time}`;
+        if (S.relicBlightbringerTrackedCasts.has(key)) return;
+        S.relicBlightbringerTrackedCasts.add(key);
+
+        if (S.relicBlightbringerCount < 6) S.relicBlightbringerCount++;
+        if (S.relicBlightbringerCount >= 6 && time >= (S.relicICD.Blightbringer || 0)) {
+            S.relicBlightbringerCount = 0;
+            S.relicICD.Blightbringer = time + S.relicProc.icd;
+            const bproc = S.relicProc;
+            for (const [c, v] of Object.entries(bproc.conditions)) {
+                if (DAMAGING_CONDITIONS.has(c)) {
+                    this._applyCondition(S, c, v.stacks, v.dur, time, 'Relic of Blightbringer');
+                } else {
+                    this._trackEffect(S, c, v.stacks, v.dur, time);
+                }
+            }
+            S.log.push({ t: time, type: 'relic_proc', relic: 'Blightbringer', skill: 'Relic of Blightbringer' });
+            S.steps.push({ skill: 'Relic of Blightbringer', start: time, end: time, att: S.att, type: 'relic_proc', ri: -1, icon: bproc.icon });
+        }
+    }
+
+    _computeSigilMuls(excludeSigil = null) {
+        const sigilNames = this.attributes.sigils || [];
+        let strikeAdd = 0, condAdd = 0;
+        let strikeMul = 1, condMul = 1;
+
+        for (const name of sigilNames) {
+            if (name === excludeSigil) continue;
+            const s = this.sigils[name];
+            if (!s) continue;
+            strikeAdd += (s.strikeDamageA || 0) / 100;
+            condAdd += (s.conditionDamageA || 0) / 100;
+            if (s.strikeDamageM) strikeMul *= 1 + s.strikeDamageM / 100;
+            if (s.conditionDamageM) condMul *= 1 + s.conditionDamageM / 100;
+        }
+
+        return {
+            strikeAdd, strikeMul, condAdd, condMul,
+            strike: (1 + strikeAdd) * strikeMul,
+            cond: (1 + condAdd) * condMul,
+        };
+    }
+
+    _procCondTick(S, ev, condDmg, condMul, infernoPower = 0) {
+        const { cond } = ev;
+        const cs = S.condState[cond];
+        if (!cs) return;
+
+        const t = ev.time;
+        const active = cs.stacks.filter(s => s.expiresAt >= t);
+
+        if (active.length > 0) {
+            const tick = (infernoPower > 0 && cond === 'Burning')
+                ? (0.075 * infernoPower + 131) * condMul
+                : conditionTickDamage(cond, condDmg) * condMul;
+            const total = tick * active.length;
+            S.totalCond += total;
+
+            for (const stack of active) {
+                this._ensurePerSkill(S, stack.appliedBy);
+                S.perSkill[stack.appliedBy].condition += tick;
+            }
+
+            S.log.push({
+                t, type: 'cond_tick', cond,
+                stacks: active.length, perStack: Math.round(tick), total: Math.round(total),
+            });
+        }
+
+        cs.stacks = cs.stacks.filter(s => s.expiresAt > t);
+        if (cs.stacks.length > 0) {
+            cs.nextTick = t + 1000;
+            insertSorted(S.eq, { time: t + 1000, type: 'ctick', cond });
+        } else {
+            cs.tickActive = false;
+            cs.nextTick = null;
+        }
+    }
+
+    _ensurePerSkill(S, name) {
+        if (!S.perSkill[name]) S.perSkill[name] = { strike: 0, condition: 0, casts: 0, castTimeMs: 0 };
+    }
+}
