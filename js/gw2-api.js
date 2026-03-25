@@ -1,5 +1,5 @@
 const API_BASE = 'https://api.guildwars2.com/v2';
-const CACHE_KEY = 'gw2_icon_cache_v8';
+const CACHE_KEY = 'gw2_icon_cache_v9';
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const EXTRA_ELEM_SKILL_IDS = [
@@ -134,6 +134,10 @@ export class GW2API {
         this.skillIcons['Deploy Jade Sphere (Air)']   = 'https://render.guildwars2.com/file/07D9C76FEB07BB04B9D07A05D87C09A0A0AE0319/2491594.png';
         this.skillIcons['Deploy Jade Sphere (Earth)'] = 'https://render.guildwars2.com/file/97BEF22148DDA3159B4CF6DB18ECFEDE7107710B/2491596.png';
         this.skillIcons['Hurl'] = 'https://render.guildwars2.com/file/BB59A576C805054EB94C66D8190490F273C7BBED/102974.png';
+        this.skillIcons['Glyph of Elemental Power (Fire)']  = 'https://render.guildwars2.com/file/0805084EF739CEDD5C9678561C331D7F0B01590B/1424236.png';
+        this.skillIcons['Glyph of Elemental Power (Water)'] = 'https://render.guildwars2.com/file/BB18F50D1F7E7F59BFCBC521F6EBD9754522B22D/1424237.png';
+        this.skillIcons['Glyph of Elemental Power (Air)']   = 'https://render.guildwars2.com/file/B4E00C980DE7F1CB0BE62F3901EB031067F302F3/1424234.png';
+        this.skillIcons['Glyph of Elemental Power (Earth)'] = 'https://render.guildwars2.com/file/C8AEFA0A46F573F37E7902257772AD9A5E742BBD/1424235.png';
     }
 
     getSkillIcon(name) {
