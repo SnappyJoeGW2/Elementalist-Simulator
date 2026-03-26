@@ -159,6 +159,9 @@ const EVOKER_FAMILIAR_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']
 const EVOKER_NO_CHARGE_SKILLS = new Set([
     'Transmute Earth', 'Hurl', 'Transmute Frost', 'Transmute Lightning', 'Transmute Fire',
 ]);
+// Skills used to fill dead-time gaps before the next skill becomes available (ctrl+click).
+// Keyed by the player's current attunement at gap time.
+const GAP_FILL_SKILLS = { Air: 'Arc Lightning', Earth: 'Stone Shards' };
 const EVOKER_ELEMENT_MAP = {
     Ignite: 'Fire', Splash: 'Water', Zap: 'Air', Calcify: 'Earth',
     Conflagration: 'Fire', 'Buoyant Deluge': 'Water', 'Lightning Blitz': 'Air', 'Seismic Impact': 'Earth'
@@ -460,6 +463,7 @@ export class SimulationEngine {
             firstHitTime: null,
             lastHitTime: null,
             perSkill: {},
+            _pendingPartialFill: null,
             eliteSpec,
             _hasEmpoweringFlame: this._hasTrait('Empowering Flame'),
             _hasBurningPrecision: this._hasTrait('Burning Precision'),
@@ -648,6 +652,24 @@ export class SimulationEngine {
                 if (typeof nxt !== 'object' || nxt.offset === undefined) break;
                 concurrents.push({ name: nxt.name, offset: nxt.offset, _ri: j });
                 j++;
+            }
+
+            // Gap-fill: before casting this skill, channel the attunement's filler
+            // auto-attack for however long its CD would have made us wait anyway.
+            if (typeof item === 'object' && item.gapFill) {
+                // Advance past any active cast first (mirrors what _step does)
+                if (S.t < S.castUntil) S.t = S.castUntil;
+                const targetSk = this._skillInContext(name, S);
+                if (targetSk) {
+                    const cdKey = this._cdKey(targetSk);
+                    const cdReady = S.skillCD[cdKey] || 0;
+                    const gapMs = Math.max(0, cdReady - S.t);
+                    if (gapMs > 0) {
+                        const fillerName = GAP_FILL_SKILLS[S.att] || null;
+                        const fillerSk = fillerName ? this.skills.find(s => s.name === fillerName) : null;
+                        if (fillerSk) this._fillGap(S, fillerSk, gapMs);
+                    }
+                }
             }
 
             S._ri = ri;
@@ -1440,7 +1462,9 @@ export class SimulationEngine {
         this._ensurePerSkill(S, name);
         S.perSkill[name].casts++;
         S.perSkill[name].castTimeMs += castMs;
-        S.steps.push({ skill: name, start, end, att: S.att, type: 'skill', ri: S._ri });
+        const pf = S._pendingPartialFill;
+        S._pendingPartialFill = null;
+        S.steps.push({ skill: name, start, end, att: S.att, type: 'skill', ri: S._ri, partialFill: pf || undefined });
 
         if (sk.type === 'Conjure') {
             const cw = CONJURE_MAP[sk.name];
@@ -2118,6 +2142,39 @@ export class SimulationEngine {
             visited.add(chain);
             chain = cs.chainSkill;
         }
+    }
+
+    _fillGap(S, sk, gapMs) {
+        const start = S.t;
+        const end = start + gapMs;
+        const ws = this._ws(sk);
+        const rows = this.skillHits[sk.name] || [];
+
+        S.log.push({ t: start, type: 'cast', skill: sk.name, att: S.att, dur: gapMs });
+
+        for (const h of rows) {
+            const off = h.startOffsetMs || 0;
+            if (off >= gapMs) break; // rows are ascending; no hits fire beyond the gap
+            insertSorted(S.eq, {
+                time: start + off, type: 'hit',
+                skill: sk.name, hitIdx: h.hit, sub: 1, totalSubs: 1,
+                dmg: h.damage, ws, isField: false, cc: h.cc,
+                conds: h.conditions,
+                finType: h.finisherType, finVal: h.finisherValue,
+                att: S.att, att2: S.att2, castStart: start,
+                conjure: S.conjureEquipped || null,
+            });
+        }
+
+        S.log.push({ t: end, type: 'cast_end', skill: sk.name });
+        this._ensurePerSkill(S, sk.name);
+        S.perSkill[sk.name].casts++;
+        S.perSkill[sk.name].castTimeMs += gapMs;
+
+        S.t = end;
+        S.castUntil = end;
+        // Pass gap-fill metadata through to the target skill's step entry
+        S._pendingPartialFill = { skill: sk.name, durationMs: gapMs, startMs: start };
     }
 
     _trackField(S, sk, castEnd) {

@@ -1821,6 +1821,10 @@ class App {
                 // Shift+click on an instant skill: add as concurrent (fires during previous cast)
                 if (e.shiftKey && isInstant && this.sim?.rotation.length > 0) {
                     this._addToRotation(skillName, 0);
+                // Ctrl+click on a non-instant skill: fill the wait gap before it with an
+                // attunement-appropriate auto-attack (Arc Lightning / Stone Shards)
+                } else if (e.ctrlKey && !isInstant) {
+                    this._addToRotation(skillName, null, true);
                 } else {
                     this._addToRotation(skillName);
                 }
@@ -1851,6 +1855,7 @@ class App {
             const rotItem = this.sim.rotation[i];
             const name = typeof rotItem === 'string' ? rotItem : rotItem.name;
             const offset = typeof rotItem === 'object' ? rotItem.offset : undefined;
+            const isGapFill = typeof rotItem === 'object' && rotItem.gapFill === true;
             const skill = this.data.skills.find(s => s.name === name);
             const isSwap = skill?.type === 'Attunement' && !skill.name.startsWith('Overload');
 
@@ -1866,7 +1871,7 @@ class App {
                     rows[0].att2 = curAtt2;
                 }
             }
-            rows[rows.length - 1].skills.push({ name, idx: i, step: stepMap[i], offset });
+            rows[rows.length - 1].skills.push({ name, idx: i, step: stepMap[i], offset, isGapFill });
         }
 
         let tlHtml = rows.map(row => {
@@ -1874,7 +1879,7 @@ class App {
             const label = isWeaver && row.att2
                 ? `${row.att[0]}/${row.att2[0]}`
                 : row.att;
-            const skillsHtml = row.skills.map(({ name, idx, step, offset }, si) => {
+            const skillsHtml = row.skills.map(({ name, idx, step, offset, isGapFill }, si) => {
                 const skill = this.data.skills.find(s => s.name === name);
                 let icon, displayName;
                 if (name === '__drop_bundle') {
@@ -1890,20 +1895,30 @@ class App {
                     displayName = name;
                 }
                 const c = this._skillColor(skill, name);
-                const ts = step ? `${(step.start / 1000).toFixed(2)}s` : '';
-                const castInfo = step ? `\nCast: ${(step.start / 1000).toFixed(2)}s → ${(step.end / 1000).toFixed(2)}s` : '';
+                const pf = step?.partialFill;
+                const ts = pf
+                    ? `${(pf.startMs / 1000).toFixed(2)}s`
+                    : step ? `${(step.start / 1000).toFixed(2)}s` : '';
+                const castInfo = step
+                    ? `\nCast: ${(step.start / 1000).toFixed(2)}s → ${(step.end / 1000).toFixed(2)}s`
+                    : '';
                 const isConcurrent = offset !== undefined;
                 const offsetBadge = isConcurrent
                     ? `<span class="rot-offset-badge" data-idx="${idx}" title="Fires ${offset}ms into previous cast (click to edit)">⊙${offset}ms</span>`
                     : '';
+                const gapFillBadge = isGapFill
+                    ? `<span class="rot-gapfill-badge" title="${pf ? `${pf.durationMs}ms of ${pf.skill} filled gap` : 'Gap-fill: channels filler until this skill is ready'}">⟳${pf ? pf.durationMs + 'ms' : ''}</span>`
+                    : '';
                 const concurClass = isConcurrent ? ' rot-concurrent' : '';
+                const gapFillClass = isGapFill ? ' rot-gapfill' : '';
                 const concurInfo = isConcurrent ? `\n⊙ Fires ${offset}ms into previous cast` : '';
+                const gapFillInfo = pf ? `\n⟳ ${pf.durationMs}ms of ${pf.skill} filled gap before cast` : isGapFill ? '\n⟳ Gap-fill enabled (no gap at sim time)' : '';
                 return (si > 0 ? '<span class="rot-arrow">→</span>' : '') +
-                    `<div class="rot-skill${concurClass}" draggable="true" data-idx="${idx}" title="${esc(displayName)}${castInfo}${concurInfo}" style="--att-border:${c}">
+                    `<div class="rot-skill${concurClass}${gapFillClass}" draggable="true" data-idx="${idx}" title="${esc(displayName)}${castInfo}${concurInfo}${gapFillInfo}" style="--att-border:${c}">
                         <img src="${icon || PLACEHOLDER_ICON}" />
                         <span class="rot-x">\u00d7</span>
                         ${ts ? `<span class="rot-time">${ts}</span>` : ''}
-                        ${offsetBadge}
+                        ${offsetBadge}${gapFillBadge}
                     </div>`;
             }).join('');
             return `<div class="rot-row" style="--row-color:${color}">
@@ -2388,10 +2403,12 @@ class App {
         this._persistBuild();
     }
 
-    _addToRotation(skillName, offset = null) {
+    _addToRotation(skillName, offset = null, gapFill = false) {
         if (!this.sim) return;
         if (offset !== null) {
             this.sim.addSkill({ name: skillName, offset });
+        } else if (gapFill) {
+            this.sim.addSkill({ name: skillName, gapFill: true });
         } else {
             this.sim.addSkill(skillName);
         }

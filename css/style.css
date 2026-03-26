@@ -1532,6 +1532,27 @@ header .accent {
     opacity: 0.85;
 }
 
+.rot-gapfill {
+    border-style: dotted;
+    opacity: 0.9;
+}
+
+.rot-gapfill-badge {
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30, 30, 50, 0.88);
+    color: #c8e87e;
+    font-size: 7px;
+    line-height: 10px;
+    padding: 0 3px;
+    border-radius: 3px;
+    white-space: nowrap;
+    z-index: 3;
+    pointer-events: none;
+}
+
 /* Proc icons row */
 .proc-icons-row {
     gap: 3px;
