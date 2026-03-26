@@ -156,6 +156,9 @@ const FIRE_FIELD_SKILLS = new Set([
     'Flamewall', 'Wildfire', 'Flame Uprising',
 ]);
 const EVOKER_FAMILIAR_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
+const EVOKER_NO_CHARGE_SKILLS = new Set([
+    'Transmute Earth', 'Hurl', 'Transmute Frost', 'Transmute Lightning', 'Transmute Fire',
+]);
 const EVOKER_ELEMENT_MAP = {
     Ignite: 'Fire', Splash: 'Water', Zap: 'Air', Calcify: 'Earth',
     Conflagration: 'Fire', 'Buoyant Deluge': 'Water', 'Lightning Blitz': 'Air', 'Seismic Impact': 'Earth'
@@ -1453,7 +1456,9 @@ export class SimulationEngine {
 
         if (S.eliteSpec === 'Evoker' && S.evokerElement) {
             const slotNum = parseInt(sk.slot);
-            if (!isNaN(slotNum) && slotNum >= 2 && slotNum <= 5 && !CONJURE_WEAPONS.has(sk.weapon)) {
+            if (!isNaN(slotNum) && slotNum >= 2 && slotNum <= 5
+                && !CONJURE_WEAPONS.has(sk.weapon)
+                && !EVOKER_NO_CHARGE_SKILLS.has(sk.name)) {
                 const skillAtt = sk.attunement ? sk.attunement.split('+') : [];
                 const bonus = skillAtt.includes(S.evokerElement) ? 2 : 1;
                 const maxCh = S._hasSpecializedElements ? 4 : 6;
