@@ -4,7 +4,7 @@
 // distributions of prefixes per group, then expand to per-slot assignments.
 
 import { SimulationEngine } from './simulation.js';
-import { calcAttributes }   from './calc-attributes.js';
+import { calcAttributes } from './calc-attributes.js';
 import { GEAR_STATS } from './gear-data.js';
 
 self.onmessage = ({ data }) => {
@@ -20,9 +20,9 @@ self.onmessage = ({ data }) => {
         const initAttrs = calcAttributes(baseBuild, selectedSkills);
         const sim = new SimulationEngine({
             skills, skillHits, weapons,
-            attributes:   initAttrs,
-            sigils:       sigilsData,
-            relics:       relicsData,
+            attributes: initAttrs,
+            sigils: sigilsData,
+            relics: relicsData,
             activeTraits: initAttrs.activeTraits,
         });
         sim.rotation = rotation;
@@ -38,47 +38,58 @@ self.onmessage = ({ data }) => {
         });
 
         const REPORT_INTERVAL = 50;
+        const TOP_N = 20;
+        const localTop = [];
+        let topDirty = false;
 
         for (const combo of combos) {
-            let comboBest = null;
             let unreported = 0;
 
             for (const gearAssign of gearCombos) {
                 const gear = _expandToGear(gearAssign, groups, prefixes);
                 const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
-                                  startAtt, startAtt2, evokerElement, permaBoons, constraints);
+                    startAtt, startAtt2, evokerElement, permaBoons, constraints);
                 unreported++;
-                if (dps > (comboBest?.rawDps ?? -1)) {
-                    comboBest = {
+
+                if (dps > 0 && (localTop.length < TOP_N || dps > localTop[localTop.length - 1].rawDps)) {
+                    localTop.push({
                         rawDps: dps, dps,
                         gear: { ...gear },
                         rune: combo.rune, relic: combo.relic,
                         sigil1: combo.sigil1, sigil2: combo.sigil2,
                         food: combo.food, utility: combo.utility,
                         infusions: combo.infusions,
-                    };
+                    });
+                    localTop.sort((a, b) => b.rawDps - a.rawDps);
+                    if (localTop.length > TOP_N) localTop.pop();
+                    topDirty = true;
                 }
 
                 if (unreported >= REPORT_INTERVAL) {
                     self.postMessage({
-                        results: comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
+                        results: topDirty ? localTop.map(r => ({ ...r })) : [],
                         evalsDone: unreported,
                         done: false,
                     });
                     unreported = 0;
+                    topDirty = false;
                 }
             }
 
             if (unreported > 0) {
                 self.postMessage({
-                    results: comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
+                    results: topDirty ? localTop.map(r => ({ ...r })) : [],
                     evalsDone: unreported,
                     done: false,
                 });
+                topDirty = false;
             }
         }
 
-        self.postMessage({ results: [], evalsDone: 0, done: true });
+        self.postMessage({
+            results: localTop.map(r => ({ ...r })),
+            evalsDone: 0, done: true,
+        });
     } catch (err) {
         self.postMessage({
             results: [], evalsDone: 0, done: true,
@@ -175,17 +186,17 @@ function _expandToGear(gearAssign, groups, prefixes) {
 }
 
 function _eval(sim, baseBuild, selectedSkills, combo, gear,
-               startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
+    startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
     const testBuild = {
         ...baseBuild,
-        gear:      { ...gear },
-        rune:      combo.rune      || baseBuild.rune,
-        relic:     combo.relic     || baseBuild.relic,
-        sigils:    combo.sigil1 != null
-                       ? [combo.sigil1, combo.sigil2].filter(Boolean)
-                       : (baseBuild.sigils || []),
-        food:      combo.food      || baseBuild.food,
-        utility:   combo.utility   || baseBuild.utility,
+        gear: { ...gear },
+        rune: combo.rune || baseBuild.rune,
+        relic: combo.relic || baseBuild.relic,
+        sigils: combo.sigil1 != null
+            ? [combo.sigil1, combo.sigil2].filter(Boolean)
+            : (baseBuild.sigils || []),
+        food: combo.food || baseBuild.food,
+        utility: combo.utility || baseBuild.utility,
         infusions: combo.infusions != null ? combo.infusions : (baseBuild.infusions || []),
     };
 
