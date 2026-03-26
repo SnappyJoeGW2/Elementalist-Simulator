@@ -29,16 +29,12 @@ export class GearOptimizer {
     }
 
     // ── Public entry point ────────────────────────────────────────────────────
-    // config: { build, selectedSkills, rotation, space, startAtt, startAtt2,
-    //           evokerElement, permaBoons, targetHP }
-    // space:  { prefixes[], runes[], sigils[], relics[], foods[], utilities[],
-    //           infusionStats[], infusionTotal }
-    // onProgress(evalsDone, totalEst, currentTop10)
     async optimize(config, onProgress) {
         this._cancelled = false;
         this._workers   = [];
 
         const { build, selectedSkills, rotation, space, constraints = {},
+                slotConstraints = {},
                 startAtt, startAtt2, evokerElement, permaBoons,
                 targetHP = 0 } = config;
 
@@ -46,15 +42,12 @@ export class GearOptimizer {
 
         const nonGearCombos = this._nonGearCombos(space);
 
-        // Use as many workers as CPU cores, capped to the number of combos.
         const numCores   = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
         const numWorkers = Math.max(1, Math.min(numCores, nonGearCombos.length));
 
-        // Split combos across workers (round-robin for even distribution).
         const batches = Array.from({ length: numWorkers }, () => []);
         nonGearCombos.forEach((combo, i) => batches[i % numWorkers].push(combo));
 
-        // Payload sent to every worker — includes all static simulation data.
         const workerPayload = {
             skills:       this.skills,
             skillHits:    this.skillHits,
@@ -66,6 +59,7 @@ export class GearOptimizer {
             rotation,
             prefixes:     space.prefixes,
             constraints,
+            slotConstraints,
             startAtt, startAtt2, evokerElement, permaBoons,
         };
 
@@ -73,7 +67,6 @@ export class GearOptimizer {
         const seenKeys = new Set();
         let   evalsDone = 0;
 
-        // Rough total for the progress bar.
         const estPerCombo = space.prefixes.length * GEAR_SLOTS.length * (space.prefixes.length - 1) * 3 + 1;
         const totalEst    = Math.max(nonGearCombos.length * estPerCombo, 1);
 
@@ -93,7 +86,7 @@ export class GearOptimizer {
                     evalsDone += data.evalsDone;
 
                     for (const r of data.results) {
-                        if (r.rawDps < 0) continue;  // constraint-violated result
+                        if (r.rawDps < 0) continue;
                         const key = this._key(r);
                         if (!seenKeys.has(key)) {
                             seenKeys.add(key);
@@ -104,19 +97,21 @@ export class GearOptimizer {
                     }
 
                     onProgress(evalsDone, totalEst, [...top10]);
-                    worker.terminate();
-                    resolve();
+
+                    if (data.done) {
+                        worker.terminate();
+                        resolve();
+                    }
                 };
 
                 worker.onerror = (err) => {
                     worker.terminate();
-                    // Fall back to single-threaded for this batch if the worker fails.
                     this._runBatchSingleThread(
                         batch, build, selectedSkills, rotation, space.prefixes,
                         startAtt, startAtt2, evokerElement, permaBoons,
-                        top10, seenKeys, constraints,
+                        top10, seenKeys, constraints, slotConstraints,
                     ).then(() => {
-                        evalsDone += batch.length; // approximate
+                        evalsDone += batch.length;
                         onProgress(evalsDone, totalEst, [...top10]);
                         resolve();
                     }).catch(reject);
@@ -128,8 +123,7 @@ export class GearOptimizer {
 
         if (this._cancelled) return top10;
 
-        // ── Re-evaluate top 10 with the actual targetHP so displayed DPS
-        //    matches what the main simulator shows after applying the build.
+        // ── Re-evaluate top 10 with the actual targetHP ───────────────────────
         const sim = this._makeSim(build, selectedSkills, rotation);
         for (const r of top10) {
             r.dps = this._evalFull(sim, build, selectedSkills, r,
@@ -140,19 +134,20 @@ export class GearOptimizer {
         return top10;
     }
 
-    // ── Single-threaded fallback for one batch (used if Worker fails) ─────────
+    // ── Single-threaded fallback ──────────────────────────────────────────────
     async _runBatchSingleThread(batch, build, selectedSkills, rotation, prefixes,
                                 startAtt, startAtt2, evokerElement, permaBoons,
-                                top10, seenKeys, constraints = {}) {
+                                top10, seenKeys, constraints = {}, slotConstraints = {}) {
         const sim = this._makeSim(build, selectedSkills, rotation);
         for (const combo of batch) {
             let comboBest = null;
             for (const startPrefix of prefixes) {
                 const gear = {};
-                for (const slot of GEAR_SLOTS) gear[slot] = startPrefix;
+                for (const slot of GEAR_SLOTS) gear[slot] = slotConstraints[slot] || startPrefix;
                 const result = this._descent(
                     sim, build, selectedSkills, combo, gear, prefixes,
-                    startAtt, startAtt2, evokerElement, permaBoons, () => {}, constraints,
+                    startAtt, startAtt2, evokerElement, permaBoons, () => {},
+                    constraints, slotConstraints,
                 );
                 if (!comboBest || result.rawDps > comboBest.rawDps) comboBest = result;
             }
@@ -165,14 +160,14 @@ export class GearOptimizer {
                     if (top10.length > 10) top10.pop();
                 }
             }
-            // Yield occasionally so the browser stays responsive.
             await new Promise(r => setTimeout(r, 0));
         }
     }
 
-    // ── Coordinate descent (single thread, used by fallback + final re-eval) ──
+    // ── Coordinate descent ───────────────────────────────────────────────────
     _descent(sim, baseBuild, selectedSkills, combo, gear, prefixes,
-             startAtt, startAtt2, evokerElement, permaBoons, onEval, constraints = {}) {
+             startAtt, startAtt2, evokerElement, permaBoons, onEval,
+             constraints = {}, slotConstraints = {}) {
 
         let bestDps = this._eval(sim, baseBuild, selectedSkills, combo, gear,
                                   startAtt, startAtt2, evokerElement, permaBoons, constraints);
@@ -182,6 +177,7 @@ export class GearOptimizer {
         while (improved) {
             improved = false;
             for (const slot of GEAR_SLOTS) {
+                if (slotConstraints[slot]) continue;
                 const orig     = gear[slot];
                 let winner     = orig;
                 let winnerDps  = bestDps;
@@ -214,7 +210,6 @@ export class GearOptimizer {
         };
     }
 
-    // ── Single DPS evaluation (no HP cap — fair comparison during search) ─────
     _eval(sim, baseBuild, selectedSkills, combo, gear,
           startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
         this._applyCombo(sim, baseBuild, selectedSkills, combo, gear);
@@ -223,7 +218,6 @@ export class GearOptimizer {
         return sim.results?.dps ?? 0;
     }
 
-    // ── Final DPS evaluation with actual targetHP (for display) ───────────────
     _evalFull(sim, baseBuild, selectedSkills, r,
               startAtt, startAtt2, evokerElement, permaBoons, targetHP) {
         const combo = { rune: r.rune, relic: r.relic, sigil1: r.sigil1, sigil2: r.sigil2,
@@ -233,7 +227,6 @@ export class GearOptimizer {
         return sim.results?.dps ?? 0;
     }
 
-    // ── Apply a gear+combo configuration to the sim instance ─────────────────
     _applyCombo(sim, baseBuild, selectedSkills, combo, gear) {
         const testBuild = {
             ...baseBuild,
@@ -253,7 +246,6 @@ export class GearOptimizer {
         sim.activeTraitNames = new Set((attrs.activeTraits || []).map(t => t.name));
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
     _makeSim(build, selectedSkills, rotation) {
         const attrs = calcAttributes(build, selectedSkills);
         const sim   = new SimulationEngine({
@@ -276,14 +268,11 @@ export class GearOptimizer {
         const foods     = space.foods.length     ? space.foods     : [null];
         const utilities = space.utilities.length ? space.utilities : [null];
 
-        // Infusion distributions: all ways to split infusionTotal across selected stats.
-        // null means "keep the build's existing infusions unchanged".
         const infStats = space.infusionStats || [];
         const infTotal = space.infusionTotal  ?? 0;
         const infusions = infStats.length === 0 ? [null]
             : this._infusionDistributions(infStats, infTotal);
 
-        // Unordered sigil pairs — duplicates not allowed (GW2 rule).
         const sigilPairs = [];
         const ss = space.sigils;
         if (ss.length < 2) {
@@ -305,7 +294,6 @@ export class GearOptimizer {
         return out;
     }
 
-    // All ways to distribute `total` infusions among `stats` stat types.
     _infusionDistributions(stats, total) {
         if (total === 0) return [[]];
 
@@ -338,7 +326,6 @@ export class GearOptimizer {
     }
 }
 
-// ── Constraint checker (shared by main thread; worker has its own copy) ───────
 function _meetsConstraints(attrs, constraints) {
     if (!constraints) return true;
     if (constraints.minBoonDuration != null &&

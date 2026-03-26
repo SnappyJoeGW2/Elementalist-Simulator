@@ -2648,6 +2648,38 @@ class App {
         if (infTotalEl && curInfTotal > 0) infTotalEl.value = curInfTotal;
 
         this._enforcePrefixMax();
+        this._populateSlotConstraints();
+    }
+
+    _populateSlotConstraints() {
+        const container = document.getElementById('opt-slot-constraints');
+        if (!container) return;
+        const SLOT_LABELS = {
+            Helm: 'Helm', Shoulders: 'Shld', Chest: 'Coat', Gloves: 'Glov',
+            Leggins: 'Legs', Boots: 'Boot', Amulet: 'Amul', Ring1: 'Rng1',
+            Ring2: 'Rng2', Accessory1: 'Acc1', Accessory2: 'Acc2', Back: 'Back',
+            Weapon1: 'Wep1', Weapon2: 'Wep2',
+        };
+        const checked = this._getChecked('opt-prefixes');
+        container.innerHTML = GEAR_SLOTS.map(slot => {
+            const label = SLOT_LABELS[slot] || slot;
+            const opts  = checked.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+            return `<div class="opt-slot-constraint">
+                <label>${esc(label)}</label>
+                <select data-slot="${esc(slot)}">
+                    <option value="">Any</option>
+                    ${opts}
+                </select>
+            </div>`;
+        }).join('');
+    }
+
+    _readSlotConstraints() {
+        const out = {};
+        document.querySelectorAll('#opt-slot-constraints select').forEach(sel => {
+            if (sel.value) out[sel.dataset.slot] = sel.value;
+        });
+        return out;
     }
 
     _bindOptimizerEvents() {
@@ -2672,8 +2704,11 @@ class App {
             });
         });
 
-        // Prefix max-3 enforcement
-        document.getElementById('opt-prefixes')?.addEventListener('change', () => this._enforcePrefixMax());
+        // Prefix max-3 enforcement + refresh slot constraint dropdowns
+        document.getElementById('opt-prefixes')?.addEventListener('change', () => {
+            this._enforcePrefixMax();
+            this._populateSlotConstraints();
+        });
 
         // Run button
         document.getElementById('btn-opt-run')?.addEventListener('click', () => this._runOptimizer());
@@ -2745,6 +2780,8 @@ class App {
             minVitality:     _parseConstraint('opt-min-vit'),
         };
 
+        const slotConstraints = this._readSlotConstraints();
+
         if (!space.prefixes.length) { alert('Select at least one gear prefix.'); return; }
 
         // Combo count estimate for user feedback.
@@ -2780,6 +2817,7 @@ class App {
                     rotation:       this.sim.rotation,
                     space,
                     constraints,
+                    slotConstraints,
                     startAtt:       this.activeAttunement,
                     startAtt2:      this.secondaryAttunement,
                     evokerElement:  this.evokerElement,
@@ -2816,35 +2854,52 @@ class App {
         const wrap   = document.getElementById('opt-results');
         if (!body || !results.length) return;
 
-        // Summarise gear as "Berserker's×8 + Assassin's×6"
-        const gearMix = (gear) => {
-            const counts = {};
-            for (const v of Object.values(gear)) counts[v] = (counts[v] || 0) + 1;
-            return Object.entries(counts)
-                .sort((a, b) => b[1] - a[1])
-                .map(([p, n]) => `<em>${n}×</em>${esc(p)}`)
-                .join(' + ');
+        const PFX_ABBR = {
+            "Berserker's": 'Bers', "Assassin's": 'Assn', "Harrier's": 'Harr',
+            "Viper's": 'Vipr', "Sinister's": 'Sins', "Grieving": 'Grvg',
+            "Ritualist's": 'Ritu', "Celestial": 'Cele', "Diviner's": 'Divn',
+            "Dragon's": 'Drag', "Marshal's": 'Mrsh', "Plaguedoctor's": 'PlgD',
+            "Trailblazer's": 'Trbl', "Seraph's": 'Sera', "Minstrel's": 'Mnst',
+        };
+        const PFX_CSS = {
+            "Berserker's": 'pfx-berserker', "Assassin's": 'pfx-assassin',
+            "Harrier's": 'pfx-harrier', "Viper's": 'pfx-viper',
+            "Sinister's": 'pfx-sinister', "Grieving": 'pfx-grieving',
+            "Ritualist's": 'pfx-ritualist', "Celestial": 'pfx-celestial',
+            "Diviner's": 'pfx-diviner', "Dragon's": 'pfx-dragon',
+            "Marshal's": 'pfx-marshal', "Plaguedoctor's": 'pfx-plaguedoctor',
+            "Trailblazer's": 'pfx-trailblazer', "Seraph's": 'pfx-seraph',
+            "Minstrel's": 'pfx-minstrel',
+        };
+
+        const slotBadge = (prefix) => {
+            const abbr = PFX_ABBR[prefix] || prefix?.slice(0, 4) || '?';
+            const cls  = PFX_CSS[prefix] || 'pfx-default';
+            return `<span class="opt-slot-badge ${cls}" title="${esc(prefix || '')}">${esc(abbr)}</span>`;
         };
 
         const shortName = (s) => {
             if (!s) return '—';
             const trimmed = s.replace(/^Bowl of |^Plate of |^Superior |^Furious |^Toxic |^Potent /i, '');
-            return trimmed.length > 22 ? trimmed.slice(0, 21) + '…' : trimmed;
+            return trimmed.length > 14 ? trimmed.slice(0, 13) + '…' : trimmed;
         };
         const infLabel = (infusions) => {
             if (!infusions?.length) return '—';
-            return infusions.map(x => `${x.count}× ${x.stat}`).join(' + ');
+            return infusions.map(x => `${x.count}×${x.stat.slice(0, 3)}`).join('+');
         };
 
         body.innerHTML = results.map((r, i) => {
-            const sigilStr = [r.sigil1, r.sigil2].filter(Boolean).join(' + ') || '—';
+            const sigilStr = [r.sigil1, r.sigil2].filter(Boolean).join('+') || '—';
             const dpsStr   = r.dps > 0 ? Math.round(r.dps).toLocaleString() : (r.rawDps > 0 ? Math.round(r.rawDps).toLocaleString() + '*' : '—');
+
+            const slotCells = GEAR_SLOTS.map(slot => slotBadge(r.gear[slot])).join('');
+
             return `<div class="opt-result-row" data-idx="${i}">
                 <span class="opt-rank">${i + 1}</span>
                 <span class="opt-dps">${dpsStr}</span>
-                <span class="opt-gearmix">${gearMix(r.gear)}</span>
-                <span class="opt-cell" title="${esc(r.rune || '')}">${esc(r.rune || '—')}</span>
-                <span class="opt-cell" title="${esc(r.relic || '')}">${esc(r.relic || '—')}</span>
+                ${slotCells}
+                <span class="opt-cell" title="${esc(r.rune || '')}">${esc(shortName(r.rune))}</span>
+                <span class="opt-cell" title="${esc(r.relic || '')}">${esc(shortName(r.relic))}</span>
                 <span class="opt-cell" title="${esc(sigilStr)}">${esc(sigilStr)}</span>
                 <span class="opt-cell" title="${esc(r.food || '')}">${esc(shortName(r.food))}</span>
                 <span class="opt-cell" title="${esc(r.utility || '')}">${esc(shortName(r.utility))}</span>
@@ -2855,7 +2910,6 @@ class App {
 
         wrap.classList.remove('hidden');
 
-        // Bind apply buttons
         body.querySelectorAll('.opt-apply-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const idx = parseInt(btn.dataset.idx);

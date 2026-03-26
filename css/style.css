@@ -2393,21 +2393,40 @@ header .accent {
     margin-top: 4px;
 }
 
-.opt-results-hdr,
+/* Per-slot results grid: # DPS 14×slot Rune Relic Sigils Food Util Infus Apply */
+.opt-results-hdr-slots,
 .opt-result-row {
     display: grid;
-    grid-template-columns: 28px 80px 1fr 90px 80px 120px 1fr 1fr 130px 72px;
-    gap: 6px;
+    grid-template-columns:
+        28px 68px
+        repeat(14, 42px)
+        72px 60px 80px 60px 50px 60px 60px;
+    gap: 2px;
     align-items: center;
-    padding: 5px 8px;
-    font-size: 0.78rem;
+    padding: 4px 6px;
+    font-size: 0.72rem;
 }
 
-.opt-results-hdr {
+.opt-results {
+    overflow-x: auto;
+    min-width: 0;
+}
+
+.opt-results-hdr-slots {
     font-weight: 600;
     color: var(--text-dim);
     border-bottom: 1px solid var(--border);
     margin-bottom: 2px;
+}
+
+.opt-col-slot {
+    text-align: center;
+    font-size: 0.68rem;
+}
+
+.opt-col-extra {
+    text-align: center;
+    font-size: 0.68rem;
 }
 
 .opt-result-row {
@@ -2435,15 +2454,15 @@ header .accent {
     text-align: right;
 }
 
-.opt-gearmix {
-    font-size: 0.75rem;
-    color: var(--text);
-}
-
-.opt-gearmix em {
-    color: var(--accent);
-    font-style: normal;
-    font-size: 0.7rem;
+.opt-slot-badge {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    padding: 1px 2px;
+    border-radius: 3px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
 .opt-cell {
@@ -2451,12 +2470,13 @@ header .accent {
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--text-dim);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
+    text-align: center;
 }
 
 .opt-apply-btn {
     padding: 3px 8px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     background: transparent;
     border: 1px solid var(--border-light);
     color: var(--text-dim);
@@ -2469,6 +2489,62 @@ header .accent {
     border-color: var(--accent);
     color: var(--accent);
 }
+
+/* Slot constraint dropdowns */
+.opt-slot-constraints-block {
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.opt-slot-constraints-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 4px 8px;
+    padding: 6px 0;
+}
+
+.opt-slot-constraint {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.opt-slot-constraint label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+.opt-slot-constraint select {
+    font-size: 0.75rem;
+    padding: 3px 4px;
+    background: var(--bg-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+}
+
+.opt-slot-constraint select:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+/* Prefix color coding */
+.pfx-berserker { background: rgba(255, 68, 68, 0.25); color: #ff6b6b; }
+.pfx-assassin  { background: rgba(255, 100, 100, 0.2); color: #ff8888; }
+.pfx-harrier   { background: rgba(100, 200, 255, 0.25); color: #7cc8ff; }
+.pfx-viper     { background: rgba(160, 80, 200, 0.3); color: #c88aff; }
+.pfx-sinister  { background: rgba(200, 50, 120, 0.3); color: #e06090; }
+.pfx-grieving  { background: rgba(220, 100, 60, 0.3); color: #e8865a; }
+.pfx-ritualist { background: rgba(50, 180, 160, 0.3); color: #5acfb0; }
+.pfx-celestial { background: rgba(220, 200, 100, 0.25); color: #d4c86a; }
+.pfx-diviner   { background: rgba(255, 180, 60, 0.25); color: #e8b04a; }
+.pfx-dragon    { background: rgba(255, 60, 60, 0.2); color: #ff7070; }
+.pfx-marshal   { background: rgba(190, 140, 50, 0.25); color: #c8a050; }
+.pfx-plaguedoctor { background: rgba(80, 160, 80, 0.3); color: #70c870; }
+.pfx-trailblazer { background: rgba(120, 80, 40, 0.35); color: #b89060; }
+.pfx-seraph    { background: rgba(255, 220, 140, 0.2); color: #e0c880; }
+.pfx-minstrel  { background: rgba(140, 180, 255, 0.2); color: #90b0e0; }
+.pfx-default   { background: rgba(255, 255, 255, 0.08); color: var(--text-dim); }
 
 /* ─── Responsive ─── */
 @media (max-width: 900px) {

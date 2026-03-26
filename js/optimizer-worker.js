@@ -1,7 +1,7 @@
 // ─── Optimizer Web Worker ─────────────────────────────────────────────────────
 // Receives a batch of non-gear combos, runs coordinate descent on each, and
-// returns the best result per combo.  Runs inside a Web Worker so it never
-// blocks the UI thread.
+// posts incremental results after every combo so the UI progress bar moves
+// smoothly.  Runs inside a Web Worker so it never blocks the UI thread.
 
 import { SimulationEngine } from './simulation.js';
 import { calcAttributes }   from './calc-attributes.js';
@@ -11,11 +11,11 @@ self.onmessage = ({ data }) => {
     const {
         skills, skillHits, weapons, sigilsData, relicsData,
         baseBuild, selectedSkills, rotation,
-        prefixes, constraints = {}, startAtt, startAtt2, evokerElement, permaBoons,
+        prefixes, constraints = {}, slotConstraints = {},
+        startAtt, startAtt2, evokerElement, permaBoons,
         combos,
     } = data;
 
-    // Build a local SimulationEngine.
     const initAttrs = calcAttributes(baseBuild, selectedSkills);
     const sim = new SimulationEngine({
         skills, skillHits, weapons,
@@ -25,30 +25,25 @@ self.onmessage = ({ data }) => {
         activeTraits: initAttrs.activeTraits,
     });
     sim.rotation = rotation;
-
-    // activeTraitNames never changes with gear — compute once.
     sim.activeTraitNames = new Set((initAttrs.activeTraits || []).map(t => t.name));
-
-    const results  = [];
-    let   evalsDone = 0;
 
     for (const combo of combos) {
         let comboBest = null;
+        let evalsDone = 0;
 
         for (const startPrefix of prefixes) {
-            // Seed: all slots start with this prefix.
             const gear = {};
-            for (const slot of GEAR_SLOTS) gear[slot] = startPrefix;
+            for (const slot of GEAR_SLOTS) gear[slot] = slotConstraints[slot] || startPrefix;
 
             let bestDps = _eval(sim, baseBuild, selectedSkills, combo, gear,
                                 startAtt, startAtt2, evokerElement, permaBoons, constraints);
             evalsDone++;
 
-            // Coordinate descent: cycle through slots until no improvement.
             let improved = true;
             while (improved) {
                 improved = false;
                 for (const slot of GEAR_SLOTS) {
+                    if (slotConstraints[slot]) continue;
                     const orig     = gear[slot];
                     let winner     = orig;
                     let winnerDps  = bestDps;
@@ -82,13 +77,16 @@ self.onmessage = ({ data }) => {
             if (!comboBest || result.rawDps > comboBest.rawDps) comboBest = result;
         }
 
-        if (comboBest && comboBest.rawDps >= 0) results.push(comboBest);
+        self.postMessage({
+            results:   comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
+            evalsDone,
+            done:      false,
+        });
     }
 
-    self.postMessage({ results, evalsDone });
+    self.postMessage({ results: [], evalsDone: 0, done: true });
 };
 
-// ── Single evaluation (no HP cap) ─────────────────────────────────────────────
 function _eval(sim, baseBuild, selectedSkills, combo, gear,
                startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
     const testBuild = {
@@ -107,12 +105,10 @@ function _eval(sim, baseBuild, selectedSkills, combo, gear,
     const attrs = calcAttributes(testBuild, selectedSkills);
     if (!_meetsConstraints(attrs.attributes, constraints)) return -1;
     sim.attributes = attrs;
-    // activeTraitNames is constant (doesn't depend on gear) — already set at init.
     sim.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
     return sim.results?.dps ?? 0;
 }
 
-// ── Constraint checker ────────────────────────────────────────────────────────
 function _meetsConstraints(attrs, constraints) {
     if (!constraints) return true;
     if (constraints.minBoonDuration != null &&

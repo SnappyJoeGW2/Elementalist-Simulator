@@ -231,6 +231,14 @@
                 </div>
             </div>
 
+            <!-- Slot Constraints (lock gear pieces to specific prefixes) -->
+            <div class="opt-slot-constraints-block">
+                <div class="opt-space-label">
+                    <span>Slot Constraints <span class="opt-max-note">(lock a slot to a specific prefix — "Any" = optimized freely)</span></span>
+                </div>
+                <div class="opt-slot-constraints-grid" id="opt-slot-constraints"></div>
+            </div>
+
             <!-- Stat Constraints -->
             <div class="opt-constraints-block">
                 <div class="opt-space-label">
@@ -278,10 +286,30 @@
 
             <!-- Results -->
             <div id="opt-results" class="opt-results hidden">
-                <div class="opt-results-hdr">
-                    <span>#</span><span>DPS</span><span>Gear Mix</span>
-                    <span>Rune</span><span>Relic</span><span>Sigils</span>
-                    <span>Food</span><span>Utility</span><span>Infusions</span><span></span>
+                <div class="opt-results-hdr opt-results-hdr-slots">
+                    <span class="opt-col-rank">#</span>
+                    <span class="opt-col-dps">DPS</span>
+                    <span class="opt-col-slot">Helm</span>
+                    <span class="opt-col-slot">Shld</span>
+                    <span class="opt-col-slot">Coat</span>
+                    <span class="opt-col-slot">Glov</span>
+                    <span class="opt-col-slot">Legs</span>
+                    <span class="opt-col-slot">Boot</span>
+                    <span class="opt-col-slot">Amul</span>
+                    <span class="opt-col-slot">Rng1</span>
+                    <span class="opt-col-slot">Rng2</span>
+                    <span class="opt-col-slot">Acc1</span>
+                    <span class="opt-col-slot">Acc2</span>
+                    <span class="opt-col-slot">Back</span>
+                    <span class="opt-col-slot">Wep1</span>
+                    <span class="opt-col-slot">Wep2</span>
+                    <span class="opt-col-extra">Rune</span>
+                    <span class="opt-col-extra">Relic</span>
+                    <span class="opt-col-extra">Sigils</span>
+                    <span class="opt-col-extra">Food</span>
+                    <span class="opt-col-extra">Util</span>
+                    <span class="opt-col-extra">Infus</span>
+                    <span class="opt-col-apply"></span>
                 </div>
                 <div id="opt-results-body"></div>
             </div>
