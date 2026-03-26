@@ -10,11 +10,6 @@
     "rotation": "Rotations/condi-alac-tempest.json"
   },
   {
-    "label": "Inferno Tempest",
-    "build": "Builds/inferno-tempest.json",
-    "rotation": "Rotations/inferno-tempest.json"
-  }
-  {
     "label": "Condi Weaver",
     "build": "Builds/condi-weaver.json",
     "rotation": "Rotations/condi-weaver.json"

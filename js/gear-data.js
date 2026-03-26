@@ -376,6 +376,7 @@ export const RELIC_DATA = {
     Thief: { trigger: 'Use weapon skill with CD or resource cost', cooldown: 0 },
     Weaver: { trigger: 'Use stance skill', cooldown: 0 },
     Fire: { trigger: 'Use healing skill (grants Fire Aura 4s)', cooldown: 20 },
+    Bloodstone: { trigger: 'Blast finisher combo (4 stacks → explosion)', cooldown: 0 },
 };
 
 export const RELIC_NAMES = Object.keys(RELIC_DATA);

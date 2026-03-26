@@ -130,6 +130,13 @@ const RELIC_PROCS = {
         trigger: 'heal_skill', icd: 20000, strikeDmgM: 0.07, effectDuration: 4000,
         conditions: null, icon: null,
     },
+    Bloodstone: {
+        trigger: 'blast_combo', icd: 0, strikeDmgM: 0.07, effectDuration: 8000,
+        volatilityDuration: 10000, stacksNeeded: 4,
+        strikeCoeff: 3.0, strikeWs: 690.5,
+        conditions: { Bleeding: { stacks: 6, dur: 6 } },
+        icon: 'https://render.guildwars2.com/file/A7327A7EDB4705EA05261110526D72AFEAF7DAB4/3629397.png',
+    },
 };
 const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
 const OFF_ATT_CD = 1500;
@@ -439,6 +446,9 @@ export class SimulationEngine {
             relicBlightbringerTrackedCasts: new Set(),
             relicThiefStacks: 0,
             relicThiefUntil: 0,
+            relicBloodstoneStacks: 0,
+            relicBloodstoneStacksUntil: 0,
+            relicBloodstoneExplosionUntil: 0,
             totalStrike: 0,
             totalCond: 0,
             condDamage: {},
@@ -2238,6 +2248,9 @@ export class SimulationEngine {
 
         if (finType === 'Blast' || finType === 'Leap') {
             this._applyComboEffect(S, fieldType, finType, ev.time, ev.skill);
+            if (finType === 'Blast' && S.activeRelic === 'Bloodstone') {
+                this._checkBloodstoneBlast(S, ev.time);
+            }
         } else if (finType === 'Projectile') {
             // Accumulator gives deterministic expected-value procs for fractional chances
             S.comboAccum.Projectile = (S.comboAccum.Projectile || 0) + finVal;
@@ -2918,6 +2931,9 @@ export class SimulationEngine {
         const proc = S.relicProc;
         if (!proc) return 1;
 
+        if (proc.trigger === 'blast_combo') {
+            return S.relicBloodstoneExplosionUntil > ev.time ? (1 + proc.strikeDmgM) : 1;
+        }
         if (proc.trigger === 'eagle_below50') {
             const dealt = S.totalStrike + S.totalCond;
             return (tgtHP < Infinity && dealt >= tgtHP * 0.5) ? (1 + proc.strikeDmgM) : 1;
@@ -3106,6 +3122,55 @@ export class SimulationEngine {
             }
             S.log.push({ t: time, type: 'relic_proc', relic: 'Blightbringer', skill: 'Relic of Blightbringer' });
             S.steps.push({ skill: 'Relic of Blightbringer', start: time, end: time, att: S.att, type: 'relic_proc', ri: -1, icon: bproc.icon });
+        }
+    }
+
+    _checkBloodstoneBlast(S, time) {
+        const proc = RELIC_PROCS.Bloodstone;
+        if (S.relicBloodstoneExplosionUntil > time) return;
+
+        if (S.relicBloodstoneStacksUntil <= time) S.relicBloodstoneStacks = 0;
+
+        S.relicBloodstoneStacks++;
+        S.relicBloodstoneStacksUntil = time + proc.volatilityDuration;
+
+        const volArr = S._condMap.get('Bloodstone Volatility');
+        if (volArr) {
+            for (const s of volArr) {
+                if (s.expiresAt > time) s.expiresAt = time + proc.volatilityDuration;
+            }
+        }
+        this._pushCondStack(S, { t: time, cond: 'Bloodstone Volatility', expiresAt: time + proc.volatilityDuration });
+
+        if (S.relicBloodstoneStacks >= proc.stacksNeeded) {
+            S.relicBloodstoneStacks = 0;
+            S.relicBloodstoneExplosionUntil = time + proc.effectDuration;
+
+            const volArr2 = S._condMap.get('Bloodstone Volatility');
+            if (volArr2) {
+                for (const s of volArr2) {
+                    if (s.expiresAt > time) s.expiresAt = time;
+                }
+            }
+            this._pushCondStack(S, { t: time, cond: 'Bloodstone Explosion', expiresAt: time + proc.effectDuration });
+
+            insertSorted(S.eq, {
+                time, type: 'hit',
+                skill: 'Bloodstone Explosion', hitIdx: 1, sub: 1, totalSubs: 1,
+                dmg: proc.strikeCoeff, ws: proc.strikeWs,
+                isField: false, cc: false, conds: null,
+                isRelicProc: true, noCrit: false, att: S.att,
+            });
+
+            for (const [c, v] of Object.entries(proc.conditions)) {
+                this._applyCondition(S, c, v.stacks, v.dur, time, 'Bloodstone Explosion');
+            }
+
+            S.log.push({ t: time, type: 'relic_proc', relic: 'Bloodstone', skill: 'Bloodstone Explosion' });
+            S.steps.push({
+                skill: 'Bloodstone Explosion', start: time, end: time,
+                att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon,
+            });
         }
     }
 
