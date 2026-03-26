@@ -407,7 +407,6 @@ export class SimulationEngine {
             weaveSelfUntil: 0,
             weaveSelfVisited: new Set(),
             perfectWeaveUntil: 0,
-            weaversProwessUntil: 0,
             aaCarryover: null,
             quicknessUntil: 0,
             alacrityUntil: 0,
@@ -748,7 +747,8 @@ export class SimulationEngine {
                 const hasSpeed = S._hasSwiftRevenge
                     && (this._effectStacksAt(S, 'Swiftness', ev.time) > 0
                         || this._effectStacksAt(S, 'Superspeed', ev.time) > 0);
-                const weaversProwessUp = S._hasWeaversProwess && S.weaversProwessUntil > ev.time;
+                const weaversProwessUp = S._hasWeaversProwess
+                    && this._effectStacksAt(S, "Weaver's Prowess", ev.time) > 0;
                 const empAurasStacks = S._hasEmpoweringAuras
                     ? Math.min(this._effectStacksAt(S, 'Empowering Auras', ev.time), 5) : 0;
                 const famProwessUp = S._hasFamiliarsProwess
@@ -1051,7 +1051,7 @@ export class SimulationEngine {
                 weaveSelfUntil: S.weaveSelfUntil,
                 weaveSelfVisited: [...S.weaveSelfVisited],
                 perfectWeaveUntil: S.perfectWeaveUntil,
-                weaversProwessUntil: S.weaversProwessUntil,
+                // weaversProwessUntil tracked via allCondStacks — no snapshot needed
                 permaBoons: S.permaBoons || {},
                 _hasTranscendentTempest: S._hasTranscendentTempest,
             },
@@ -1758,7 +1758,7 @@ export class SimulationEngine {
             if (S._hasRockSolid) this._grantRockSolid(S, S.t);
         }
         if (S._hasWeaversProwess && target !== prevPrimary) {
-            S.weaversProwessUntil = S.t + 8000;
+            S.allCondStacks.push({ t: S.t, cond: "Weaver's Prowess", expiresAt: S.t + 8000 });
         }
         if (S._hasElementsOfRage && target === prevPrimary) {
             this._refreshEffect(S, 'Elements of Rage', 8, S.t);
@@ -2716,7 +2716,7 @@ export class SimulationEngine {
     _applyCondition(S, cond, stacks, durSec, time, skillName, castStart = null, extraCondDurPct = 0) {
         const attrs = this.attributes.attributes;
         let bonus = getConditionDurationBonus(cond, attrs) + extraCondDurPct;
-        if (S._hasWeaversProwess && S.weaversProwessUntil > time) {
+        if (S._hasWeaversProwess && this._effectStacksAt(S, "Weaver's Prowess", time) > 0) {
             bonus += 20;
         }
         if (S._empPool?.Expertise) {
@@ -2752,13 +2752,15 @@ export class SimulationEngine {
         }
 
         const activeAtTime = cs.stacks.filter(s => s.t <= time && s.expiresAt > time).length;
-        const wpApplied = S._hasWeaversProwess && S.weaversProwessUntil > time;
+        const wpApplied = S._hasWeaversProwess
+            && this._effectStacksAt(S, "Weaver's Prowess", time) > 0;
+        const effectiveBonus = Math.min(bonus, 100) + uncapped;
         S.log.push({
             t: time, type: 'cond_apply', cond, stacks, durMs: adjMs,
             total: activeAtTime, skill: skillName,
             diag: {
                 baseDurMs: Math.round(durSec * 1000),
-                bonusPct: Math.round(bonus * 100) / 100,
+                bonusPct: Math.round(effectiveBonus * 100) / 100,
                 weaversProwess: wpApplied || false,
                 uncappedPct: uncapped,
             },
@@ -2811,7 +2813,7 @@ export class SimulationEngine {
         } else {
             bonus = getConditionDurationBonus(effect, attrs);
             if (S._hasPiercingShards && effect === 'Vulnerability') bonus += 33;
-            if (S._hasWeaversProwess && S.weaversProwessUntil > time) {
+            if (S._hasWeaversProwess && this._effectStacksAt(S, "Weaver's Prowess", time) > 0) {
                 bonus += 20;
             }
             if (S._empPool?.Expertise) {
