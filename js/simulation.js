@@ -417,6 +417,7 @@ export class SimulationEngine {
             conjurePickups: [],
             energy: eliteSpec === 'Catalyst' ? CATALYST_ENERGY_MAX : null,
             sphereActiveUntil: 0,
+            sphereWindows: [],
             evokerElement: (eliteSpec === 'Evoker' && startEvokerElement) ? startEvokerElement : null,
             evokerCharges: eliteSpec === 'Evoker' ? 6 : 0,
             evokerEmpowered: 0,
@@ -1069,6 +1070,7 @@ export class SimulationEngine {
                 eliteSpec: S.eliteSpec,
                 energy: S.energy,
                 sphereActiveUntil: S.sphereActiveUntil,
+                sphereWindows: S.sphereWindows.filter(w => w.end > rotEnd).map(w => ({ ...w })),
                 evokerElement: S.evokerElement,
                 evokerCharges: S.evokerCharges,
                 evokerEmpowered: S.evokerEmpowered,
@@ -1878,6 +1880,13 @@ export class SimulationEngine {
         }
     }
 
+    _anySphereActiveAt(S, time) {
+        for (const w of S.sphereWindows) {
+            if (w.start <= time && w.end > time) return true;
+        }
+        return false;
+    }
+
     _doJadeSphere(S, sk) {
         if (S.eliteSpec !== 'Catalyst') {
             S.log.push({ t: S.t, type: 'err', msg: `Jade Sphere requires Catalyst specialization` });
@@ -1899,6 +1908,7 @@ export class SimulationEngine {
         const durMs = Math.round((sk.duration || 5) * 1000);
         S.sphereActiveUntil = Math.max(S.sphereActiveUntil, S.t + durMs);
         S.sphereExpiry[sk.attunement] = Math.max(S.sphereExpiry[sk.attunement] || 0, S.t + durMs);
+        S.sphereWindows.push({ start: S.t, end: S.t + durMs });
 
         this._trackField(S, sk, S.t);
 
@@ -2704,7 +2714,7 @@ export class SimulationEngine {
             strike = strikeDamage(ev.dmg, ev.ws, power) * critMult * strikeMul;
             S.totalStrike += strike;
 
-            if (S.energy !== null && (ev.time >= S.sphereActiveUntil || S._hasSphereSpecialist)) {
+            if (S.energy !== null && (!this._anySphereActiveAt(S, ev.time) || S._hasSphereSpecialist)) {
                 S.energy = Math.min(CATALYST_ENERGY_MAX, S.energy + 1);
             }
         }
