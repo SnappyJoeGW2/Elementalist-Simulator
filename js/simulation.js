@@ -2245,7 +2245,7 @@ export class SimulationEngine {
 
     _checkCombo(S, ev) {
         if (!ev.finType) return;
-        const activeField = S.fields.find(f => f.end > ev.time);
+        const activeField = S.fields.find(f => f.start <= ev.time && f.end > ev.time);
         if (!activeField) return;
         // Use the player's actual attunement at hit-fire time, not the cast-time attunement
         // baked into ev.att.  A skill cast in Earth but hitting after an Air swap must use
