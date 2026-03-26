@@ -31,15 +31,19 @@ self.onmessage = ({ data }) => {
     const groups = _buildEquivGroups(activeSlots, prefixes, slotConstraints);
     const gearCombos = _enumerateGearCombos(groups, prefixes);
 
+    const REPORT_INTERVAL = 50;
+
     for (const combo of combos) {
         let comboBest = null;
         let evalsDone = 0;
+        let unreported = 0;
 
         for (const gearAssign of gearCombos) {
             const gear = _expandToGear(gearAssign, groups, prefixes);
             const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
                               startAtt, startAtt2, evokerElement, permaBoons, constraints);
             evalsDone++;
+            unreported++;
             if (dps > (comboBest?.rawDps ?? -1)) {
                 comboBest = {
                     rawDps: dps, dps,
@@ -50,13 +54,24 @@ self.onmessage = ({ data }) => {
                     infusions: combo.infusions,
                 };
             }
+
+            if (unreported >= REPORT_INTERVAL) {
+                self.postMessage({
+                    results: comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
+                    evalsDone: unreported,
+                    done: false,
+                });
+                unreported = 0;
+            }
         }
 
-        self.postMessage({
-            results:   comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
-            evalsDone,
-            done:      false,
-        });
+        if (unreported > 0) {
+            self.postMessage({
+                results: comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
+                evalsDone: unreported,
+                done: false,
+            });
+        }
     }
 
     self.postMessage({ results: [], evalsDone: 0, done: true });
