@@ -203,9 +203,21 @@ class App {
             activeTraits: this.data.attributes.activeTraits,
         });
 
+        // Rotation couldn't be restored in _restoreBuild because this.sim didn't
+        // exist yet.  Re-apply the saved rotation now that the engine is ready.
+        if (this._pendingRotation) {
+            this._deserializeRotation(this._pendingRotation);
+            this._pendingRotation = null;
+            if (this.sim.rotation.length > 0) this._autoRun();
+        }
+
         this._initOptimizer();
 
         document.getElementById('btn-sim-clear').addEventListener('click', () => this._clearRotation());
+        document.getElementById('btn-sim-rerun').addEventListener('click', () => {
+            if (this.sim?.rotation.length > 0) this._autoRun();
+            this.render();
+        });
         document.getElementById('btn-export-rotation').addEventListener('click', () => this._exportRotation());
         document.getElementById('btn-import-rotation').addEventListener('click', () => {
             document.getElementById('rotation-file-input').click();
@@ -2417,7 +2429,13 @@ class App {
                 }
             }
         }
-        if (state.rotation) this._deserializeRotation(state.rotation);
+        if (state.rotation) {
+            if (this.sim) {
+                this._deserializeRotation(state.rotation);
+            } else {
+                this._pendingRotation = state.rotation;
+            }
+        }
     }
 
     _persistBuild() {
