@@ -59,7 +59,7 @@ Once you have a rotation, the optimizer finds the **best gear combination** for 
 
 Because the optimizer runs your actual rotation through the full simulator for every evaluation, the results account for all trait synergies, proc timing, and boon interactions — not just a stat formula.
 
-**NOTE:** Optimization is much more heavy than Discretize's optimizer, since we run whole rotation for each build. Using optimizer mainly with 1 prefix selected, but multiple Sigils/Relics (accurate procs) is advised.
+**NOTE:** Optimization is much heavier than Discretize's optimizer, since we run whole rotation for each build. Using optimizer mainly with 1 prefix selected, but multiple Sigils/Relics (accurate procs) is advised.
 
 ---
 
