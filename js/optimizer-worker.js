@@ -1,11 +1,11 @@
 // ─── Optimizer Web Worker ─────────────────────────────────────────────────────
-// Receives a batch of non-gear combos, runs coordinate descent on each, and
-// posts incremental results after every combo so the UI progress bar moves
-// smoothly.  Runs inside a Web Worker so it never blocks the UI thread.
+// Exhaustive search over equivalence classes of gear slots.
+// Slots with identical stat weights are grouped; we enumerate unique
+// distributions of prefixes per group, then expand to per-slot assignments.
 
 import { SimulationEngine } from './simulation.js';
 import { calcAttributes }   from './calc-attributes.js';
-import { GEAR_SLOTS }       from './gear-data.js';
+import { GEAR_STATS } from './gear-data.js';
 
 self.onmessage = ({ data }) => {
     const {
@@ -13,7 +13,7 @@ self.onmessage = ({ data }) => {
         baseBuild, selectedSkills, rotation,
         prefixes, constraints = {}, slotConstraints = {},
         startAtt, startAtt2, evokerElement, permaBoons,
-        combos,
+        combos, activeSlots,
     } = data;
 
     const initAttrs = calcAttributes(baseBuild, selectedSkills);
@@ -25,56 +25,31 @@ self.onmessage = ({ data }) => {
         activeTraits: initAttrs.activeTraits,
     });
     sim.rotation = rotation;
+    sim.fastMode = true;
     sim.activeTraitNames = new Set((initAttrs.activeTraits || []).map(t => t.name));
+
+    const groups = _buildEquivGroups(activeSlots, prefixes, slotConstraints);
+    const gearCombos = _enumerateGearCombos(groups, prefixes);
 
     for (const combo of combos) {
         let comboBest = null;
         let evalsDone = 0;
 
-        for (const startPrefix of prefixes) {
-            const gear = {};
-            for (const slot of GEAR_SLOTS) gear[slot] = slotConstraints[slot] || startPrefix;
-
-            let bestDps = _eval(sim, baseBuild, selectedSkills, combo, gear,
-                                startAtt, startAtt2, evokerElement, permaBoons, constraints);
+        for (const gearAssign of gearCombos) {
+            const gear = _expandToGear(gearAssign, groups, prefixes);
+            const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
+                              startAtt, startAtt2, evokerElement, permaBoons, constraints);
             evalsDone++;
-
-            let improved = true;
-            while (improved) {
-                improved = false;
-                for (const slot of GEAR_SLOTS) {
-                    if (slotConstraints[slot]) continue;
-                    const orig     = gear[slot];
-                    let winner     = orig;
-                    let winnerDps  = bestDps;
-
-                    for (const prefix of prefixes) {
-                        if (prefix === orig) continue;
-                        gear[slot] = prefix;
-                        const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
-                                          startAtt, startAtt2, evokerElement, permaBoons, constraints);
-                        evalsDone++;
-                        if (dps > winnerDps) { winnerDps = dps; winner = prefix; }
-                    }
-
-                    gear[slot] = winner;
-                    if (winner !== orig) { bestDps = winnerDps; improved = true; }
-                }
+            if (dps > (comboBest?.rawDps ?? -1)) {
+                comboBest = {
+                    rawDps: dps, dps,
+                    gear: { ...gear },
+                    rune: combo.rune, relic: combo.relic,
+                    sigil1: combo.sigil1, sigil2: combo.sigil2,
+                    food: combo.food, utility: combo.utility,
+                    infusions: combo.infusions,
+                };
             }
-
-            const result = {
-                rawDps:    bestDps,
-                dps:       bestDps,
-                gear:      { ...gear },
-                rune:      combo.rune,
-                relic:     combo.relic,
-                sigil1:    combo.sigil1,
-                sigil2:    combo.sigil2,
-                food:      combo.food,
-                utility:   combo.utility,
-                infusions: combo.infusions,
-            };
-            if (!comboBest || result.rawDps > comboBest.rawDps) comboBest = result;
         }
 
         self.postMessage({
@@ -86,6 +61,93 @@ self.onmessage = ({ data }) => {
 
     self.postMessage({ results: [], evalsDone: 0, done: true });
 };
+
+// ── Build equivalence groups ─────────────────────────────────────────────────
+function _buildEquivGroups(activeSlots, prefixes, slotConstraints) {
+    const free = [];
+    const locked = [];
+
+    for (const slot of activeSlots) {
+        if (slotConstraints[slot]) {
+            locked.push({ slots: [slot], locked: slotConstraints[slot] });
+        } else {
+            free.push(slot);
+        }
+    }
+
+    const sigMap = new Map();
+    for (const slot of free) {
+        const sig = _slotSignature(slot, prefixes);
+        if (!sigMap.has(sig)) sigMap.set(sig, []);
+        sigMap.get(sig).push(slot);
+    }
+
+    const groups = [];
+    for (const [, slots] of sigMap) groups.push({ slots, locked: null });
+    for (const g of locked) groups.push(g);
+    return groups;
+}
+
+function _slotSignature(slot, prefixes) {
+    const parts = [];
+    for (const pfx of prefixes) {
+        const stats = GEAR_STATS[pfx]?.[slot] || {};
+        const sorted = Object.entries(stats).sort((a, b) => a[0].localeCompare(b[0]));
+        parts.push(sorted.map(([k, v]) => `${k}:${v}`).join(','));
+    }
+    return parts.join('|');
+}
+
+// ── Enumerate all unique gear distributions ──────────────────────────────────
+function _enumerateGearCombos(groups, prefixes) {
+    const K = prefixes.length;
+    const groupDistributions = groups.map(g => {
+        if (g.locked !== null) {
+            return [new Array(g.slots.length).fill(prefixes.indexOf(g.locked))];
+        }
+        return _distributions(g.slots.length, K);
+    });
+
+    let combos = [[]];
+    for (const dists of groupDistributions) {
+        const next = [];
+        for (const prev of combos) {
+            for (const dist of dists) {
+                next.push([...prev, dist]);
+            }
+        }
+        combos = next;
+    }
+    return combos;
+}
+
+function _distributions(n, k) {
+    const results = [];
+    const cur = new Array(n);
+    const recurse = (pos, minIdx) => {
+        if (pos === n) { results.push([...cur]); return; }
+        for (let i = minIdx; i < k; i++) {
+            cur[pos] = i;
+            recurse(pos + 1, i);
+        }
+    };
+    recurse(0, 0);
+    return results;
+}
+
+function _expandToGear(gearAssign, groups, prefixes) {
+    const gear = {};
+    for (let gi = 0; gi < groups.length; gi++) {
+        const g = groups[gi];
+        const dist = gearAssign[gi];
+        for (let si = 0; si < g.slots.length; si++) {
+            const effectiveSlot = g.slots[si];
+            const gearSlot = effectiveSlot === 'Weapon2H' ? 'Weapon1' : effectiveSlot;
+            gear[gearSlot] = prefixes[dist[si]];
+        }
+    }
+    return gear;
+}
 
 function _eval(sim, baseBuild, selectedSkills, combo, gear,
                startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {

@@ -20,6 +20,7 @@
 import {
     GEAR_STATS, GEAR_SLOTS, BASE_STATS, JBC_BONUS, INFUSION_BONUS,
     RUNE_DATA, FOOD_DATA, UTILITY_DATA, UTILITY_CONVERSION_RATES, SIGIL_DATA,
+    WEAPON_DATA,
 } from './gear-data.js';
 import { getActiveTraits } from './traits-data.js';
 
@@ -93,10 +94,14 @@ export function calcAttributes(build, skills) {
     const jbcAcc    = {};  // jade bot core bonuses
 
     // ── 2. Gear ──
+    const mhWeapon = build.weapons?.[0] || '';
+    const is2H = WEAPON_DATA[mhWeapon]?.wielding === '2h';
     for (const slot of GEAR_SLOTS) {
+        if (is2H && slot === 'Weapon2') continue;
+        const statSlot = (is2H && slot === 'Weapon1') ? 'Weapon2H' : slot;
         const prefix = build.gear?.[slot];
         if (!prefix) continue;
-        const slotStats = GEAR_STATS[prefix]?.[slot];
+        const slotStats = GEAR_STATS[prefix]?.[statSlot];
         if (!slotStats) continue;
         for (const [s, v] of Object.entries(slotStats)) add(gearAcc, s, v);
     }

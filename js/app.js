@@ -4,6 +4,7 @@ import {
     PREFIXES, GEAR_SLOTS, RUNE_NAMES, FOOD_NAMES, FOOD_DATA,
     UTILITY_NAMES, UTILITY_DATA, UTILITY_CONVERSION_RATES, INFUSION_STATS,
     WEAPON_DATA, SIGIL_DATA, SIGIL_NAMES, RELIC_DATA, RELIC_NAMES,
+    getActiveGearSlots,
 } from './gear-data.js';
 import { TRAITS, SPECIALIZATIONS } from './traits-data.js';
 import { GW2API, PLACEHOLDER_ICON } from './gw2-api.js';
@@ -294,14 +295,17 @@ class App {
     // ─── Gear Panel ───
     renderGear() {
         const container = document.getElementById('gear-slots');
+        const is2H = TH_WEAPONS.has(this.build.weapons?.[0] || '');
 
         container.innerHTML = GEAR_SLOTS.map(slot => {
+            const hidden = is2H && slot === 'Weapon2';
+            const label  = is2H && slot === 'Weapon1' ? 'Weapon (2H)' : slot;
             const cur = this.build.gear[slot] || PREFIXES[0];
             const opts = PREFIXES.map(p =>
                 `<option value="${esc(p)}"${p === cur ? ' selected' : ''}>${esc(p)}</option>`
             ).join('');
-            return `<div class="gear-row">
-                <span class="gear-label">${slot}</span>
+            return `<div class="gear-row"${hidden ? ' style="display:none"' : ''}>
+                <span class="gear-label">${label}</span>
                 <select class="gear-select" data-slot="${slot}">${opts}</select>
             </div>`;
         }).join('');
@@ -343,6 +347,7 @@ class App {
             document.getElementById('oh-row').style.pointerEvents = is2H ? 'none' : '';
             this._onBuildChange();
             this.renderAttunementBar();
+            this.renderGear();
         });
         weaponContainer.querySelector('#sel-oh').addEventListener('change', e => {
             this.build.weapons[1] = e.target.value;
@@ -2658,10 +2663,11 @@ class App {
             Helm: 'Helm', Shoulders: 'Shld', Chest: 'Coat', Gloves: 'Glov',
             Leggins: 'Legs', Boots: 'Boot', Amulet: 'Amul', Ring1: 'Rng1',
             Ring2: 'Rng2', Accessory1: 'Acc1', Accessory2: 'Acc2', Back: 'Back',
-            Weapon1: 'Wep1', Weapon2: 'Wep2',
+            Weapon1: 'Wep1', Weapon2: 'Wep2', Weapon2H: 'Wep(2H)',
         };
+        const activeSlots = getActiveGearSlots(this.build.weapons, WEAPON_DATA);
         const checked = this._getChecked('opt-prefixes');
-        container.innerHTML = GEAR_SLOTS.map(slot => {
+        container.innerHTML = activeSlots.map(slot => {
             const label = SLOT_LABELS[slot] || slot;
             const opts  = checked.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
             return `<div class="opt-slot-constraint">
@@ -2680,6 +2686,10 @@ class App {
             if (sel.value) out[sel.dataset.slot] = sel.value;
         });
         return out;
+    }
+
+    _getActiveSlots() {
+        return getActiveGearSlots(this.build.weapons, WEAPON_DATA);
     }
 
     _bindOptimizerEvents() {
@@ -2892,7 +2902,11 @@ class App {
             const sigilStr = [r.sigil1, r.sigil2].filter(Boolean).join('+') || '—';
             const dpsStr   = r.dps > 0 ? Math.round(r.dps).toLocaleString() : (r.rawDps > 0 ? Math.round(r.rawDps).toLocaleString() + '*' : '—');
 
-            const slotCells = GEAR_SLOTS.map(slot => slotBadge(r.gear[slot])).join('');
+            const is2H = TH_WEAPONS.has(this.build.weapons?.[0] || '');
+            const slotCells = GEAR_SLOTS.map(slot => {
+                if (is2H && slot === 'Weapon2') return '<span class="opt-slot-badge pfx-default">—</span>';
+                return slotBadge(r.gear[slot]);
+            }).join('');
 
             return `<div class="opt-result-row" data-idx="${i}">
                 <span class="opt-rank">${i + 1}</span>

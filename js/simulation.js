@@ -164,6 +164,8 @@ function insertSorted(arr, ev) {
     arr.splice(lo, 0, ev);
 }
 
+const NOOP_ARRAY = { push() {}, length: 0 };
+
 export class SimulationEngine {
     constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits }) {
         this.skills = skills;
@@ -175,6 +177,7 @@ export class SimulationEngine {
         this.activeTraitNames = new Set((activeTraits || []).map(t => t.name));
         this.rotation = [];
         this.results = null;
+        this.fastMode = false;
     }
 
     _hasTrait(name) { return this.activeTraitNames.has(name); }
@@ -392,8 +395,8 @@ export class SimulationEngine {
             comboAccum: {},
             auras: [],
             boons: {},
-            log: [],
-            steps: [],
+            log: this.fastMode ? NOOP_ARRAY : [],
+            steps: this.fastMode ? NOOP_ARRAY : [],
             allCondStacks: [],
             conjureEquipped: null,
             conjurePickups: [],
@@ -1002,7 +1005,7 @@ export class SimulationEngine {
         const dpsStart = S.firstHitTime ?? 0;
         const effectiveEnd = deathTime !== null ? deathTime : rotEnd;
         const dpsWindowMs = effectiveEnd - dpsStart;
-        S.log.sort((a, b) => a.t - b.t);
+        if (S.log.sort) S.log.sort((a, b) => a.t - b.t);
 
         this.results = {
             rotationMs: rotEnd,
@@ -3116,8 +3119,10 @@ export class SimulationEngine {
             const tick = baseTick * condMul;
             const total = tick * active.length;
             S.totalCond += total;
-            S.condDamage[cond] = (S.condDamage[cond] || 0) + total;
-            S.condStackSeconds[cond] = (S.condStackSeconds[cond] || 0) + active.length;
+            if (!this.fastMode) {
+                S.condDamage[cond] = (S.condDamage[cond] || 0) + total;
+                S.condStackSeconds[cond] = (S.condStackSeconds[cond] || 0) + active.length;
+            }
 
             for (const stack of active) {
                 this._ensurePerSkill(S, stack.appliedBy);

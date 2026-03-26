@@ -28,6 +28,7 @@ export const GEAR_STATS = {
         Back: { Power: 63, Precision: 40, Ferocity: 40 },
         Weapon1: { Power: 125, Precision: 90, Ferocity: 90 },
         Weapon2: { Power: 125, Precision: 90, Ferocity: 90 },
+        Weapon2H: { Power: 251, Precision: 179, Ferocity: 179 },
     },
     "Assassin's": {
         Helm: { Power: 45, Precision: 63, Ferocity: 45 },
@@ -44,6 +45,7 @@ export const GEAR_STATS = {
         Back: { Power: 40, Precision: 63, Ferocity: 40 },
         Weapon1: { Power: 90, Precision: 125, Ferocity: 90 },
         Weapon2: { Power: 90, Precision: 125, Ferocity: 90 },
+        Weapon2H: { Power: 179, Precision: 251, Ferocity: 179 },
     },
     "Diviner's": {
         Helm: { Power: 54, Precision: 30, Ferocity: 30, Concentration: 54 },
@@ -60,6 +62,7 @@ export const GEAR_STATS = {
         Back: { Power: 52, Precision: 27, Ferocity: 27, Concentration: 52 },
         Weapon1: { Power: 108, Precision: 59, Ferocity: 59, Concentration: 108 },
         Weapon2: { Power: 108, Precision: 59, Ferocity: 59, Concentration: 108 },
+        Weapon2H: { Power: 215, Precision: 118, Ferocity: 118, Concentration: 215 },
     },
     "Viper's": {
         Helm: { Power: 54, Precision: 30, 'Condition Damage': 54, Expertise: 30 },
@@ -76,6 +79,7 @@ export const GEAR_STATS = {
         Back: { Power: 52, Precision: 27, 'Condition Damage': 52, Expertise: 27 },
         Weapon1: { Power: 108, Precision: 59, 'Condition Damage': 108, Expertise: 59 },
         Weapon2: { Power: 108, Precision: 59, 'Condition Damage': 108, Expertise: 59 },
+        Weapon2H: { Power: 215, Precision: 118, 'Condition Damage': 215, Expertise: 118 },
     },
     'Grieving': {
         Helm: { Power: 54, Precision: 30, Ferocity: 30, 'Condition Damage': 54 },
@@ -92,6 +96,7 @@ export const GEAR_STATS = {
         Back: { Power: 52, Precision: 27, Ferocity: 27, 'Condition Damage': 52 },
         Weapon1: { Power: 108, Precision: 59, Ferocity: 59, 'Condition Damage': 108 },
         Weapon2: { Power: 108, Precision: 59, Ferocity: 59, 'Condition Damage': 108 },
+        Weapon2H: { Power: 215, Precision: 118, Ferocity: 118, 'Condition Damage': 215 },
     },
     'Sinister': {
         Helm: { Power: 45, Precision: 45, 'Condition Damage': 63 },
@@ -108,6 +113,7 @@ export const GEAR_STATS = {
         Back: { Power: 40, Precision: 40, 'Condition Damage': 63 },
         Weapon1: { Power: 90, Precision: 90, 'Condition Damage': 125 },
         Weapon2: { Power: 90, Precision: 90, 'Condition Damage': 125 },
+        Weapon2H: { Power: 179, Precision: 179, 'Condition Damage': 251 },
     },
     'Celestial': {
         Helm: { Power: 30, Precision: 30, Ferocity: 30, Concentration: 30, 'Condition Damage': 30, Expertise: 30, Toughness: 30 },
@@ -124,6 +130,7 @@ export const GEAR_STATS = {
         Back: { Power: 28, Precision: 28, Ferocity: 28, Concentration: 28, 'Condition Damage': 28, Expertise: 28, Toughness: 28 },
         Weapon1: { Power: 59, Precision: 59, Ferocity: 59, Concentration: 59, 'Condition Damage': 59, Expertise: 59, Toughness: 59 },
         Weapon2: { Power: 59, Precision: 59, Ferocity: 59, Concentration: 59, 'Condition Damage': 59, Expertise: 59, Toughness: 59 },
+        Weapon2H: { Power: 118, Precision: 118, Ferocity: 118, Concentration: 118, 'Condition Damage': 118, Expertise: 118, Toughness: 118 },
     },
     "Dragon's": {
         Helm: { Power: 54, Precision: 30, Ferocity: 54, Vitality: 30 },
@@ -140,6 +147,7 @@ export const GEAR_STATS = {
         Back: { Power: 52, Precision: 27, Ferocity: 52, Vitality: 27 },
         Weapon1: { Power: 108, Precision: 59, Ferocity: 108, Vitality: 59 },
         Weapon2: { Power: 108, Precision: 59, Ferocity: 108, Vitality: 59 },
+        Weapon2H: { Power: 215, Precision: 118, Ferocity: 215, Vitality: 118 },
     },
     "Ritualist's": {
         Helm: { Vitality: 54, Concentration: 30, 'Condition Damage': 54, Expertise: 30 },
@@ -156,10 +164,29 @@ export const GEAR_STATS = {
         Back: { Vitality: 52, Concentration: 27, 'Condition Damage': 52, Expertise: 27 },
         Weapon1: { Vitality: 108, Concentration: 59, 'Condition Damage': 108, Expertise: 59 },
         Weapon2: { Vitality: 108, Concentration: 59, 'Condition Damage': 108, Expertise: 59 },
+        Weapon2H: { Vitality: 215, Concentration: 118, 'Condition Damage': 215, Expertise: 118 },
     },
 };
 
 export const PREFIXES = Object.keys(GEAR_STATS);
+
+// Returns the list of effective gear slots for attribute calculation.
+// For 2H weapons: Weapon1 is replaced by Weapon2H, Weapon2 is removed.
+// `weapons` is the build.weapons array, e.g. ['Staff'] or ['Sword','Dagger'].
+export function getActiveGearSlots(weapons, weaponData) {
+    const mh = weapons?.[0] || '';
+    const is2H = weaponData?.[mh]?.wielding === '2h';
+    if (is2H) {
+        return GEAR_SLOTS.filter(s => s !== 'Weapon2').map(s => s === 'Weapon1' ? 'Weapon2H' : s);
+    }
+    return [...GEAR_SLOTS];
+}
+
+// Maps effective slot names back to display slot names for gear assignment.
+// Weapon2H → Weapon1 (since it's the single weapon piece).
+export function effectiveSlotToGearSlot(effectiveSlot) {
+    return effectiveSlot === 'Weapon2H' ? 'Weapon1' : effectiveSlot;
+}
 
 // ─── Base Stats (level 80) ────────────────────────────────────────────────────
 export const BASE_STATS = {
