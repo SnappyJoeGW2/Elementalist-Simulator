@@ -438,7 +438,7 @@ Primordial Stance (Water),1000,1000,1,Duration,1,,0.33,5,1,,,,,,1,,,,,,,,,,,,,,,
 Primordial Stance (Air),1000,1000,1,Duration,1,,0.33,5,1,,,,,8|3,,,,,,,,,,,,,,,,,,
 Primordial Stance (Earth),1000,1000,1,Duration,1,,0.33,5,1,,,2|6,,,,,,,,,,,,,,,,,,,,
 Deploy Jade Sphere (Fire),0,1000,1,Duration,1,,0.25,5,1,,,,,,,,,,,,,,,,,1|10,,,,,,
-Deploy Jade Sphere (Water,0,1000,1,Duration,1,,0.25,5,1,,,,,,,,,,,,,,,,,,,,,,,1
+Deploy Jade Sphere (Water),0,1000,1,Duration,1,,0.25,5,1,,,,,,,,,,,,,,,,,,,,,,,1
 Deploy Jade Sphere (Air),0,1000,1,Duration,1,,0.25,5,1,,,,,,,,,,,,,,,,1,,,,,,,
 Deploy Jade Sphere (Earth),0,1000,1,Duration,1,,0.25,5,1,,,,,,,,,,,,,,,,,,1,,,,,
 Shattering Ice,200,,1,1,,,0.6,5,1,,,,,,1,,,,,,,,,,,,,,,,,
