@@ -887,7 +887,7 @@ export class SimulationEngine {
                 if (S._hasViciousEmpowerment && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc
                     && ev.cc && ev.time >= (S.traitICD['ViciousEmp'] || 0)) {
                     S.traitICD['ViciousEmp'] = ev.time + 250;
-                    this._grantElemEmpowerment(S, 2, ev.time);
+                    this._grantElemEmpowerment(S, 2, ev.time, 'Vicious Empowerment');
                     this._trackEffect(S, 'Might', 2, 10, ev.time);
                 }
 
@@ -2149,7 +2149,7 @@ export class SimulationEngine {
             this._grantEmpoweringAuras(S, time);
         }
         if (S._hasElemEpitome) {
-            this._grantElemEmpowerment(S, 1, time);
+            this._grantElemEmpowerment(S, 1, time, skill);
         }
     }
 
@@ -2222,11 +2222,14 @@ export class SimulationEngine {
         return stacks * 0.01;
     }
 
-    _grantElemEmpowerment(S, stacks, time) {
+    _grantElemEmpowerment(S, stacks, time, source) {
         const current = Math.min(this._effectStacksAt(S, 'Elemental Empowerment', time), 10);
         const toAdd = Math.min(stacks, 10 - current);
         for (let i = 0; i < toAdd; i++) {
             this._pushCondStack(S, { t: time, cond: 'Elemental Empowerment', expiresAt: time + 15000 });
+        }
+        if (toAdd > 0 && source) {
+            S.log.push({ t: time, type: 'apply', effect: 'Elemental Empowerment', stacks: toAdd, dur: 15, skill: source });
         }
     }
 
@@ -2244,7 +2247,10 @@ export class SimulationEngine {
         if (!ev.finType) return;
         const activeField = S.fields.find(f => f.end > ev.time);
         if (!activeField) return;
-        const att = ev.att;
+        // Use the player's actual attunement at hit-fire time, not the cast-time attunement
+        // baked into ev.att.  A skill cast in Earth but hitting after an Air swap must use
+        // the Air ICD key so the per-attunement 10 s cooldowns are independent.
+        const att = this._attAt(S, ev.time);
 
         if (S._hasElemEpitome) {
             const icdKey = `EpitomeCombo_${att}`;
@@ -2909,7 +2915,7 @@ export class SimulationEngine {
         if (S._hasViciousEmpowerment && effect === 'Immobilize'
             && time >= (S.traitICD['ViciousEmp'] || 0)) {
             S.traitICD['ViciousEmp'] = time + 250;
-            this._grantElemEmpowerment(S, 2, time);
+            this._grantElemEmpowerment(S, 2, time, 'Vicious Empowerment');
             this._trackEffect(S, 'Might', 2, 10, time);
         }
     }
