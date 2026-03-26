@@ -407,6 +407,7 @@ export class SimulationEngine {
             weaveSelfUntil: 0,
             weaveSelfVisited: new Set(),
             perfectWeaveUntil: 0,
+            weaversProwessUntil: 0,
             aaCarryover: null,
             quicknessUntil: 0,
             alacrityUntil: 0,
@@ -747,7 +748,7 @@ export class SimulationEngine {
                 const hasSpeed = S._hasSwiftRevenge
                     && (this._effectStacksAt(S, 'Swiftness', ev.time) > 0
                         || this._effectStacksAt(S, 'Superspeed', ev.time) > 0);
-                const weaversProwessUp = S._hasWeaversProwess && hitAtt2 !== null && hitAtt !== hitAtt2;
+                const weaversProwessUp = S._hasWeaversProwess && S.weaversProwessUntil > ev.time;
                 const empAurasStacks = S._hasEmpoweringAuras
                     ? Math.min(this._effectStacksAt(S, 'Empowering Auras', ev.time), 5) : 0;
                 const famProwessUp = S._hasFamiliarsProwess
@@ -1050,6 +1051,7 @@ export class SimulationEngine {
                 weaveSelfUntil: S.weaveSelfUntil,
                 weaveSelfVisited: [...S.weaveSelfVisited],
                 perfectWeaveUntil: S.perfectWeaveUntil,
+                weaversProwessUntil: S.weaversProwessUntil,
                 permaBoons: S.permaBoons || {},
                 _hasTranscendentTempest: S._hasTranscendentTempest,
             },
@@ -1335,13 +1337,14 @@ export class SimulationEngine {
         this._trackAura(S, sk, end);
 
         // Fire instant skills that overlap with this cast window
+        const anchorRi = S._ri;
         for (const c of concurrents) {
             const fireAt = start + (c.offset || 0);
             S.t = Math.max(fireAt, start); // clamp to cast start; _step handles own CD wait
             S._ri = c._ri;
             this._step(S, c.name, true /* skipCastUntil */);
-            // S.t is now at the concurrent's actual fire time (< end); reset below
         }
+        S._ri = anchorRi;
 
         if (castMs > 0) S.castUntil = end;
         S.t = end;
@@ -1753,6 +1756,9 @@ export class SimulationEngine {
         if (target === 'Earth') {
             this._triggerEarthenBlast(S, S.t);
             if (S._hasRockSolid) this._grantRockSolid(S, S.t);
+        }
+        if (S._hasWeaversProwess && target !== prevPrimary) {
+            S.weaversProwessUntil = S.t + 8000;
         }
         if (S._hasElementsOfRage && target === prevPrimary) {
             this._refreshEffect(S, 'Elements of Rage', 8, S.t);
@@ -2710,10 +2716,8 @@ export class SimulationEngine {
     _applyCondition(S, cond, stacks, durSec, time, skillName, castStart = null, extraCondDurPct = 0) {
         const attrs = this.attributes.attributes;
         let bonus = getConditionDurationBonus(cond, attrs) + extraCondDurPct;
-        if (S._hasWeaversProwess) {
-            const a1 = this._attAt(S, time);
-            const a2 = this._att2At(S, time);
-            if (a2 !== null && a1 !== a2) bonus += 20;
+        if (S._hasWeaversProwess && S.weaversProwessUntil > time) {
+            bonus += 20;
         }
         if (S._empPool?.Expertise) {
             bonus += (S._empPool.Expertise * this._getEmpMul(S, time)) / 15;
@@ -2748,11 +2752,7 @@ export class SimulationEngine {
         }
 
         const activeAtTime = cs.stacks.filter(s => s.t <= time && s.expiresAt > time).length;
-        const wpApplied = S._hasWeaversProwess && (() => {
-            const a1 = this._attAt(S, time);
-            const a2 = this._att2At(S, time);
-            return a2 !== null && a1 !== a2;
-        })();
+        const wpApplied = S._hasWeaversProwess && S.weaversProwessUntil > time;
         S.log.push({
             t: time, type: 'cond_apply', cond, stacks, durMs: adjMs,
             total: activeAtTime, skill: skillName,
@@ -2811,10 +2811,8 @@ export class SimulationEngine {
         } else {
             bonus = getConditionDurationBonus(effect, attrs);
             if (S._hasPiercingShards && effect === 'Vulnerability') bonus += 33;
-            if (S._hasWeaversProwess) {
-                const a1 = this._attAt(S, time);
-                const a2 = this._att2At(S, time);
-                if (a2 !== null && a1 !== a2) bonus += 20;
+            if (S._hasWeaversProwess && S.weaversProwessUntil > time) {
+                bonus += 20;
             }
             if (S._empPool?.Expertise) {
                 bonus += (S._empPool.Expertise * this._getEmpMul(S, time)) / 15;
