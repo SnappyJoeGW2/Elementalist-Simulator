@@ -50,14 +50,16 @@ Export your entire build — gear, traitline selections, skill rotation — as a
 
 ## Gear Optimizer
 
-Once you have a rotation, the optimizer finds the **best gear combination** for it using coordinate descent with multi-threaded Web Workers:
+Once you have a rotation, the optimizer finds the **best gear combination** for it, simply browsing whole combinatory space:
 
 1. Choose which prefixes, runes, sigils, relics, food, and utility to test.
 2. Optionally set minimum constraints (Boon Duration, Critical Chance, Toughness, Vitality).
 3. Hit **Run** — the optimizer hill-climbs from multiple starting points in parallel, evaluating the full simulation for each candidate build.
-4. The top-10 results are ranked by DPS and displayed with one-click apply.
+4. The top-20 results are ranked by DPS and displayed with one-click apply.
 
 Because the optimizer runs your actual rotation through the full simulator for every evaluation, the results account for all trait synergies, proc timing, and boon interactions — not just a stat formula.
+
+**NOTE:** Optimization is much more heavy than Discretize's optimizer, since we run whole rotation for each build. Using optimizer mainly with 1 prefix selected, but multiple Sigils/Relics (accurate procs) is advised.
 
 ---
 
