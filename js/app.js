@@ -2834,10 +2834,12 @@ class App {
                     permaBoons:     this.permaBoons,
                     targetHP:       this._getTargetHP(),
                 },
-                (done, total, top10) => {
+                (done, total, top10, statusMsg) => {
                     const pct = total > 0 ? Math.min(100, (done / total) * 100) : 0;
                     progFill.style.width  = pct.toFixed(1) + '%';
-                    progLabel.textContent = `${done.toLocaleString()} / ~${total.toLocaleString()} evals — ${combos} non-gear combos`;
+                    progLabel.textContent = statusMsg
+                        ? statusMsg
+                        : `${done.toLocaleString()} / ~${total.toLocaleString()} evals (${pct.toFixed(0)}%)`;
                     this._renderOptimizerResults(top10);
                 }
             );

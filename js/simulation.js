@@ -203,6 +203,13 @@ export class SimulationEngine {
         return matches.find(s => !CONJURE_WEAPONS.has(s.weapon)) || matches[0];
     }
 
+    _pushCondStack(S, entry) {
+        let arr = S._condMap.get(entry.cond);
+        if (!arr) { arr = []; S._condMap.set(entry.cond, arr); }
+        arr.push(entry);
+        S.allCondStacks.push(entry);
+    }
+
     _cdKey(sk) {
         if (CONJURE_WEAPONS.has(sk.weapon)) return `${sk.name}::${sk.weapon}`;
         if (sk.type === 'Jade Sphere') return sk.name;
@@ -397,7 +404,8 @@ export class SimulationEngine {
             boons: {},
             log: this.fastMode ? NOOP_ARRAY : [],
             steps: this.fastMode ? NOOP_ARRAY : [],
-            allCondStacks: [],
+            allCondStacks: this.fastMode ? NOOP_ARRAY : [],
+            _condMap: new Map(),
             conjureEquipped: null,
             conjurePickups: [],
             energy: eliteSpec === 'Catalyst' ? CATALYST_ENERGY_MAX : null,
@@ -583,7 +591,7 @@ export class SimulationEngine {
             if (!val) continue;
             const count = typeof val === 'number' ? val : 1;
             for (let i = 0; i < count; i++) {
-                S.allCondStacks.push({ t: 0, cond: effect, expiresAt: PERMA_EXPIRY, perma: true });
+                this._pushCondStack(S, { t: 0, cond: effect, expiresAt: PERMA_EXPIRY, perma: true });
             }
             // Damaging conditions stay in allCondStacks only (display / "target has X" checks).
             // They must NOT go into condState — permanent stacks never expire, which causes
@@ -602,7 +610,7 @@ export class SimulationEngine {
         }
         if (S._hasElemEmpowermentTrait) {
             for (let i = 0; i < 3; i++) {
-                S.allCondStacks.push({ t: 0, cond: 'Elemental Empowerment', expiresAt: PERMA_EXPIRY, perma: true });
+                this._pushCondStack(S, { t: 0, cond: 'Elemental Empowerment', expiresAt: PERMA_EXPIRY, perma: true });
             }
         }
 
@@ -977,7 +985,7 @@ export class SimulationEngine {
                     ? (S._hasFamiliarsFocus ? 0.10 : 0.05) : 0;
                 const tickCondMul = (1 + sigilMuls.condAdd + tickTempAria + tickTranscT
                     + tickElemRage + tickEmpAuras + tickFP) * sigilMuls.condMul * vulnMul;
-                const tickDiag = {
+                const tickDiag = this.fastMode ? null : {
                     condDmg, infernoPower, condMul: tickCondMul,
                     sigilCondAdd: sigilMuls.condAdd, sigilCondMul: sigilMuls.condMul,
                     tempAria: tickTempAria, transcTemp: tickTranscT,
@@ -1005,6 +1013,12 @@ export class SimulationEngine {
         const dpsStart = S.firstHitTime ?? 0;
         const effectiveEnd = deathTime !== null ? deathTime : rotEnd;
         const dpsWindowMs = effectiveEnd - dpsStart;
+
+        if (this.fastMode) {
+            this.results = { dps: dpsWindowMs > 0 ? effectiveDmg / (dpsWindowMs / 1000) : 0 };
+            return;
+        }
+
         if (S.log.sort) S.log.sort((a, b) => a.t - b.t);
 
         this.results = {
@@ -1520,13 +1534,13 @@ export class SimulationEngine {
 
         if (sk.name === 'Relentless Fire') {
             const durMs = (S.sphereExpiry.Fire > end) ? 8000 : 5000;
-            S.allCondStacks.push({ t: end, cond: 'Relentless Fire', expiresAt: end + durMs });
+            this._pushCondStack(S, { t: end, cond: 'Relentless Fire', expiresAt: end + durMs });
             S.log.push({ t: end, type: 'skill_proc', skill: 'Relentless Fire', detail: `${durMs / 1000}s` });
         }
 
         if (sk.name === 'Shattering Ice') {
             const durMs = (S.sphereExpiry.Water > end) ? 8000 : 5000;
-            S.allCondStacks.push({ t: end, cond: 'Shattering Ice', expiresAt: end + durMs });
+            this._pushCondStack(S, { t: end, cond: 'Shattering Ice', expiresAt: end + durMs });
             // ICD starts at cast-end so the on-cast hit (< end) doesn't trigger the proc
             S.traitICD['ShatteringIce'] = end;
             S.log.push({ t: end, type: 'skill_proc', skill: 'Shattering Ice', detail: `${durMs / 1000}s` });
@@ -1761,7 +1775,7 @@ export class SimulationEngine {
             if (S._hasRockSolid) this._grantRockSolid(S, S.t);
         }
         if (S._hasWeaversProwess && target !== prevPrimary) {
-            S.allCondStacks.push({ t: S.t, cond: "Weaver's Prowess", expiresAt: S.t + 8000 });
+            this._pushCondStack(S, { t: S.t, cond: "Weaver's Prowess", expiresAt: S.t + 8000 });
         }
         if (S._hasElementsOfRage && target === prevPrimary) {
             this._refreshEffect(S, 'Elements of Rage', 8, S.t);
@@ -2077,7 +2091,7 @@ export class SimulationEngine {
     _applyAura(S, auraName, durMs, time, skill) {
         if (S._hasSmothering) durMs = Math.round(durMs * 1.33);
         S.auras.push({ type: auraName, end: time + durMs, skill });
-        S.allCondStacks.push({ t: time, cond: auraName, expiresAt: time + durMs });
+        this._pushCondStack(S, { t: time, cond: auraName, expiresAt: time + durMs });
         S.log.push({ t: time, type: 'aura', aura: auraName, skill, dur: durMs });
         if (S._hasZephyrsBoon) {
             this._trackEffect(S, 'Fury', 1, 5, time);
@@ -2105,19 +2119,22 @@ export class SimulationEngine {
     }
 
     _refreshEffect(S, effectName, durSec, time) {
-        for (const s of S.allCondStacks) {
-            if (s.cond === effectName && s.expiresAt > time) s.expiresAt = time;
+        const arr = S._condMap.get(effectName);
+        if (arr) {
+            for (const s of arr) {
+                if (s.expiresAt > time) s.expiresAt = time;
+            }
         }
         this._trackEffect(S, effectName, 1, durSec, time);
     }
 
     _grantFamiliarProwess(S, time) {
-        const existing = S.allCondStacks.find(
-            s => s.cond === "Familiar's Prowess" && s.expiresAt > time && !s.perma);
+        const arr = S._condMap.get("Familiar's Prowess");
+        const existing = arr?.find(s => s.expiresAt > time && !s.perma);
         if (existing) {
             existing.expiresAt = Math.min(existing.expiresAt + 5000, time + 15000);
         } else {
-            S.allCondStacks.push({ t: time, cond: "Familiar's Prowess", expiresAt: time + 5000 });
+            this._pushCondStack(S, { t: time, cond: "Familiar's Prowess", expiresAt: time + 5000 });
         }
     }
 
@@ -2174,17 +2191,17 @@ export class SimulationEngine {
         const current = Math.min(this._effectStacksAt(S, 'Elemental Empowerment', time), 10);
         const toAdd = Math.min(stacks, 10 - current);
         for (let i = 0; i < toAdd; i++) {
-            S.allCondStacks.push({ t: time, cond: 'Elemental Empowerment', expiresAt: time + 15000 });
+            this._pushCondStack(S, { t: time, cond: 'Elemental Empowerment', expiresAt: time + 15000 });
         }
     }
 
     _grantEmpoweringAuras(S, time) {
         const durMs = 10000;
-        const existing = S.allCondStacks.filter(
-            s => s.cond === 'Empowering Auras' && s.expiresAt > time && !s.perma);
+        const arr = S._condMap.get('Empowering Auras');
+        const existing = arr ? arr.filter(s => s.expiresAt > time && !s.perma) : [];
         for (const s of existing) s.expiresAt = time + durMs;
         if (existing.length < 5) {
-            S.allCondStacks.push({ t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
+            this._pushCondStack(S, { t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
         }
     }
 
@@ -2289,9 +2306,11 @@ export class SimulationEngine {
 
     _applyBoonExtension(S, durSec, time) {
         const extMs = Math.round(durSec * 1000);
-        for (const s of S.allCondStacks) {
-            if (BOONS.has(s.cond) && s.expiresAt > time) {
-                s.expiresAt += extMs;
+        for (const boon of BOONS) {
+            const arr = S._condMap.get(boon);
+            if (!arr) continue;
+            for (const s of arr) {
+                if (s.expiresAt > time) s.expiresAt += extMs;
             }
         }
         // Keep the explicit Quickness/Alacrity expiry fields in sync
@@ -2459,7 +2478,7 @@ export class SimulationEngine {
     }
 
     _applyFreshAirBuff(S, time) {
-        S.allCondStacks.push({ t: time, cond: 'Fresh Air', expiresAt: time + 5000 });
+        this._pushCondStack(S, { t: time, cond: 'Fresh Air', expiresAt: time + 5000 });
         S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air' });
     }
 
@@ -2494,7 +2513,7 @@ export class SimulationEngine {
     _grantPersistingFlames(S, time) {
         const active = this._effectStacksAt(S, 'Persisting Flames', time);
         if (active >= 5) return;
-        S.allCondStacks.push({ t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
+        this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
     }
 
     _scheduleHits(S, sk, castStart, scaleOff = off => off) {
@@ -2622,10 +2641,10 @@ export class SimulationEngine {
 
     // Arcane Lightning: 150 Ferocity buff (15s, refreshes on each Arcane cast)
     _refreshArcaneLightningBuff(S, time) {
-        const existing = S.allCondStacks.find(
-            s => s.cond === 'Arcane Lightning' && s.expiresAt > time && !s.perma);
+        const arr = S._condMap.get('Arcane Lightning');
+        const existing = arr?.find(s => s.expiresAt > time && !s.perma);
         if (existing) existing.expiresAt = time + 15000;
-        else S.allCondStacks.push({ t: time, cond: 'Arcane Lightning', expiresAt: time + 15000 });
+        else this._pushCondStack(S, { t: time, cond: 'Arcane Lightning', expiresAt: time + 15000 });
     }
 
     // Bountiful Power: accumulate stacks on swap; at 5 → Quickness + 7s +20% strike buff
@@ -2635,7 +2654,7 @@ export class SimulationEngine {
         if (S.bountifulPowerStacks >= 5) {
             S.bountifulPowerStacks -= 5;
             this._trackEffect(S, 'Quickness', 1, 5, time);
-            S.allCondStacks.push({ t: time, cond: 'Bountiful Power Active', expiresAt: time + 7000 });
+            this._pushCondStack(S, { t: time, cond: 'Bountiful Power Active', expiresAt: time + 7000 });
             S.log.push({ t: time, type: 'skill_proc', skill: 'Bountiful Power', detail: '+20% strike, 5s Quickness' });
         }
     }
@@ -2745,7 +2764,7 @@ export class SimulationEngine {
             // pre-processing with future timestamps; without this check every future stack
             // would be counted from the very first tick event.
             cs.stacks.push({ t: time, expiresAt: time + adjMs, appliedBy: skillName });
-            S.allCondStacks.push({ t: time, cond, expiresAt: time + adjMs });
+            this._pushCondStack(S, { t: time, cond, expiresAt: time + adjMs });
         }
 
         if (!cs.tickActive) {
@@ -2832,7 +2851,7 @@ export class SimulationEngine {
         const adjMs = Math.round(durSec * 1000 * (1 + Math.min(bonus / 100, 1) + uncapped / 100));
 
         for (let i = 0; i < stacks; i++) {
-            S.allCondStacks.push({ t: time, cond: effect, expiresAt: time + adjMs });
+            this._pushCondStack(S, { t: time, cond: effect, expiresAt: time + adjMs });
         }
 
         if (effect === 'Quickness') {
@@ -2857,32 +2876,40 @@ export class SimulationEngine {
     }
 
     _mightStacksAt(S, t) {
+        const arr = S._condMap.get('Might');
+        if (!arr) return 0;
         let count = 0;
-        for (const s of S.allCondStacks) {
-            if (s.cond === 'Might' && s.t <= t && s.expiresAt > t) count++;
+        for (const s of arr) {
+            if (s.t <= t && s.expiresAt > t) count++;
         }
         return Math.min(count, 25);
     }
 
     _hasFuryAt(S, t) {
-        for (const s of S.allCondStacks) {
-            if (s.cond === 'Fury' && s.t <= t && s.expiresAt > t) return true;
+        const arr = S._condMap.get('Fury');
+        if (!arr) return false;
+        for (const s of arr) {
+            if (s.t <= t && s.expiresAt > t) return true;
         }
         return false;
     }
 
     _vulnStacksAt(S, t) {
+        const arr = S._condMap.get('Vulnerability');
+        if (!arr) return 0;
         let count = 0;
-        for (const s of S.allCondStacks) {
-            if (s.cond === 'Vulnerability' && s.t <= t && s.expiresAt > t) count++;
+        for (const s of arr) {
+            if (s.t <= t && s.expiresAt > t) count++;
         }
         return Math.min(count, 25);
     }
 
     _effectStacksAt(S, effect, t) {
+        const arr = S._condMap.get(effect);
+        if (!arr) return 0;
         let count = 0;
-        for (const s of S.allCondStacks) {
-            if (s.cond === effect && s.t <= t && s.expiresAt > t) count++;
+        for (const s of arr) {
+            if (s.t <= t && s.expiresAt > t) count++;
         }
         return count;
     }

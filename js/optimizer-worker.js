@@ -8,73 +8,83 @@ import { calcAttributes }   from './calc-attributes.js';
 import { GEAR_STATS } from './gear-data.js';
 
 self.onmessage = ({ data }) => {
-    const {
-        skills, skillHits, weapons, sigilsData, relicsData,
-        baseBuild, selectedSkills, rotation,
-        prefixes, constraints = {}, slotConstraints = {},
-        startAtt, startAtt2, evokerElement, permaBoons,
-        combos, activeSlots,
-    } = data;
+    try {
+        const {
+            skills, skillHits, weapons, sigilsData, relicsData,
+            baseBuild, selectedSkills, rotation,
+            prefixes, constraints = {}, slotConstraints = {},
+            startAtt, startAtt2, evokerElement, permaBoons,
+            combos, activeSlots,
+        } = data;
 
-    const initAttrs = calcAttributes(baseBuild, selectedSkills);
-    const sim = new SimulationEngine({
-        skills, skillHits, weapons,
-        attributes:   initAttrs,
-        sigils:       sigilsData,
-        relics:       relicsData,
-        activeTraits: initAttrs.activeTraits,
-    });
-    sim.rotation = rotation;
-    sim.fastMode = true;
-    sim.activeTraitNames = new Set((initAttrs.activeTraits || []).map(t => t.name));
+        const initAttrs = calcAttributes(baseBuild, selectedSkills);
+        const sim = new SimulationEngine({
+            skills, skillHits, weapons,
+            attributes:   initAttrs,
+            sigils:       sigilsData,
+            relics:       relicsData,
+            activeTraits: initAttrs.activeTraits,
+        });
+        sim.rotation = rotation;
+        sim.fastMode = true;
+        sim.activeTraitNames = new Set((initAttrs.activeTraits || []).map(t => t.name));
 
-    const groups = _buildEquivGroups(activeSlots, prefixes, slotConstraints);
-    const gearCombos = _enumerateGearCombos(groups, prefixes);
+        const groups = _buildEquivGroups(activeSlots, prefixes, slotConstraints);
+        const gearCombos = _enumerateGearCombos(groups, prefixes);
 
-    const REPORT_INTERVAL = 50;
+        self.postMessage({
+            results: [], evalsDone: 0, done: false,
+            booted: true, gearComboCount: gearCombos.length, nonGearCombos: combos.length,
+        });
 
-    for (const combo of combos) {
-        let comboBest = null;
-        let evalsDone = 0;
-        let unreported = 0;
+        const REPORT_INTERVAL = 50;
 
-        for (const gearAssign of gearCombos) {
-            const gear = _expandToGear(gearAssign, groups, prefixes);
-            const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
-                              startAtt, startAtt2, evokerElement, permaBoons, constraints);
-            evalsDone++;
-            unreported++;
-            if (dps > (comboBest?.rawDps ?? -1)) {
-                comboBest = {
-                    rawDps: dps, dps,
-                    gear: { ...gear },
-                    rune: combo.rune, relic: combo.relic,
-                    sigil1: combo.sigil1, sigil2: combo.sigil2,
-                    food: combo.food, utility: combo.utility,
-                    infusions: combo.infusions,
-                };
+        for (const combo of combos) {
+            let comboBest = null;
+            let unreported = 0;
+
+            for (const gearAssign of gearCombos) {
+                const gear = _expandToGear(gearAssign, groups, prefixes);
+                const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
+                                  startAtt, startAtt2, evokerElement, permaBoons, constraints);
+                unreported++;
+                if (dps > (comboBest?.rawDps ?? -1)) {
+                    comboBest = {
+                        rawDps: dps, dps,
+                        gear: { ...gear },
+                        rune: combo.rune, relic: combo.relic,
+                        sigil1: combo.sigil1, sigil2: combo.sigil2,
+                        food: combo.food, utility: combo.utility,
+                        infusions: combo.infusions,
+                    };
+                }
+
+                if (unreported >= REPORT_INTERVAL) {
+                    self.postMessage({
+                        results: comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
+                        evalsDone: unreported,
+                        done: false,
+                    });
+                    unreported = 0;
+                }
             }
 
-            if (unreported >= REPORT_INTERVAL) {
+            if (unreported > 0) {
                 self.postMessage({
                     results: comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
                     evalsDone: unreported,
                     done: false,
                 });
-                unreported = 0;
             }
         }
 
-        if (unreported > 0) {
-            self.postMessage({
-                results: comboBest && comboBest.rawDps >= 0 ? [comboBest] : [],
-                evalsDone: unreported,
-                done: false,
-            });
-        }
+        self.postMessage({ results: [], evalsDone: 0, done: true });
+    } catch (err) {
+        self.postMessage({
+            results: [], evalsDone: 0, done: true,
+            error: String(err?.message || err),
+        });
     }
-
-    self.postMessage({ results: [], evalsDone: 0, done: true });
 };
 
 // ── Build equivalence groups ─────────────────────────────────────────────────

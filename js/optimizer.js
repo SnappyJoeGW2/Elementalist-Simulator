@@ -86,6 +86,11 @@ export class GearOptimizer {
                 worker.onmessage = ({ data }) => {
                     if (this._cancelled) { resolve(); return; }
 
+                    if (data.error) {
+                        console.error('Optimizer worker error:', data.error);
+                        onProgress(evalsDone, totalEst, [...top10], `Worker error: ${data.error}`);
+                    }
+
                     evalsDone += data.evalsDone;
 
                     for (const r of data.results) {
@@ -99,7 +104,12 @@ export class GearOptimizer {
                         }
                     }
 
-                    onProgress(evalsDone, totalEst, [...top10]);
+                    if (data.booted) {
+                        onProgress(evalsDone, totalEst, [...top10],
+                            `Worker started — ${data.gearComboCount} gear × ${data.nonGearCombos} non-gear combos`);
+                    } else {
+                        onProgress(evalsDone, totalEst, [...top10]);
+                    }
 
                     if (data.done) {
                         worker.terminate();
@@ -110,6 +120,7 @@ export class GearOptimizer {
                 worker.onerror = (err) => {
                     worker.terminate();
                     console.error('Optimizer worker error:', err);
+                    onProgress(evalsDone, totalEst, [...top10], `Worker crashed: ${err?.message || err}`);
                     resolve();
                 };
 
