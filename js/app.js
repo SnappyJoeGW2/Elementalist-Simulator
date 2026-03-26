@@ -94,6 +94,7 @@ const SKILL_TYPE_SPEC = {
 const INTENSITY_EFFECTS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
     'Might', 'Stability', 'Vulnerability',
+    'Elemental Empowerment', 'Empowering Auras', 'Persisting Flames',
 ]);
 
 const EFFECT_COLORS = {
@@ -112,6 +113,9 @@ const EFFECT_COLORS = {
     'Shocking Aura': '#c06ad0',
     'Magnetic Aura': '#aa7744',
     'Light Aura': '#dddd44',
+    'Elemental Empowerment': '#55ccbb',
+    'Empowering Auras': '#cc88dd',
+    'Persisting Flames': '#ff6644',
     'Dark Aura': '#884488',
     'Persisting Flames': '#ff8833',
     'Fresh Air': '#66ccff',
@@ -2228,7 +2232,10 @@ class App {
             dpsLine.push({ t, v: t > 0 ? cum / (t / 1000) : 0 });
         }
 
-        const STACK_CAPS = { Might: 25, Stability: 25, Vulnerability: 25 };
+        const STACK_CAPS = {
+            Might: 25, Stability: 25, Vulnerability: 25,
+            'Elemental Empowerment': 10, 'Empowering Auras': 5, 'Persisting Flames': 5,
+        };
         const effectLines = {};
         let maxStacks = 0;
         for (const ct of allEffects) {
@@ -2292,16 +2299,35 @@ class App {
             ctx.stroke();
         }
 
+        const LABEL_EFFECTS = new Set(['Elemental Empowerment', 'Empowering Auras', 'Persisting Flames']);
         for (const ct of allEffects) {
             if (!effectLines[ct]) continue;
             const col = EFFECT_COLORS[ct] || '#aaa';
+            const line = effectLines[ct];
             ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.beginPath();
-            for (let i = 0; i < effectLines[ct].length; i++) {
-                const x = pad.left + (pw / maxTime) * effectLines[ct][i].t;
-                const y = pad.top + ph - (ph / Math.max(maxStacks, 1)) * effectLines[ct][i].v;
+            for (let i = 0; i < line.length; i++) {
+                const x = pad.left + (pw / maxTime) * line[i].t;
+                const y = pad.top + ph - (ph / Math.max(maxStacks, 1)) * line[i].v;
                 if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.stroke(); ctx.setLineDash([]);
+
+            if (LABEL_EFFECTS.has(ct)) {
+                ctx.font = 'bold 9px Segoe UI';
+                ctx.textAlign = 'center';
+                let prevVal = -1;
+                for (let i = 0; i < line.length; i++) {
+                    const v = line[i].v;
+                    if (v === prevVal || v === 0) { prevVal = v; continue; }
+                    const x = pad.left + (pw / maxTime) * line[i].t;
+                    const y = pad.top + ph - (ph / Math.max(maxStacks, 1)) * v;
+                    ctx.fillStyle = '#0c0c14';
+                    ctx.fillRect(x - 6, y - 10, 12, 11);
+                    ctx.fillStyle = col;
+                    ctx.fillText(v.toString(), x, y - 1);
+                    prevVal = v;
+                }
+            }
         }
 
         if (activeDurEffects.length > 0) {
