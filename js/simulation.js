@@ -1887,6 +1887,20 @@ export class SimulationEngine {
         return false;
     }
 
+    _flushPendingEnergy(S) {
+        if (S.energy === null || S.energy >= CATALYST_ENERGY_MAX) return;
+        for (const ev of S.eq) {
+            if (ev.type !== 'hit' || ev.dmg <= 0 || ev.ws <= 0) continue;
+            if (ev.time > S.t) continue;
+            if (ev._energyCredited) continue;
+            if (!this._anySphereActiveAt(S, ev.time) || S._hasSphereSpecialist) {
+                S.energy = Math.min(CATALYST_ENERGY_MAX, S.energy + 1);
+                ev._energyCredited = true;
+                if (S.energy >= CATALYST_ENERGY_MAX) break;
+            }
+        }
+    }
+
     _doJadeSphere(S, sk) {
         if (S.eliteSpec !== 'Catalyst') {
             S.log.push({ t: S.t, type: 'err', msg: `Jade Sphere requires Catalyst specialization` });
@@ -1896,6 +1910,7 @@ export class SimulationEngine {
             S.log.push({ t: S.t, type: 'err', msg: `Need ${sk.attunement} for ${sk.name}` });
             return;
         }
+        this._flushPendingEnergy(S);
         if (S.energy < CATALYST_SPHERE_COST) {
             S.log.push({ t: S.t, type: 'err', msg: `Not enough energy (${S.energy}/${CATALYST_SPHERE_COST})` });
             return;
@@ -2714,7 +2729,8 @@ export class SimulationEngine {
             strike = strikeDamage(ev.dmg, ev.ws, power) * critMult * strikeMul;
             S.totalStrike += strike;
 
-            if (S.energy !== null && (!this._anySphereActiveAt(S, ev.time) || S._hasSphereSpecialist)) {
+            if (S.energy !== null && !ev._energyCredited
+                && (!this._anySphereActiveAt(S, ev.time) || S._hasSphereSpecialist)) {
                 S.energy = Math.min(CATALYST_ENERGY_MAX, S.energy + 1);
             }
         }

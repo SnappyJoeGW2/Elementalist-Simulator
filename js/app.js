@@ -1627,7 +1627,7 @@ class App {
         if (elite === 'Catalyst') {
             const energy = es ? (es.energy ?? 30) : 30;
             const pct = Math.round((energy / CATALYST_ENERGY_MAX) * 100);
-            const sphereActive = es ? es.time < es.sphereActiveUntil : false;
+            const sphereActive = es?.sphereWindows?.some(w => w.start <= es.time && w.end > es.time) ?? false;
             h += `<div class="pal-group"><div class="pal-label" style="color:#44ddaa">F5</div><div class="pal-row" style="flex-wrap:wrap;gap:4px">`;
             h += `<div class="energy-bar-wrap">
                 <div class="energy-bar-fill${sphereActive ? ' sphere-active' : ''}" style="width:${pct}%"></div>
