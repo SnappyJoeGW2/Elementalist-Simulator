@@ -152,6 +152,19 @@ export class GW2API {
         this.skillIcons['Glyph of Elemental Power (Water)'] = 'https://render.guildwars2.com/file/BB18F50D1F7E7F59BFCBC521F6EBD9754522B22D/1424237.png';
         this.skillIcons['Glyph of Elemental Power (Air)'] = 'https://render.guildwars2.com/file/B4E00C980DE7F1CB0BE62F3901EB031067F302F3/1424234.png';
         this.skillIcons['Glyph of Elemental Power (Earth)'] = 'https://render.guildwars2.com/file/C8AEFA0A46F573F37E7902257772AD9A5E742BBD/1424235.png';
+        this.skillIcons['Grand Finale'] = 'https://render.guildwars2.com/file/41D40EDB66D0CC0A73F405630803D2D600CABCCE/2491580.png';
+        this.skillIcons['Etching: Volcano'] = 'https://render.guildwars2.com/file/037DCBFCCD3BA4C3ACC7B73DF4965D3A170F0F3E/3379099.png';
+        this.skillIcons['Etching: Jökulhlaup'] = 'https://render.guildwars2.com/file/3333FBE3CB1331A40AC51903580FCFB09BC80335/3379103.png';
+        this.skillIcons['Etching: Derecho'] = 'https://render.guildwars2.com/file/F1B3331AB23F37964BE8D6A91F43FF066BE970AA/3379093.png';
+        this.skillIcons['Etching: Haboob'] = 'https://render.guildwars2.com/file/7C7339E9EA33F7CD05806CE20066DF0EC4673767/3379096.png';
+        this.skillIcons['Lesser Volcano'] = 'https://render.guildwars2.com/file/F17A92D0331607C7C59D0213ECE1C5F1C3770680/3379100.png';
+        this.skillIcons['Lesser Jökulhlaup'] = 'https://render.guildwars2.com/file/00A93FDC4F99D29749B27C4D73C5A1644A0F3726/104675.png';
+        this.skillIcons['Lesser Derecho'] = 'https://render.guildwars2.com/file/93950D05BFE50508031DA59BA0381252F60FEDBC/3379094.png';
+        this.skillIcons['Lesser Haboob'] = 'https://render.guildwars2.com/file/E5FDD5E622E3DF73496BB35C0E33B429B8C5EB52/3379097.png';
+        this.skillIcons['Volcano'] = 'https://render.guildwars2.com/file/F17A92D0331607C7C59D0213ECE1C5F1C3770680/3379100.png';
+        this.skillIcons['Jökulhlaup'] = 'https://render.guildwars2.com/file/48EB1A03297EE4DFA0FE2CA41F0B02B77302060B/3379104.png';
+        this.skillIcons['Derecho'] = 'https://render.guildwars2.com/file/94F1A894667CA4F3407C57B055F8236804264B1F/3379095.png';
+        this.skillIcons['Haboob'] = 'https://render.guildwars2.com/file/562F2D0ED67AD8453F9CA60F27DB154F2E7543FC/3379098.png';
     }
 
     getSkillIcon(name) {

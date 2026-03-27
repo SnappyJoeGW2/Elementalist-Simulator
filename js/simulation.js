@@ -128,7 +128,7 @@ const RELIC_PROCS = {
         // On healing skill (ICD 20s): grant Fire Aura 4s.
         // While Fire Aura is active: +7% strike damage (multiplicative).
         trigger: 'heal_skill', icd: 20000, strikeDmgM: 0.07, effectDuration: 4000,
-        conditions: null, icon: null,
+        conditions: null, icon: 'https://render.guildwars2.com/file/00E5051DCC0EDD58395DF9CEA3456466EA4FD347/3592834.png',
     },
     Bloodstone: {
         trigger: 'blast_combo', icd: 0, strikeDmgM: 0.07, effectDuration: 8000,
@@ -1564,7 +1564,7 @@ export class SimulationEngine {
                     S.etchingState[etchCast.etching] = null;
                     S.etchingOtherCasts[etchCast.etching] = 0;
                 }
-            } else if (sk.slot !== '1') {
+            } else {
                 // Count non-slot-1 Spear weapon casts (excluding etchings/lesser/full themselves)
                 for (const chain of Object.values(ETCHING_CHAINS)) {
                     if (S.etchingState[chain.etching] === 'lesser') {
