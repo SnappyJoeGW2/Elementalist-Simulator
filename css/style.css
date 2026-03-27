@@ -1245,6 +1245,15 @@ header .accent {
     box-shadow: none;
 }
 
+.pal-skill.pistol-bullet {
+    border-style: dashed;
+}
+
+.pal-skill.pistol-bullet.bullet-active {
+    border-style: solid;
+    opacity: 1;
+}
+
 .pal-charges {
     position: absolute;
     bottom: -1px;

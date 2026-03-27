@@ -214,14 +214,56 @@ const HAMMER_GF_CONDITIONS = {
 };
 // Orbs that grant buffs to the caster (tracked as pseudo-effects in _condMap)
 const HAMMER_ORB_BUFF_KEY = {
-    Fire: 'Hammer Orb Fire',  // +5% strike and condi
-    Air:  'Hammer Orb Air',   // +15% crit chance
+    Fire:  'Hammer Orb Fire',   // +5% strike and condi
+    Water: 'Hammer Orb Water',  // tracked for display only
+    Air:   'Hammer Orb Air',    // +15% crit chance
+    Earth: 'Hammer Orb Earth',  // tracked for display only
 };
 // All Hammer orb-category skill names (base + dual), used for ICD and chain checks
 const HAMMER_ALL_ORB_NAMES = new Set([
     ...Object.keys(HAMMER_ORB_SKILLS),
     ...Object.keys(HAMMER_DUAL_ORB_SKILLS),
 ]);
+
+// ── Pistol bullet system ──────────────────────────────────────────────────────
+// Slot 2 and 3 Pistol skills grant their element's bullet if not held, or consume it if held.
+// "Consume" effects and "grant" effects are applied in the post-cast section of _step().
+const PISTOL_BULLET_COLOR = {
+    Fire: '#e05530', Water: '#4488cc', Air: '#c06ad0', Earth: '#aa7744',
+};
+// Which element does each base pistol skill belong to?
+const PISTOL_SKILL_ELEMENT = {
+    // Slot 2
+    'Raging Ricochet':  'Fire',
+    'Frigid Flurry':    'Water',
+    'Dazing Discharge': 'Air',
+    'Shattering Stone': 'Earth',
+    // Slot 3 (base)
+    'Searing Salvo':    'Fire',
+    'Frozen Fusillade': 'Water',
+    'Aerial Agility':   'Air',   // never consumes, may grant
+    'Boulder Blast':    'Earth',
+    // Slot 3 (Weaver dual) — handled separately, listed here for lookup convenience
+    'Frostfire Flurry':   null,  // Fire+Water dual
+    'Purblinding Plasma': null,  // Fire+Air dual
+    'Molten Meteor':      null,  // Fire+Earth dual
+    'Flowing Finesse':    null,  // Air+Water dual
+    'Echoing Erosion':    null,  // Water+Earth dual
+    'Enervating Earth':   null,  // Air+Earth dual
+};
+// Dual pistol slot-3 skill → [priElement, secElement] (Fire is always listed first when present)
+const PISTOL_DUAL_ELEMENTS = {
+    'Frostfire Flurry':   ['Fire', 'Water'],
+    'Purblinding Plasma': ['Fire', 'Air'],
+    'Molten Meteor':      ['Fire', 'Earth'],
+    'Flowing Finesse':    ['Water', 'Air'],
+    'Echoing Erosion':    ['Water', 'Earth'],
+    'Enervating Earth':   ['Air',  'Earth'],
+};
+// Skills that NEVER consume a bullet
+const PISTOL_NO_CONSUME = new Set(['Aerial Agility', 'Aerial Agility (chain)']);
+// Skills that NEVER grant a bullet
+const PISTOL_NO_GRANT = new Set(['Aerial Agility (chain)']);
 
 function insertSorted(arr, ev) {
     let lo = 0, hi = arr.length;
@@ -402,7 +444,7 @@ export class SimulationEngine {
         return false;
     }
 
-    run(startAtt = 'Fire', startAtt2 = null, startEvokerElement = null, permaBoons = {}, disabled = null, targetHP = 0, stopAtTime = null) {
+    run(startAtt = 'Fire', startAtt2 = null, startEvokerElement = null, permaBoons = {}, disabled = null, targetHP = 0, stopAtTime = null, startPistolBullets = null) {
         const a = this.attributes.attributes;
 
         const disSigil = disabled?.startsWith('Sigil:') ? disabled.slice(6) : null;
@@ -620,6 +662,14 @@ export class SimulationEngine {
             hammerOrbs: { Fire: null, Water: null, Air: null, Earth: null },
             hammerOrbGrantedBy: { Fire: null, Water: null, Air: null, Earth: null },
             hammerOrbLastCast: -Infinity, // last time any orb skill (incl. GF) was cast, for ICD
+            // Pistol bullet system
+            pistolBullets: startPistolBullets
+                ? { Fire: !!startPistolBullets.Fire, Water: !!startPistolBullets.Water, Air: !!startPistolBullets.Air, Earth: !!startPistolBullets.Earth }
+                : { Fire: false, Water: false, Air: false, Earth: false },
+            _pistolBulletMapEntry: {}, // { Fire: condMap entry ref, ... } for removal on consume
+            dazingDischargeUntil: 0,      // expiry of next-pistol-CD-33% buff (5s window)
+            shatteringStoneHits: 0,       // remaining bleed-on-hit procs (max 3)
+            shatteringStoneUntil: 0,      // 10s window expiry for shattering stone
             // Spear "next spear skill" buffs
             spearNextDmgBonus: false,     // Seethe: next non-slot-1 Spear skill +25% strike
             spearNextCdReduce: false,     // Ripple: next non-slot-1 Spear skill -33% recharge
@@ -699,6 +749,16 @@ export class SimulationEngine {
         if (S._hasElemEmpowermentTrait) {
             for (let i = 0; i < 3; i++) {
                 this._pushCondStack(S, { t: 0, cond: 'Elemental Empowerment', expiresAt: PERMA_EXPIRY, perma: true });
+            }
+        }
+
+        // Pre-set pistol bullets from startPistolBullets — add to condMap for plot tracking
+        for (const el of ['Fire', 'Water', 'Air', 'Earth']) {
+            if (S.pistolBullets[el]) {
+                const condName = el === 'Water' ? 'Ice Bullet' : `${el} Bullet`;
+                const entry = { t: 0, cond: condName, expiresAt: PERMA_EXPIRY };
+                this._pushCondStack(S, entry);
+                S._pistolBulletMapEntry[el] = entry;
             }
         }
 
@@ -1087,6 +1147,21 @@ export class SimulationEngine {
                     });
                 }
 
+                // Frigid Flurry (Ice bullet consumed): each hit has 20% Projectile finisher
+                if (ev.frigidFlurryProc && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc) {
+                    this._checkCombo(S, { ...ev, finType: 'Projectile', finVal: 0.2 });
+                }
+
+                // Shattering Stone (Earth bullet consumed): next 3 hits within 10s apply Bleed 5s
+                if (S.shatteringStoneHits > 0 && ev.time <= S.shatteringStoneUntil
+                    && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc && !ev.isField
+                    && ev.dmg > 0 && ev.ws > 0) {
+                    S.shatteringStoneHits--;
+                    this._applyCondition(S, 'Bleeding', 1, 5, ev.time, 'Shattering Stone');
+                    if (S.shatteringStoneHits <= 0) S.shatteringStoneUntil = 0;
+                    S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Shattering Stone', detail: `Bleed proc (${S.shatteringStoneHits} left)` });
+                }
+
                 if (activeRelic && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc) {
                     this._checkRelicOnHit(S, ev);
                 }
@@ -1211,6 +1286,10 @@ export class SimulationEngine {
                 hammerOrbs: { ...S.hammerOrbs },
                 hammerOrbGrantedBy: { ...S.hammerOrbGrantedBy },
                 hammerOrbLastCast: S.hammerOrbLastCast,
+                pistolBullets: { ...S.pistolBullets },
+                dazingDischargeUntil: S.dazingDischargeUntil,
+                shatteringStoneHits: S.shatteringStoneHits,
+                shatteringStoneUntil: S.shatteringStoneUntil,
             },
         };
 
@@ -1221,9 +1300,9 @@ export class SimulationEngine {
         return this.results;
     }
 
-    computeContributions(startAtt, startAtt2, evokerElement, permaBoons, targetHP = 0) {
+    computeContributions(startAtt, startAtt2, evokerElement, permaBoons, targetHP = 0, startPistolBullets = null) {
         // Full run WITH target HP — used for the displayed DPS/kill-time results.
-        this.run(startAtt, startAtt2, evokerElement, permaBoons, null, targetHP);
+        this.run(startAtt, startAtt2, evokerElement, permaBoons, null, targetHP, null, startPistolBullets);
         const fullResults = this.results;
 
         // When the target actually dies, run comparison sims with the same targetHP and cap
@@ -1238,7 +1317,7 @@ export class SimulationEngine {
         } else {
             // No kill — run a separate no-cap baseline so the window is independent of
             // modifier effects on kill time.
-            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
+            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0, null, startPistolBullets);
             fullDps = this.results.dps;
             baselineWindowSec = null;
             baselineStop = null;
@@ -1319,7 +1398,7 @@ export class SimulationEngine {
         // it actually fires and produces a non-zero contribution.
         let fullDpsForContrib = fullDps;
         if (baselineStop !== null) {
-            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
+            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0, null, startPistolBullets);
             fullDpsForContrib = this.results.dps;
         }
 
@@ -1329,7 +1408,7 @@ export class SimulationEngine {
             if (baselineStop !== null && isBolt) {
                 // Bolt to the Heart: must use finite-HP so it actually fires.
                 // Stop at baseline kill time so the window is fixed.
-                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, targetHP, baselineStop);
+                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, targetHP, baselineStop, startPistolBullets);
                 const withoutDps = this.results.totalDamage / baselineWindowSec;
                 const increase = fullDps - withoutDps;
                 contributions.push({
@@ -1341,7 +1420,7 @@ export class SimulationEngine {
             } else {
                 // All other mods (and infinite-HP mode): compare using infinite-HP runs so
                 // each modifier's contribution is isolated and cannot interact with Bolt.
-                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, 0);
+                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, 0, null, startPistolBullets);
                 const withoutDps = this.results.dps;
                 const increase = fullDpsForContrib - withoutDps;
                 contributions.push({
@@ -1535,8 +1614,11 @@ export class SimulationEngine {
         const end = start + castMs;
 
         S.log.push({ t: start, type: 'cast', skill: name, att: S.att, dur: castMs });
+        // Pre-schedule: determine if Frigid Flurry will consume its bullet so hits get Projectile tag
+        S._frigidFlurryProcActive = (name === 'Frigid Flurry' && S.pistolBullets['Water'] === true);
         // Grand Finale hits are scheduled manually in the post-cast block (one hit per consumed orb)
         if (name !== 'Grand Finale') this._scheduleHits(S, sk, start, scaleOff);
+        S._frigidFlurryProcActive = false;
         this._trackField(S, sk, end);
         this._trackAura(S, sk, end);
 
@@ -1578,6 +1660,17 @@ export class SimulationEngine {
                     baseCdMs = Math.round(baseCdMs * (2 / 3));
                     S.spearNextCdReduce = false;
                     S.log.push({ t: end, type: 'skill_proc', skill: 'Ripple', detail: `${name} CD -33%` });
+                }
+                // Dazing Discharge: next non-slot-1 Pistol skill recharge -33% (5s window)
+                if (S.dazingDischargeUntil > end && sk.weapon === 'Pistol' && sk.type === 'Weapon skill' && sk.slot !== '1') {
+                    baseCdMs = Math.round(baseCdMs * (2 / 3));
+                    S.dazingDischargeUntil = 0;
+                    S.log.push({ t: end, type: 'skill_proc', skill: 'Dazing Discharge', detail: `${name} CD -33%` });
+                }
+                // Purblinding Plasma (Air bullet consumed): reduce THIS skill's recharge by 33%
+                if (name === 'Purblinding Plasma' && S._purblindingCDReduce) {
+                    baseCdMs = Math.round(baseCdMs * (2 / 3));
+                    S.log.push({ t: end, type: 'skill_proc', skill: 'Purblinding Plasma', detail: 'Air bullet → CD -33%' });
                 }
                 finalCd = end + this._alaCd(S, baseCdMs, end);
             }
@@ -1699,6 +1792,127 @@ export class SimulationEngine {
             && S.att !== S.att2) {
             S.attCD[S.att] = end;
             S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${S.att} attunement CD reset` });
+        }
+
+        // ── Pistol bullet system ──────────────────────────────────────────────
+        S._purblindingCDReduce = false; // reset each cast before potentially setting it below
+        if (sk.weapon === 'Pistol' && sk.type === 'Weapon skill'
+            && (sk.slot === '2' || sk.slot === '3')
+            && name !== 'Elemental Explosion') {
+
+            const isDual = sk.attunement && sk.attunement.includes('+');
+
+            if (!isDual) {
+                // ── Base pistol skills ───────────────────────────────────────
+                const el = PISTOL_SKILL_ELEMENT[name];
+                if (el) {
+                    const canConsume = !PISTOL_NO_CONSUME.has(name);
+                    const canGrant   = !PISTOL_NO_GRANT.has(name);
+                    const hasIt = S.pistolBullets[el];
+
+                    if (canConsume && hasIt) {
+                        // ── Consume bullet — apply consume effects ────────────
+                        S.pistolBullets[el] = false;
+                        // Remove from condMap tracking
+                        const mapEntry = S._pistolBulletMapEntry[el];
+                        if (mapEntry) { mapEntry.expiresAt = end; S._pistolBulletMapEntry[el] = null; }
+                        S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${el} bullet consumed` });
+
+                        if (name === 'Raging Ricochet') {
+                            this._trackEffect(S, 'Might', 1, 10, end);
+                        } else if (name === 'Searing Salvo') {
+                            // Blast finisher + Fire Aura: inject a hit with Blast finisher tag
+                            this._applyAura(S, 'Fire Aura', 4000, end, 'Searing Salvo');
+                            insertSorted(S.eq, {
+                                time: end, type: 'hit',
+                                skill: 'Searing Salvo', hitIdx: 99, sub: 1, totalSubs: 1,
+                                dmg: 0, ws: 0, isField: false, cc: false, conds: null,
+                                finType: 'Blast', finVal: 1,
+                                att: S.att, att2: S.att2, castStart: start,
+                                isTraitProc: true, noCrit: true,
+                            });
+                        } else if (name === 'Frigid Flurry') {
+                            // 20% Projectile chance per hit — tag on scheduled hits via state flag
+                            S._frigidFlurryProcActive = true;
+                        } else if (name === 'Frozen Fusillade') {
+                            // Delayed hit 4s after cast: 0.75 coeff + 5x Bleed 8s
+                            insertSorted(S.eq, {
+                                time: end + 4000, type: 'hit',
+                                skill: 'Frozen Fusillade', hitIdx: 99, sub: 1, totalSubs: 1,
+                                dmg: 0.75, ws: this._ws(sk),
+                                isField: false, cc: false,
+                                conds: { Bleeding: { stacks: 5, duration: 8 } },
+                                att: S.att, att2: S.att2, castStart: start,
+                            });
+                        } else if (name === 'Dazing Discharge') {
+                            S.dazingDischargeUntil = end + 5000;
+                            S.log.push({ t: end, type: 'skill_proc', skill: 'Dazing Discharge', detail: 'next Pistol CD -33% armed (5s)' });
+                        } else if (name === 'Shattering Stone') {
+                            S.shatteringStoneHits = 3;
+                            S.shatteringStoneUntil = end + 10000;
+                            S.log.push({ t: end, type: 'skill_proc', skill: 'Shattering Stone', detail: 'next 3 hits apply Bleed (10s)' });
+                        } else if (name === 'Boulder Blast') {
+                            // 100% Projectile finisher on its own hit — inject Projectile finisher hit
+                            insertSorted(S.eq, {
+                                time: end, type: 'hit',
+                                skill: 'Boulder Blast', hitIdx: 99, sub: 1, totalSubs: 1,
+                                dmg: 0, ws: 0, isField: false, cc: false, conds: null,
+                                finType: 'Projectile', finVal: 1,
+                                att: S.att, att2: S.att2, castStart: start,
+                                isTraitProc: true, noCrit: true,
+                            });
+                        }
+                    } else if (canGrant && !hasIt) {
+                        // ── Grant bullet ─────────────────────────────────────
+                        S.pistolBullets[el] = true;
+                        const condName = el === 'Water' ? 'Ice Bullet' : `${el} Bullet`;
+                        const entry = { t: end, cond: condName, expiresAt: PERMA_EXPIRY };
+                        this._pushCondStack(S, entry);
+                        S._pistolBulletMapEntry[el] = entry;
+                        S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${el} bullet granted` });
+                    }
+                    // If hasIt and canConsume → consumed above; if !canConsume and !hasIt → grant
+                    // If !canConsume and hasIt → no grant (already have), no consume → nothing
+                }
+            } else {
+                // ── Weaver dual pistol slot-3 skills ────────────────────────
+                const dualEls = PISTOL_DUAL_ELEMENTS[name];
+                if (dualEls) {
+                    const [priEl, secEl] = dualEls;
+                    const hasPri = S.pistolBullets[priEl];
+                    const hasSec = S.pistolBullets[secEl];
+                    let anyConsumed = false;
+
+                    const _bulletConsume = (el) => {
+                        S.pistolBullets[el] = false;
+                        const condName = el === 'Water' ? 'Ice Bullet' : `${el} Bullet`;
+                        const me = S._pistolBulletMapEntry[el];
+                        if (me) { me.expiresAt = end; S._pistolBulletMapEntry[el] = null; }
+                        S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${el} bullet consumed` });
+                    };
+                    const _bulletGrant = (el) => {
+                        S.pistolBullets[el] = true;
+                        const condName = el === 'Water' ? 'Ice Bullet' : `${el} Bullet`;
+                        const entry = { t: end, cond: condName, expiresAt: PERMA_EXPIRY };
+                        this._pushCondStack(S, entry);
+                        S._pistolBulletMapEntry[el] = entry;
+                        S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${el} bullet granted` });
+                    };
+
+                    if (hasPri) { _bulletConsume(priEl); anyConsumed = true; }
+                    if (hasSec) { _bulletConsume(secEl); anyConsumed = true; }
+
+                    // Apply consume effects for each consumed element
+                    if (hasPri) this._applyPistolDualConsumeEffect(S, sk, name, priEl, end, start);
+                    if (hasSec) this._applyPistolDualConsumeEffect(S, sk, name, secEl, end, start);
+
+                    // Grant primary element bullet if nothing was consumed
+                    if (!anyConsumed) {
+                        const grantEl = S.att; // primary attunement's element
+                        _bulletGrant(grantEl);
+                    }
+                }
+            }
         }
 
         // ── Hammer orb system ─────────────────────────────────────────────────
@@ -2969,6 +3183,7 @@ export class SimulationEngine {
                     spearForceCrit: spearGirantCrit || undefined,
                     spearCCHit: (spearCCHit && isFirstHit) || undefined,
                     hammerOrbElement: (hammerOrbElement && durBased) ? hammerOrbElement : undefined,
+                    frigidFlurryProc: S._frigidFlurryProcActive || undefined,
                 });
             }
         }
@@ -3326,6 +3541,64 @@ export class SimulationEngine {
             if (s.t <= t && s.expiresAt > t) count++;
         }
         return count;
+    }
+
+    // Apply per-element consume effects for Weaver dual pistol slot-3 skills
+    _applyPistolDualConsumeEffect(S, sk, name, element, end, start) {
+        const ws = this._ws(sk);
+        if (name === 'Frostfire Flurry') {
+            if (element === 'Fire') {
+                this._applyAura(S, 'Fire Aura', 3000, end, name);
+            } else if (element === 'Water') {
+                this._applyCondition(S, 'Vulnerability', 4, 8, end, name);
+            }
+        } else if (name === 'Purblinding Plasma') {
+            if (element === 'Fire') {
+                this._applyCondition(S, 'Burning', 3, 4, end, name);
+            } else if (element === 'Air') {
+                S._purblindingCDReduce = true; // consumed by recharge block above
+            }
+        } else if (name === 'Molten Meteor') {
+            if (element === 'Earth') {
+                insertSorted(S.eq, {
+                    time: end, type: 'hit',
+                    skill: name, hitIdx: 99, sub: 1, totalSubs: 1,
+                    dmg: 0, ws: 0, isField: false, cc: false,
+                    conds: { Bleeding: { stacks: 3, duration: 8 } },
+                    att: S.att, att2: S.att2, castStart: start,
+                    isTraitProc: true, noCrit: true,
+                });
+            }
+            // Fire: no extra effect
+        } else if (name === 'Flowing Finesse') {
+            if (element === 'Water') {
+                this._applyAura(S, 'Frost Aura', 3000, end, name);
+            } else if (element === 'Air') {
+                this._trackEffect(S, 'Superspeed', 1, 4, end);
+            }
+        } else if (name === 'Echoing Erosion') {
+            // Both Water and Earth: no extra effects on consume
+        } else if (name === 'Enervating Earth') {
+            if (element === 'Air') {
+                // CC — inject a zero-damage hit with cc:true for relic/trait procs
+                insertSorted(S.eq, {
+                    time: end, type: 'hit',
+                    skill: name, hitIdx: 99, sub: 1, totalSubs: 1,
+                    dmg: 0, ws: 0, isField: false, cc: true, conds: null,
+                    att: S.att, att2: S.att2, castStart: start,
+                    isTraitProc: true, noCrit: true,
+                });
+            } else if (element === 'Earth') {
+                insertSorted(S.eq, {
+                    time: end, type: 'hit',
+                    skill: name, hitIdx: 99, sub: 1, totalSubs: 1,
+                    dmg: 0, ws: 0, isField: false, cc: false,
+                    conds: { Bleeding: { stacks: 4, duration: 8 } },
+                    att: S.att, att2: S.att2, castStart: start,
+                    isTraitProc: true, noCrit: true,
+                });
+            }
+        }
     }
 
     // Returns array of element names for currently active hammer orbs at time t

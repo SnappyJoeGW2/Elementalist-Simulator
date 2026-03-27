@@ -105,6 +105,15 @@ for (const chain of Object.values(ETCHING_CHAINS_UI)) {
     ETCHING_LOOKUP_UI.set(chain.full,    chain);
 }
 
+// Pistol bullet system
+const PISTOL_BULLET_ICONS = {
+    Fire:  'https://wiki.guildwars2.com/images/9/9f/Scorching_Shot.png',
+    Water: 'https://wiki.guildwars2.com/images/2/2d/Soothing_Splash.png',
+    Air:   'https://wiki.guildwars2.com/images/3/30/Electric_Exposure.png',
+    Earth: 'https://wiki.guildwars2.com/images/3/34/Piercing_Pebble.png',
+};
+const PISTOL_BULLET_LABELS = { Fire: 'Fire Bullet', Water: 'Ice Bullet', Air: 'Air Bullet', Earth: 'Earth Bullet' };
+
 // Hammer orb system (mirrors simulation.js constants)
 const HAMMER_ORB_SKILLS_UI = new Set(['Flame Wheel', 'Icy Coil', 'Crescent Wind', 'Rocky Loop']);
 const HAMMER_DUAL_ORB_SKILLS_UI = {
@@ -153,6 +162,14 @@ const EFFECT_COLORS = {
     'Elemental Empowerment': '#44ddaa',
     'Empowering Auras': '#ffaa33',
     "Familiar's Prowess": '#aa55ff',
+    'Hammer Orb Fire':  '#e05530',
+    'Hammer Orb Water': '#4488cc',
+    'Hammer Orb Air':   '#c06ad0',
+    'Hammer Orb Earth': '#aa7744',
+    'Fire Bullet':  '#e05530',
+    'Ice Bullet':   '#4488cc',
+    'Air Bullet':   '#c06ad0',
+    'Earth Bullet': '#aa7744',
 };
 
 function esc(s) {
@@ -1868,6 +1885,25 @@ class App {
             }
         }
 
+        // ── Pistol bullet tracker ─────────────────────────────────────────────
+        // Show bullet state when Pistol is equipped. Clicking a bullet grants/removes it.
+        const pistolEquipped = mh === 'Pistol' || oh === 'Pistol';
+        if (pistolEquipped) {
+            const bullets = es?.pistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
+            h += '<div class="pal-group"><div class="pal-label" style="color:#ddbb88">Bullet</div><div class="pal-row">';
+            for (const el of ATTUNEMENTS) {
+                const active = bullets[el];
+                const icon = PISTOL_BULLET_ICONS[el];
+                const label = PISTOL_BULLET_LABELS[el];
+                const color = ATTUNEMENT_COLORS[el];
+                h += `<div class="pal-skill pistol-bullet${active ? ' bullet-active' : ''}" data-bullet-el="${esc(el)}"
+                    title="${esc(label)}${active ? ' (active — click to remove)' : ' (click to grant)'}"
+                    style="--att-border:${color};${active ? `box-shadow:0 0 6px ${color};` : 'opacity:0.4;'}">
+                    <img src="${icon}" /></div>`;
+            }
+            h += '</div></div>';
+        }
+
         // ── Hammer orb: Grand Finale ──────────────────────────────────────────
         // Grand Finale has no attunement in the CSV so it won't appear in the normal palette groups.
         // Show it in a dedicated group whenever Hammer is equipped.
@@ -1949,6 +1985,27 @@ class App {
                 } else {
                     this._addToRotation(skillName);
                 }
+            });
+        });
+
+        // Pistol bullet click-to-toggle handler
+        el.querySelectorAll('.pistol-bullet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const element = btn.dataset.bulletEl;
+                if (!element) return;
+                if (!this.sim) {
+                    // No sim yet: initialise a simple bullet state
+                    this._presetPistolBullets = this._presetPistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
+                    this._presetPistolBullets[element] = !this._presetPistolBullets[element];
+                } else {
+                    // Patch the endState bullets and re-render palette
+                    const es = this.sim.results?.endState;
+                    if (es?.pistolBullets) {
+                        es.pistolBullets[element] = !es.pistolBullets[element];
+                    }
+                }
+                this._renderPalette();
             });
         });
     }
@@ -2516,12 +2573,22 @@ class App {
             return;
         }
         const tgtHP = this._getTargetHP();
-        this.sim.computeContributions(this.activeAttunement, this.secondaryAttunement, this.evokerElement, this.permaBoons, tgtHP);
+        const startBullets = this._getStartPistolBullets();
+        this.sim.computeContributions(this.activeAttunement, this.secondaryAttunement, this.evokerElement, this.permaBoons, tgtHP, startBullets);
         this._renderPalette();
         this._renderTimeline();
         this._renderResults();
         this._updateOptimizerVisibility(true);
         this._persistBuild();
+    }
+
+    _getStartPistolBullets() {
+        // Use endState bullets from last run if available (reflecting user toggles),
+        // otherwise fall back to any preset toggles made before first run.
+        const es = this.sim?.results?.endState;
+        if (es?.pistolBullets) return { ...es.pistolBullets };
+        if (this._presetPistolBullets) return { ...this._presetPistolBullets };
+        return null;
     }
 
     _addToRotation(skillName, offset = null, gapFill = false) {
