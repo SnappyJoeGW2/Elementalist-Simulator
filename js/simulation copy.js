@@ -167,24 +167,6 @@ const EVOKER_ELEMENT_MAP = {
     Conflagration: 'Fire', 'Buoyant Deluge': 'Water', 'Lightning Blitz': 'Air', 'Seismic Impact': 'Earth'
 };
 
-// Spear Etching chains: Etching → lesser → (3 other Spear weapon casts) → full
-// Casting lesser OR full resets back to Etching.
-const ETCHING_CHAINS = {
-    'Volcano':    { etching: 'Etching: Volcano',    lesser: 'Lesser Volcano',    full: 'Volcano'    },
-    'Jökulhlaup':{ etching: 'Etching: Jökulhlaup', lesser: 'Lesser Jökulhlaup', full: 'Jökulhlaup' },
-    'Derecho':   { etching: 'Etching: Derecho',     lesser: 'Lesser Derecho',    full: 'Derecho'    },
-    'Haboob':    { etching: 'Etching: Haboob',      lesser: 'Lesser Haboob',     full: 'Haboob'     },
-};
-// Map any of the three names → the chain entry
-const ETCHING_LOOKUP = new Map();
-for (const chain of Object.values(ETCHING_CHAINS)) {
-    ETCHING_LOOKUP.set(chain.etching, chain);
-    ETCHING_LOOKUP.set(chain.lesser,  chain);
-    ETCHING_LOOKUP.set(chain.full,    chain);
-}
-// Skills that grant "next Spear skill" buffs
-const SPEAR_NEXT_BUFF_SKILLS = new Set(['Seethe', 'Ripple', 'Energize', 'Harden']);
-
 function insertSorted(arr, ev) {
     let lo = 0, hi = arr.length;
     while (lo < hi) {
@@ -573,14 +555,6 @@ export class SimulationEngine {
             elemBalanceCount: 0,
             elemBalanceActive: false,
             elemBalanceExpiry: 0,
-            // Spear Etching chain: null = on Etching, 'lesser' = lesser available, 'full' = full available
-            etchingState: {},        // { [etchingName]: 'lesser' | 'full' }
-            etchingOtherCasts: {},   // { [etchingName]: count of non-slot-1/non-Etching weapon casts since Etching }
-            // Spear "next spear skill" buffs
-            spearNextDmgBonus: false,     // Seethe: next non-slot-1 Spear skill +25% strike
-            spearNextCdReduce: false,     // Ripple: next non-slot-1 Spear skill -33% recharge
-            spearNextGuaranteedCrit: false, // Energize: next non-slot-1 Spear skill guaranteed crit
-            spearNextCCHit: false,        // Harden: next non-slot-1 Spear skill first hit applies CC
             _mightCondDmgBonus: 30,
             _furyCritBonus: 25,
         };
@@ -803,8 +777,8 @@ export class SimulationEngine {
                 const signetFireLost = S.signetFirePassiveLostUntil > ev.time ? (180 / 21) : 0;
                 const supElemCrit = (S._hasSuperiorElements
                     && this._effectStacksAt(S, 'Weakness', ev.time) > 0) ? 15 : 0;
-                const cc = ev.noCrit ? 0 : (ev.spearForceCrit ? 100 : Math.min(
-                    baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit + empCritCh + conjurePrec, 100));
+                const cc = ev.noCrit ? 0 : Math.min(
+                    baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit + empCritCh + conjurePrec, 100);
                 const critMult = expectedCritMultiplier(cc, effectiveCritDmg);
                 const zapBuff = S.evokerElement === 'Air' && this._effectStacksAt(S, 'Zap Buff', ev.time) > 0;
                 const relicStrikeMul = this._getRelicStrikeMul(S, ev, tgtHP);
@@ -879,9 +853,8 @@ export class SimulationEngine {
                 const targetHasVuln = this._vulnStacksAt(S, ev.time) > 0;
                 const piercingShardsMul = (S._hasPiercingShards && targetHasVuln)
                     ? (hitAtt === 'Water' ? 1.14 : 1.07) : 1;
-                const seetheMul = ev.spearDmgBonus ? 1.25 : 1;
                 const strikeMul = baseStrike * vulnMul * relicStrikeMul
-                    * pyroMul * fieryMightMul * serratedMul * stormsoulMul * flowLikeWaterMul * boltMul * zapMul * piercingShardsMul * seetheMul;
+                    * pyroMul * fieryMightMul * serratedMul * stormsoulMul * flowLikeWaterMul * boltMul * zapMul * piercingShardsMul;
                 const cMul = baseCond * vulnMul;
 
                 // Primordial Stance: apply conditions based on attunements at hit time (not cast time)
@@ -892,9 +865,6 @@ export class SimulationEngine {
                     const psAtt2 = this._att2At(S, ev.time);
                     this._applyPrimordialStance(S, psAtt1, psAtt2, ev.time);
                 }
-                // Harden: first hit of buffed Spear skill applies CC
-                if (ev.spearCCHit && procEv === ev) procEv = { ...ev, cc: true };
-                else if (ev.spearCCHit) procEv = { ...procEv, cc: true };
                 this._procHit(S, procEv, power, hitCondDmg, critMult, strikeMul, cMul);
 
                 // Attach diagnostic breakdown to the log entry that _procHit just pushed
@@ -1382,26 +1352,6 @@ export class SimulationEngine {
             }
         }
 
-        // Etching chain validation
-        const etchChain = ETCHING_LOOKUP.get(name);
-        if (etchChain) {
-            const state = S.etchingState[etchChain.etching];
-            if (name === etchChain.lesser) {
-                // lesser is available only if etchingState is 'lesser'
-                if (state !== 'lesser') {
-                    S.log.push({ t: S.t, type: 'err', msg: `Etching: need to cast ${etchChain.etching} first` });
-                    return;
-                }
-            } else if (name === etchChain.full) {
-                // full is available only if etchingState is 'full'
-                if (state !== 'full') {
-                    S.log.push({ t: S.t, type: 'err', msg: `Etching: ${etchChain.full} requires 3 other Spear casts after ${etchChain.etching}` });
-                    return;
-                }
-            }
-            // etching itself is always allowed (no state restriction)
-        }
-
         const key = this._cdKey(sk);
         const isCharged = sk.maximumCount > 0 && sk.countRecharge > 0;
 
@@ -1473,12 +1423,6 @@ export class SimulationEngine {
                 // _pyroRechargeMs already applied Aeromancer's Training (×0.8), giving 16s → 8s,
                 // or 20s → 10s without the trait.
                 if (name === 'Ride the Lightning') baseCdMs = Math.round(baseCdMs / 2);
-                // Ripple: next non-slot-1 Spear weapon skill recharge -33%
-                if (S.spearNextCdReduce && sk.weapon === 'Spear' && sk.type === 'Weapon skill' && sk.slot !== '1') {
-                    baseCdMs = Math.round(baseCdMs * (2 / 3));
-                    S.spearNextCdReduce = false;
-                    S.log.push({ t: end, type: 'skill_proc', skill: 'Ripple', detail: `${name} CD -33%` });
-                }
                 finalCd = end + this._alaCd(S, baseCdMs, end);
             }
             S.skillCD[key] = finalCd;
@@ -1547,59 +1491,6 @@ export class SimulationEngine {
         }
 
         this._checkRelicOnCast(S, sk, start, end);
-
-        // ── Spear Etching chain state management ──────────────────────────────
-        if (sk.weapon === 'Spear' && sk.type === 'Weapon skill') {
-            const etchCast = ETCHING_LOOKUP.get(name);
-            if (etchCast) {
-                if (name === etchCast.etching) {
-                    // Casting an Etching arms the lesser variant; no CD propagation to lesser/full
-                    S.etchingState[etchCast.etching] = 'lesser';
-                    S.etchingOtherCasts[etchCast.etching] = 0;
-                    S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `armed ${etchCast.lesser}` });
-                } else {
-                    // Casting lesser or full resets back to etching
-                    S.etchingState[etchCast.etching] = null;
-                    S.etchingOtherCasts[etchCast.etching] = 0;
-                }
-            } else if (sk.slot !== '1') {
-                // Count non-slot-1 Spear weapon casts (excluding etchings/lesser/full themselves)
-                for (const chain of Object.values(ETCHING_CHAINS)) {
-                    if (S.etchingState[chain.etching] === 'lesser') {
-                        S.etchingOtherCasts[chain.etching] = (S.etchingOtherCasts[chain.etching] || 0) + 1;
-                        if (S.etchingOtherCasts[chain.etching] >= 3) {
-                            S.etchingState[chain.etching] = 'full';
-                            S.log.push({ t: end, type: 'skill_proc', skill: chain.etching, detail: `upgraded to ${chain.full}` });
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── Spear "next spear skill" buffs — grant ─────────────────────────────
-        if (sk.weapon === 'Spear') {
-            if (name === 'Seethe') {
-                S.spearNextDmgBonus = true;
-                S.log.push({ t: end, type: 'skill_proc', skill: 'Seethe', detail: 'next Spear +25% strike armed' });
-            } else if (name === 'Ripple') {
-                S.spearNextCdReduce = true;
-                S.log.push({ t: end, type: 'skill_proc', skill: 'Ripple', detail: 'next Spear -33% recharge armed' });
-            } else if (name === 'Energize') {
-                S.spearNextGuaranteedCrit = true;
-                S.log.push({ t: end, type: 'skill_proc', skill: 'Energize', detail: 'next Spear guaranteed crit armed' });
-            } else if (name === 'Harden') {
-                S.spearNextCCHit = true;
-                S.log.push({ t: end, type: 'skill_proc', skill: 'Harden', detail: 'next Spear first hit CC armed' });
-            }
-        }
-
-        // ── Spear slot 3 dual-attunement (Weaver): reset primary attunement CD ─
-        if (S.eliteSpec === 'Weaver' && sk.weapon === 'Spear' && sk.slot === '3'
-            && sk.attunement && sk.attunement.includes('+')
-            && S.att !== S.att2) {
-            S.attCD[S.att] = end;
-            S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${S.att} attunement CD reset` });
-        }
 
         if (S._hasPyroPuissance && S.att === 'Fire') {
             this._trackEffect(S, 'Might', 1, 15, end);
@@ -2739,18 +2630,6 @@ export class SimulationEngine {
         const rows = this.skillHits[sk.name] || this.skillHits[strippedName] || [];
         const ws = this._ws(sk);
 
-        // Consume "next Spear skill" buffs for non-slot-1 Spear weapon skills
-        const isSpearWeapon = sk.weapon === 'Spear' && sk.type === 'Weapon skill' && sk.slot !== '1';
-        const spearDmgBonus  = isSpearWeapon && S.spearNextDmgBonus;
-        const spearGirantCrit = isSpearWeapon && S.spearNextGuaranteedCrit;
-        const spearCCHit     = isSpearWeapon && S.spearNextCCHit;
-        if (isSpearWeapon) {
-            if (spearDmgBonus)   S.spearNextDmgBonus = false;
-            if (spearGirantCrit) S.spearNextGuaranteedCrit = false;
-            if (spearCCHit)      S.spearNextCCHit = false;
-        }
-
-        let firstHitScheduled = false;
         for (const h of rows) {
             const off = scaleOff(h.startOffsetMs || 0);
             const rep = h.repeatOffsetMs || 0;
@@ -2775,8 +2654,6 @@ export class SimulationEngine {
 
             for (let i = 0; i < count; i++) {
                 const t = castStart + off + (effectiveRep > 0 && count > 1 ? i * effectiveRep : 0);
-                const isFirstHit = !firstHitScheduled;
-                firstHitScheduled = true;
                 insertSorted(S.eq, {
                     time: t, type: 'hit',
                     skill: sk.name, hitIdx: h.hit, sub: i + 1, totalSubs: count,
@@ -2785,9 +2662,6 @@ export class SimulationEngine {
                     finType: h.finisherType, finVal: h.finisherValue,
                     att: S.att, att2: S.att2, castStart,
                     conjure: S.conjureEquipped || null,
-                    spearDmgBonus:   spearDmgBonus   || undefined,
-                    spearForceCrit:  spearGirantCrit  || undefined,
-                    spearCCHit:      (spearCCHit && isFirstHit) || undefined,
                 });
             }
         }
