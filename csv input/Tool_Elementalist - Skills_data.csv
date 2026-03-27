@@ -1,4 +1,4 @@
-Name,Type,Slot,Attunement,Weapon,Chain skill,Cast Time,Recharge,Count Recharge,Maximum Count,Combo Field,Duration,Aura
+ï»¿Name,Type,Slot,Attunement,Weapon,Chain skill,Cast Time,Recharge,Count Recharge,Maximum Count,Combo Field,Duration,Aura
 Fire Attunement,Attunement,F1,,Profession mechanic,,0,10,,,,,
 Water Attunement,Attunement,F2,,Profession mechanic,,0,10,,,,,
 Air Attunement,Attunement,F3,,Profession mechanic,,0,10,,,,,
@@ -201,9 +201,9 @@ Restorative Spear,Weapon skill,1,Water,Spear,,0.64,0,,,,,
 Ice Beam,Weapon skill,2,Water,Spear,,0.84,6,,,,,
 Ripple,Weapon skill,3,Water,Spear,,0.8,15,,,,,
 Undertow,Weapon skill,4,Water,Spear,,0.6,20,,,,,
-Etching: Jökulhlaup,Weapon skill,5,Water,Spear,,0.24,25,,,Water,7,
-Lesser Jökulhlaup,Weapon skill,5,Water,Spear,,0.6,0,,,,,
-Jökulhlaup,Weapon skill,5,Water,Spear,,0.6,0,,,,,
+Etching: JÃ¶kulhlaup,Weapon skill,5,Water,Spear,,0.24,25,,,Water,7,
+Lesser JÃ¶kulhlaup,Weapon skill,5,Water,Spear,,0.6,0,,,,,
+JÃ¶kulhlaup,Weapon skill,5,Water,Spear,,0.6,0,,,,,
 Lightning Javelin,Weapon skill,1,Air,Spear,,0.64,0,,,,,
 Fulgor,Weapon skill,2,Air,Spear,,0.56,6,,,,,
 Energize,Weapon skill,3,Air,Spear,,0,15,,,,,
