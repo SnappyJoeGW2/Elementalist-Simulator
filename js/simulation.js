@@ -157,7 +157,7 @@ const FIRE_FIELD_SKILLS = new Set([
 ]);
 const EVOKER_FAMILIAR_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
 const EVOKER_NO_CHARGE_SKILLS = new Set([
-    'Transmute Earth', 'Hurl', 'Transmute Frost', 'Transmute Lightning', 'Transmute Fire',
+    'Transmute Earth', 'Hurl', 'Transmute Frost', 'Transmute Lightning', 'Transmute Fire', 'Grand Finale'
 ]);
 // Skills used to fill dead-time gaps before the next skill becomes available (ctrl+click).
 // Keyed by the player's current attunement at gap time.
@@ -170,17 +170,17 @@ const EVOKER_ELEMENT_MAP = {
 // Spear Etching chains: Etching → lesser → (3 other Spear weapon casts) → full
 // Casting lesser OR full resets back to Etching.
 const ETCHING_CHAINS = {
-    'Volcano':    { etching: 'Etching: Volcano',    lesser: 'Lesser Volcano',    full: 'Volcano'    },
-    'Jökulhlaup':{ etching: 'Etching: Jökulhlaup', lesser: 'Lesser Jökulhlaup', full: 'Jökulhlaup' },
-    'Derecho':   { etching: 'Etching: Derecho',     lesser: 'Lesser Derecho',    full: 'Derecho'    },
-    'Haboob':    { etching: 'Etching: Haboob',      lesser: 'Lesser Haboob',     full: 'Haboob'     },
+    'Volcano': { etching: 'Etching: Volcano', lesser: 'Lesser Volcano', full: 'Volcano' },
+    'Jökulhlaup': { etching: 'Etching: Jökulhlaup', lesser: 'Lesser Jökulhlaup', full: 'Jökulhlaup' },
+    'Derecho': { etching: 'Etching: Derecho', lesser: 'Lesser Derecho', full: 'Derecho' },
+    'Haboob': { etching: 'Etching: Haboob', lesser: 'Lesser Haboob', full: 'Haboob' },
 };
 // Map any of the three names → the chain entry
 const ETCHING_LOOKUP = new Map();
 for (const chain of Object.values(ETCHING_CHAINS)) {
     ETCHING_LOOKUP.set(chain.etching, chain);
-    ETCHING_LOOKUP.set(chain.lesser,  chain);
-    ETCHING_LOOKUP.set(chain.full,    chain);
+    ETCHING_LOOKUP.set(chain.lesser, chain);
+    ETCHING_LOOKUP.set(chain.full, chain);
 }
 // Skills that grant "next Spear skill" buffs
 const SPEAR_NEXT_BUFF_SKILLS = new Set(['Seethe', 'Ripple', 'Energize', 'Harden']);
@@ -1138,6 +1138,8 @@ export class SimulationEngine {
                 // weaversProwessUntil tracked via allCondStacks — no snapshot needed
                 permaBoons: S.permaBoons || {},
                 _hasTranscendentTempest: S._hasTranscendentTempest,
+                etchingState: { ...S.etchingState },
+                etchingOtherCasts: { ...S.etchingOtherCasts },
             },
         };
 
@@ -2741,13 +2743,13 @@ export class SimulationEngine {
 
         // Consume "next Spear skill" buffs for non-slot-1 Spear weapon skills
         const isSpearWeapon = sk.weapon === 'Spear' && sk.type === 'Weapon skill' && sk.slot !== '1';
-        const spearDmgBonus  = isSpearWeapon && S.spearNextDmgBonus;
+        const spearDmgBonus = isSpearWeapon && S.spearNextDmgBonus;
         const spearGirantCrit = isSpearWeapon && S.spearNextGuaranteedCrit;
-        const spearCCHit     = isSpearWeapon && S.spearNextCCHit;
+        const spearCCHit = isSpearWeapon && S.spearNextCCHit;
         if (isSpearWeapon) {
-            if (spearDmgBonus)   S.spearNextDmgBonus = false;
+            if (spearDmgBonus) S.spearNextDmgBonus = false;
             if (spearGirantCrit) S.spearNextGuaranteedCrit = false;
-            if (spearCCHit)      S.spearNextCCHit = false;
+            if (spearCCHit) S.spearNextCCHit = false;
         }
 
         let firstHitScheduled = false;
@@ -2785,9 +2787,9 @@ export class SimulationEngine {
                     finType: h.finisherType, finVal: h.finisherValue,
                     att: S.att, att2: S.att2, castStart,
                     conjure: S.conjureEquipped || null,
-                    spearDmgBonus:   spearDmgBonus   || undefined,
-                    spearForceCrit:  spearGirantCrit  || undefined,
-                    spearCCHit:      (spearCCHit && isFirstHit) || undefined,
+                    spearDmgBonus: spearDmgBonus || undefined,
+                    spearForceCrit: spearGirantCrit || undefined,
+                    spearCCHit: (spearCCHit && isFirstHit) || undefined,
                 });
             }
         }

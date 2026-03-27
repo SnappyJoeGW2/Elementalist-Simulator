@@ -91,6 +91,20 @@ const SKILL_TYPE_SPEC = {
     Meditation: 'Evoker', Familiar: 'Evoker', 'Jade Sphere': 'Catalyst',
 };
 
+// Spear Etching chains (mirrors ETCHING_CHAINS in simulation.js)
+const ETCHING_CHAINS_UI = {
+    'Volcano':    { etching: 'Etching: Volcano',    lesser: 'Lesser Volcano',    full: 'Volcano'    },
+    'Jökulhlaup':{ etching: 'Etching: Jökulhlaup', lesser: 'Lesser Jökulhlaup', full: 'Jökulhlaup' },
+    'Derecho':   { etching: 'Etching: Derecho',     lesser: 'Lesser Derecho',    full: 'Derecho'    },
+    'Haboob':    { etching: 'Etching: Haboob',      lesser: 'Lesser Haboob',     full: 'Haboob'     },
+};
+const ETCHING_LOOKUP_UI = new Map();
+for (const chain of Object.values(ETCHING_CHAINS_UI)) {
+    ETCHING_LOOKUP_UI.set(chain.etching, chain);
+    ETCHING_LOOKUP_UI.set(chain.lesser,  chain);
+    ETCHING_LOOKUP_UI.set(chain.full,    chain);
+}
+
 const INTENSITY_EFFECTS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
     'Might', 'Stability', 'Vulnerability',
@@ -938,7 +952,7 @@ class App {
                 skills = this._getSkillsForSlot(weapon, att, String(slot));
             }
 
-            const chain = this._getChainOrder(skills);
+            const chain = this._getChainOrderWithEtching(skills);
             const root = chain[0];
 
             if (slot === 4 && !is2h) html += '<div class="weapon-divider"></div>';
@@ -995,6 +1009,22 @@ class App {
             visited.add(next.name);
             current = next;
         }
+        return order;
+    }
+
+    // Returns chain order for a slot, appending Etching lesser/full variants when the root is an Etching skill.
+    _getChainOrderWithEtching(skills) {
+        const order = this._getChainOrder(skills);
+        if (order.length === 0) return order;
+        const root = order[0];
+        const etchChain = ETCHING_LOOKUP_UI.get(root.name);
+        if (!etchChain || root.name !== etchChain.etching) return order;
+        // Append lesser then full, sourced from all loaded skills
+        const allSkills = this.data.skills;
+        const lesserSk = allSkills.find(s => s.name === etchChain.lesser);
+        const fullSk   = allSkills.find(s => s.name === etchChain.full);
+        if (lesserSk && !order.some(s => s.name === lesserSk.name)) order.push(lesserSk);
+        if (fullSk   && !order.some(s => s.name === fullSk.name))   order.push(fullSk);
         return order;
     }
 
@@ -1505,6 +1535,14 @@ class App {
             if (skillName !== expected) return false;
         }
 
+        // Etching chain availability
+        const etchChain = ETCHING_LOOKUP_UI.get(skillName);
+        if (etchChain) {
+            const state = es.etchingState?.[etchChain.etching];
+            if (skillName === etchChain.lesser && state !== 'lesser') return false;
+            if (skillName === etchChain.full   && state !== 'full')   return false;
+        }
+
         // Tailored Victory: only available while Perfect Weave is active
         if (skillName === 'Tailored Victory' && (es.perfectWeaveUntil || 0) <= t) return false;
 
@@ -1756,6 +1794,25 @@ class App {
                     const chain = this._getChainOrder(this._getSkillsForSlot(weapon, att, String(slot)));
                     for (const sk of chain) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
                 }
+                h += '</div></div>';
+            }
+        }
+
+        // ── Spear Etching chain variants ─────────────────────────────────────
+        // Show lesser/full variants when Spear is equipped, regardless of attunement state,
+        // so the user can always add them to the rotation after running a sim.
+        const spearEquipped = mh === 'Spear' || oh === 'Spear';
+        if (spearEquipped) {
+            const etchingSkills = [];
+            for (const chain of Object.values(ETCHING_CHAINS_UI)) {
+                const lesserSk = skills.find(s => s.name === chain.lesser);
+                const fullSk   = skills.find(s => s.name === chain.full);
+                if (lesserSk) etchingSkills.push(lesserSk);
+                if (fullSk)   etchingSkills.push(fullSk);
+            }
+            if (etchingSkills.length > 0) {
+                h += '<div class="pal-group"><div class="pal-label" style="color:#cc8844">Etch</div><div class="pal-row">';
+                for (const sk of etchingSkills) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
                 h += '</div></div>';
             }
         }
