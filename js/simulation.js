@@ -185,6 +185,44 @@ for (const chain of Object.values(ETCHING_CHAINS)) {
 // Skills that grant "next Spear skill" buffs
 const SPEAR_NEXT_BUFF_SKILLS = new Set(['Seethe', 'Ripple', 'Energize', 'Harden']);
 
+// ── Hammer orb system ─────────────────────────────────────────────────────────
+// Each orb skill grants one elemental orb (15s duration, ticking damage).
+// Grand Finale consumes all active orbs, dealing hits and applying conditions per orb.
+const HAMMER_ORB_SKILLS = {
+    'Flame Wheel':  'Fire',
+    'Icy Coil':     'Water',
+    'Crescent Wind':'Air',
+    'Rocky Loop':   'Earth',
+};
+// Dual orbit skills grant two orbs each
+const HAMMER_DUAL_ORB_SKILLS = {
+    'Dual Orbits: Fire and Water':  ['Fire', 'Water'],
+    'Dual Orbits: Fire and Air':    ['Fire', 'Air'],
+    'Dual Orbits: Fire and Earth':  ['Fire', 'Earth'],
+    'Dual Orbits: Water and Air':   ['Water', 'Air'],
+    'Dual Orbits: Water and Earth': ['Water', 'Earth'],
+    'Dual Orbits: Air and Earth':   ['Air', 'Earth'],
+};
+const HAMMER_ORB_DURATION_MS = 15000;
+const HAMMER_ORB_ICD_MS = 480; // between orb skills and Grand Finale
+// Per-orb conditions applied by Grand Finale when that orb is consumed
+const HAMMER_GF_CONDITIONS = {
+    Fire:  { cond: 'Burning',       stacks: 2, dur: 5 },
+    Water: { cond: 'Vulnerability', stacks: 6, dur: 10 },
+    Air:   { cond: 'Weakness',      stacks: 1, dur: 5 },
+    Earth: { cond: 'Bleeding',      stacks: 4, dur: 5 },
+};
+// Orbs that grant buffs to the caster (tracked as pseudo-effects in _condMap)
+const HAMMER_ORB_BUFF_KEY = {
+    Fire: 'Hammer Orb Fire',  // +5% strike and condi
+    Air:  'Hammer Orb Air',   // +15% crit chance
+};
+// All Hammer orb-category skill names (base + dual), used for ICD and chain checks
+const HAMMER_ALL_ORB_NAMES = new Set([
+    ...Object.keys(HAMMER_ORB_SKILLS),
+    ...Object.keys(HAMMER_DUAL_ORB_SKILLS),
+]);
+
 function insertSorted(arr, ev) {
     let lo = 0, hi = arr.length;
     while (lo < hi) {
@@ -576,6 +614,12 @@ export class SimulationEngine {
             // Spear Etching chain: null = on Etching, 'lesser' = lesser available, 'full' = full available
             etchingState: {},        // { [etchingName]: 'lesser' | 'full' }
             etchingOtherCasts: {},   // { [etchingName]: count of non-slot-1/non-Etching weapon casts since Etching }
+            // Hammer orb system
+            // hammerOrbs: { Fire: expiresAt|null, Water: ..., Air: ..., Earth: ... }
+            // orbsGrantedInAtt: { Fire: Set<attunement>, ... } — which attunement unlocked each orb
+            hammerOrbs: { Fire: null, Water: null, Air: null, Earth: null },
+            hammerOrbGrantedBy: { Fire: null, Water: null, Air: null, Earth: null },
+            hammerOrbLastCast: -Infinity, // last time any orb skill (incl. GF) was cast, for ICD
             // Spear "next spear skill" buffs
             spearNextDmgBonus: false,     // Seethe: next non-slot-1 Spear skill +25% strike
             spearNextCdReduce: false,     // Ripple: next non-slot-1 Spear skill -33% recharge
@@ -763,6 +807,25 @@ export class SimulationEngine {
             const vulnMul = skipVuln ? 1 : 1 + this._vulnStacksAt(S, ev.time) * 0.01;
 
             if (ev.type === 'hit') {
+                // Hammer orb ticks: skip if Grand Finale consumed the orb before this tick fires
+                if (ev.hammerOrbElement) {
+                    if (ev.hammerOrbElement === 'Dual') {
+                        // Dual orb: skip if ALL orbs that could be associated are gone
+                        // (any active orb still makes it valid — both were granted together,
+                        // so if GF consumed both, both are null)
+                        const dualEls = HAMMER_DUAL_ORB_SKILLS[ev.skill];
+                        if (dualEls && dualEls.every(el => S.hammerOrbs[el] === null || S.hammerOrbs[el] <= ev.time)) {
+                            S.log.push({ t: ev.time, type: 'skip', skill: ev.skill, reason: 'orb consumed by Grand Finale' });
+                            continue;
+                        }
+                    } else {
+                        if (S.hammerOrbs[ev.hammerOrbElement] === null || S.hammerOrbs[ev.hammerOrbElement] <= ev.time) {
+                            S.log.push({ t: ev.time, type: 'skip', skill: ev.skill, reason: 'orb consumed by Grand Finale' });
+                            continue;
+                        }
+                    }
+                }
+
                 const hitAtt = ev.att;
                 const hitAtt2 = ev.att2 || null;
                 // For Weaver, "attuned to X" means X is either primary or secondary attunement
@@ -803,8 +866,11 @@ export class SimulationEngine {
                 const signetFireLost = S.signetFirePassiveLostUntil > ev.time ? (180 / 21) : 0;
                 const supElemCrit = (S._hasSuperiorElements
                     && this._effectStacksAt(S, 'Weakness', ev.time) > 0) ? 15 : 0;
+                const hammerFireOrbUp = this._effectStacksAt(S, 'Hammer Orb Fire', ev.time) > 0;
+                const hammerAirOrbUp  = this._effectStacksAt(S, 'Hammer Orb Air',  ev.time) > 0;
+                const hammerAirCritBonus = hammerAirOrbUp ? 15 : 0;
                 const cc = ev.noCrit ? 0 : (ev.spearForceCrit ? 100 : Math.min(
-                    baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit + empCritCh + conjurePrec, 100));
+                    baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit + empCritCh + conjurePrec + hammerAirCritBonus, 100));
                 const critMult = expectedCritMultiplier(cc, effectiveCritDmg);
                 const zapBuff = S.evokerElement === 'Air' && this._effectStacksAt(S, 'Zap Buff', ev.time) > 0;
                 const relicStrikeMul = this._getRelicStrikeMul(S, ev, tgtHP);
@@ -845,13 +911,15 @@ export class SimulationEngine {
                     + (relentlessFireUp ? 0.10 : 0)
                     + (bountifulPowerUp ? 0.20 : 0)
                     + (wsAirBonus ? 0.10 : 0)
-                    + fpStrike;
+                    + fpStrike
+                    + (hammerFireOrbUp ? 0.05 : 0);
                 const addCond = (tempAriaUp ? 0.05 : 0)
                     + (transcTempUp ? 0.20 : 0)
                     + (elemRageUp ? 0.05 : 0)
                     + empAurasStacks * 0.01
                     + (wsFireBonus ? 0.20 : 0)
-                    + fpCond;
+                    + fpCond
+                    + (hammerFireOrbUp ? 0.05 : 0);
                 const baseStrike = (1 + sigilMuls.strikeAdd + addStrike) * sigilMuls.strikeMul;
                 const baseCond = (1 + sigilMuls.condAdd + addCond) * sigilMuls.condMul;
 
@@ -1140,6 +1208,9 @@ export class SimulationEngine {
                 _hasTranscendentTempest: S._hasTranscendentTempest,
                 etchingState: { ...S.etchingState },
                 etchingOtherCasts: { ...S.etchingOtherCasts },
+                hammerOrbs: { ...S.hammerOrbs },
+                hammerOrbGrantedBy: { ...S.hammerOrbGrantedBy },
+                hammerOrbLastCast: S.hammerOrbLastCast,
             },
         };
 
@@ -1404,6 +1475,32 @@ export class SimulationEngine {
             // etching itself is always allowed (no state restriction)
         }
 
+        // ── Hammer orb ICD: orb skills blocked 480ms after Grand Finale (and vice versa) ──
+        if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
+            const isGF = name === 'Grand Finale';
+            const isOrbSkill = HAMMER_ALL_ORB_NAMES.has(name);
+            if ((isGF || isOrbSkill) && S.hammerOrbLastCast > -Infinity) {
+                const sinceLast = S.t - S.hammerOrbLastCast;
+                if (sinceLast < HAMMER_ORB_ICD_MS) S.t = S.hammerOrbLastCast + HAMMER_ORB_ICD_MS;
+            }
+        }
+
+        // ── Grand Finale: validate at least one orb active in current attunement context ──
+        if (name === 'Grand Finale' && sk.weapon === 'Hammer') {
+            const activeOrbs = this._hammerActiveOrbs(S, S.t);
+            if (activeOrbs.length === 0) {
+                S.log.push({ t: S.t, type: 'err', msg: 'Grand Finale: no active orbs' });
+                return;
+            }
+            // For non-Weaver: must have cast the corresponding attunement's orb skill first
+            // For Weaver: must have an orb granted by a skill that required att or att2
+            const hasQualifyingOrb = this._hammerGFAvailable(S, S.t);
+            if (!hasQualifyingOrb) {
+                S.log.push({ t: S.t, type: 'err', msg: `Grand Finale: need an orb from current attunement (${S.att}${S.att2 ? '/'+S.att2 : ''})` });
+                return;
+            }
+        }
+
         const key = this._cdKey(sk);
         const isCharged = sk.maximumCount > 0 && sk.countRecharge > 0;
 
@@ -1438,7 +1535,8 @@ export class SimulationEngine {
         const end = start + castMs;
 
         S.log.push({ t: start, type: 'cast', skill: name, att: S.att, dur: castMs });
-        this._scheduleHits(S, sk, start, scaleOff);
+        // Grand Finale hits are scheduled manually in the post-cast block (one hit per consumed orb)
+        if (name !== 'Grand Finale') this._scheduleHits(S, sk, start, scaleOff);
         this._trackField(S, sk, end);
         this._trackAura(S, sk, end);
 
@@ -1601,6 +1699,83 @@ export class SimulationEngine {
             && S.att !== S.att2) {
             S.attCD[S.att] = end;
             S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${S.att} attunement CD reset` });
+        }
+
+        // ── Hammer orb system ─────────────────────────────────────────────────
+        if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
+            const singleEl = HAMMER_ORB_SKILLS[name];
+            const dualEls  = HAMMER_DUAL_ORB_SKILLS[name];
+            const isGF     = name === 'Grand Finale';
+
+            if (singleEl || dualEls) {
+                // Orb skill: grant orb(s), refresh all existing orbs, apply buff(s)
+                const granted = singleEl ? [singleEl] : dualEls;
+                // Refresh all currently active orbs and extend their buffs
+                for (const el of ['Fire', 'Water', 'Air', 'Earth']) {
+                    if (S.hammerOrbs[el] !== null) {
+                        S.hammerOrbs[el] = end + HAMMER_ORB_DURATION_MS;
+                        // Extend buff stacks in _condMap
+                        const buffKey = HAMMER_ORB_BUFF_KEY[el];
+                        if (buffKey) {
+                            const arr = S._condMap.get(buffKey);
+                            if (arr) for (const s of arr) if (s.expiresAt > end) s.expiresAt = end + HAMMER_ORB_DURATION_MS;
+                        }
+                    }
+                }
+                // Grant new orbs
+                for (const el of granted) {
+                    S.hammerOrbs[el] = end + HAMMER_ORB_DURATION_MS;
+                    S.hammerOrbGrantedBy[el] = name;
+                    const buffKey = HAMMER_ORB_BUFF_KEY[el];
+                    if (buffKey) {
+                        // Remove any stale buff stacks and push a fresh one
+                        const old = S._condMap.get(buffKey);
+                        if (old) for (const s of old) s.expiresAt = end; // expire old stacks
+                        this._pushCondStack(S, { t: end, cond: buffKey, expiresAt: end + HAMMER_ORB_DURATION_MS });
+                    }
+                    S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${el} orb granted (until +${HAMMER_ORB_DURATION_MS / 1000}s)` });
+                }
+                S.hammerOrbLastCast = end;
+            } else if (isGF) {
+                // Grand Finale: consume all active orbs, schedule hits, apply conditions
+                S.hammerOrbLastCast = end;
+                const consumed = this._hammerActiveOrbs(S, end);
+                // Expire all orbs and their buffs immediately
+                for (const el of consumed) {
+                    S.hammerOrbs[el] = null;
+                    S.hammerOrbGrantedBy[el] = null;
+                    const buffKey = HAMMER_ORB_BUFF_KEY[el];
+                    if (buffKey) {
+                        const arr = S._condMap.get(buffKey);
+                        if (arr) for (const s of arr) s.expiresAt = end;
+                    }
+                }
+                // Schedule one hit per consumed orb (using Grand Finale's hit data as template)
+                const gfSk = this._skill('Grand Finale');
+                const gfHits = this.skillHits['Grand Finale'] || [];
+                const gfHit = gfHits[0]; // single hit row
+                if (gfSk && gfHit) {
+                    const ws = this._ws(gfSk);
+                    for (let i = 0; i < consumed.length; i++) {
+                        const el = consumed[i];
+                        const condData = HAMMER_GF_CONDITIONS[el];
+                        insertSorted(S.eq, {
+                            time: end + (gfHit.startOffsetMs || 680),
+                            type: 'hit',
+                            skill: 'Grand Finale', hitIdx: 1, sub: i + 1, totalSubs: consumed.length,
+                            dmg: gfHit.damage, ws,
+                            isField: false, cc: false,
+                            conds: condData ? { [condData.cond]: { stacks: condData.stacks, duration: condData.dur } } : null,
+                            finType: gfHit.finisherType, finVal: gfHit.finisherValue,
+                            att: S.att, att2: S.att2, castStart: start,
+                            conjure: S.conjureEquipped || null,
+                        });
+                    }
+                }
+                S.log.push({ t: end, type: 'skill_proc', skill: 'Grand Finale', detail: `consumed ${consumed.length} orbs: ${consumed.join(', ')}` });
+                // After Grand Finale: all orb skills revert (no further Grand Finale until new orb)
+                // This is enforced by hammerOrbs all being null now.
+            }
         }
 
         if (S._hasPyroPuissance && S.att === 'Fire') {
@@ -2741,6 +2916,9 @@ export class SimulationEngine {
         const rows = this.skillHits[sk.name] || this.skillHits[strippedName] || [];
         const ws = this._ws(sk);
 
+        // Tag Hammer orb ticks so Grand Finale can cancel them
+        const hammerOrbElement = HAMMER_ORB_SKILLS[sk.name] || (HAMMER_DUAL_ORB_SKILLS[sk.name] ? 'Dual' : null);
+
         // Consume "next Spear skill" buffs for non-slot-1 Spear weapon skills
         const isSpearWeapon = sk.weapon === 'Spear' && sk.type === 'Weapon skill' && sk.slot !== '1';
         const spearDmgBonus = isSpearWeapon && S.spearNextDmgBonus;
@@ -2790,6 +2968,7 @@ export class SimulationEngine {
                     spearDmgBonus: spearDmgBonus || undefined,
                     spearForceCrit: spearGirantCrit || undefined,
                     spearCCHit: (spearCCHit && isFirstHit) || undefined,
+                    hammerOrbElement: (hammerOrbElement && durBased) ? hammerOrbElement : undefined,
                 });
             }
         }
@@ -3147,6 +3326,54 @@ export class SimulationEngine {
             if (s.t <= t && s.expiresAt > t) count++;
         }
         return count;
+    }
+
+    // Returns array of element names for currently active hammer orbs at time t
+    _hammerActiveOrbs(S, t) {
+        const active = [];
+        for (const el of ['Fire', 'Water', 'Air', 'Earth']) {
+            if (S.hammerOrbs[el] !== null && S.hammerOrbs[el] > t) active.push(el);
+        }
+        return active;
+    }
+
+    // Grand Finale is available if:
+    //  - Non-Weaver: there is at least one active orb for the current attunement
+    //  - Weaver with pri !== sec: there is at least one active orb granted by a skill
+    //    whose attunement requirement includes pri or sec
+    //  - Weaver with pri === sec: there is at least one orb for that attunement
+    _hammerGFAvailable(S, t) {
+        const active = this._hammerActiveOrbs(S, t);
+        if (active.length === 0) return false;
+        const pri = S.att;
+        const sec = S.att2;
+
+        if (S.eliteSpec !== 'Weaver' || !sec || pri === sec) {
+            // Need an orb that was granted while (or in relation to) current attunement
+            // Simpler: orb for current attunement must exist
+            return active.includes(pri);
+        }
+
+        // Weaver dual: accessible if any orb granted by a skill requiring pri OR sec,
+        // or directly granted by a Dual Orbit skill covering pri or sec.
+        for (const el of active) {
+            const grantedBy = S.hammerOrbGrantedBy[el];
+            if (!grantedBy) continue;
+            const grantSk = this._skill(grantedBy);
+            if (!grantSk) continue;
+            const att = grantSk.attunement || '';
+            // Dual orbit: attunement contains '+'
+            if (att.includes('+')) {
+                const parts = att.split('+');
+                if (parts.includes(pri) || parts.includes(sec)) return true;
+            } else {
+                if (att === pri || att === sec) return true;
+            }
+        }
+        // Also: if we have both pri and sec orbs regardless of how they were gained,
+        // that qualifies (individual orb skills from each att side)
+        if (active.includes(pri) || active.includes(sec)) return true;
+        return false;
     }
 
     _getRelicStrikeMul(S, ev, tgtHP) {

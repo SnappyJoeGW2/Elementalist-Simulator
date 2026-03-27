@@ -105,6 +105,20 @@ for (const chain of Object.values(ETCHING_CHAINS_UI)) {
     ETCHING_LOOKUP_UI.set(chain.full,    chain);
 }
 
+// Hammer orb system (mirrors simulation.js constants)
+const HAMMER_ORB_SKILLS_UI = new Set(['Flame Wheel', 'Icy Coil', 'Crescent Wind', 'Rocky Loop']);
+const HAMMER_DUAL_ORB_SKILLS_UI = {
+    'Dual Orbits: Fire and Water':  ['Fire', 'Water'],
+    'Dual Orbits: Fire and Air':    ['Fire', 'Air'],
+    'Dual Orbits: Fire and Earth':  ['Fire', 'Earth'],
+    'Dual Orbits: Water and Air':   ['Water', 'Air'],
+    'Dual Orbits: Water and Earth': ['Water', 'Earth'],
+    'Dual Orbits: Air and Earth':   ['Air', 'Earth'],
+};
+const HAMMER_ALL_ORB_NAMES_UI = new Set([...HAMMER_ORB_SKILLS_UI, ...Object.keys(HAMMER_DUAL_ORB_SKILLS_UI)]);
+const HAMMER_ORB_DURATION_MS_UI = 15000;
+const HAMMER_ORB_ICD_MS_UI = 480;
+
 const INTENSITY_EFFECTS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
     'Might', 'Stability', 'Vulnerability',
@@ -1543,6 +1557,43 @@ class App {
             if (skillName === etchChain.full   && state !== 'full')   return false;
         }
 
+        // Hammer orb ICD (480ms between any orb skill and Grand Finale)
+        if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
+            const isGF = skillName === 'Grand Finale';
+            const isOrb = HAMMER_ALL_ORB_NAMES_UI.has(skillName);
+            if ((isGF || isOrb) && (es.hammerOrbLastCast ?? -Infinity) > -Infinity) {
+                if (t - es.hammerOrbLastCast < HAMMER_ORB_ICD_MS_UI) return false;
+            }
+        }
+
+        // Hammer Grand Finale: needs at least one active orb in current attunement context
+        if (skillName === 'Grand Finale' && sk.weapon === 'Hammer') {
+            const orbs = es.hammerOrbs || {};
+            const activeOrbs = Object.entries(orbs).filter(([, exp]) => exp !== null && exp > t).map(([el]) => el);
+            if (activeOrbs.length === 0) return false;
+            // Check attunement-specific prerequisite
+            const pri = es.att;
+            const sec = es.att2;
+            const grantedBy = es.hammerOrbGrantedBy || {};
+            if (es.eliteSpec !== 'Weaver' || !sec || pri === sec) {
+                if (!activeOrbs.includes(pri)) return false;
+            } else {
+                let qualifies = activeOrbs.includes(pri) || activeOrbs.includes(sec);
+                if (!qualifies) {
+                    for (const el of activeOrbs) {
+                        const gb = grantedBy[el];
+                        if (!gb) continue;
+                        const gbSk = this.data.skills.find(s => s.name === gb);
+                        if (!gbSk) continue;
+                        const att = gbSk.attunement || '';
+                        const parts = att.split('+');
+                        if (parts.includes(pri) || parts.includes(sec)) { qualifies = true; break; }
+                    }
+                }
+                if (!qualifies) return false;
+            }
+        }
+
         // Tailored Victory: only available while Perfect Weave is active
         if (skillName === 'Tailored Victory' && (es.perfectWeaveUntil || 0) <= t) return false;
 
@@ -1813,6 +1864,19 @@ class App {
             if (etchingSkills.length > 0) {
                 h += '<div class="pal-group"><div class="pal-label" style="color:#cc8844">Etch</div><div class="pal-row">';
                 for (const sk of etchingSkills) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
+                h += '</div></div>';
+            }
+        }
+
+        // ── Hammer orb: Grand Finale ──────────────────────────────────────────
+        // Grand Finale has no attunement in the CSV so it won't appear in the normal palette groups.
+        // Show it in a dedicated group whenever Hammer is equipped.
+        const hammerEquipped = mh === 'Hammer' || oh === 'Hammer';
+        if (hammerEquipped) {
+            const gfSk = skills.find(s => s.name === 'Grand Finale' && s.weapon === 'Hammer');
+            if (gfSk) {
+                h += '<div class="pal-group"><div class="pal-label" style="color:#ff9944">GF</div><div class="pal-row">';
+                h += this._palIcon(gfSk, this._isSkillAvailable(gfSk.name));
                 h += '</div></div>';
             }
         }

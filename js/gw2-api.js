@@ -158,10 +158,10 @@ export class GW2API {
         this.skillIcons['Etching: Derecho'] = 'https://render.guildwars2.com/file/F1B3331AB23F37964BE8D6A91F43FF066BE970AA/3379093.png';
         this.skillIcons['Etching: Haboob'] = 'https://render.guildwars2.com/file/7C7339E9EA33F7CD05806CE20066DF0EC4673767/3379096.png';
         this.skillIcons['Lesser Volcano'] = 'https://render.guildwars2.com/file/F17A92D0331607C7C59D0213ECE1C5F1C3770680/3379100.png';
-        this.skillIcons['Lesser Jökulhlaup'] = 'https://render.guildwars2.com/file/00A93FDC4F99D29749B27C4D73C5A1644A0F3726/104675.png';
+        this.skillIcons['Lesser Jökulhlaup'] = 'https://render.guildwars2.com/file/3333FBE3CB1331A40AC51903580FCFB09BC80335/3379103.png';
         this.skillIcons['Lesser Derecho'] = 'https://render.guildwars2.com/file/93950D05BFE50508031DA59BA0381252F60FEDBC/3379094.png';
         this.skillIcons['Lesser Haboob'] = 'https://render.guildwars2.com/file/E5FDD5E622E3DF73496BB35C0E33B429B8C5EB52/3379097.png';
-        this.skillIcons['Volcano'] = 'https://render.guildwars2.com/file/F17A92D0331607C7C59D0213ECE1C5F1C3770680/3379100.png';
+        this.skillIcons['Volcano'] = 'https://render.guildwars2.com/file/334EA928E56F38C176A22415DE3ECE144C5FD5BB/3379101.png';
         this.skillIcons['Jökulhlaup'] = 'https://render.guildwars2.com/file/48EB1A03297EE4DFA0FE2CA41F0B02B77302060B/3379104.png';
         this.skillIcons['Derecho'] = 'https://render.guildwars2.com/file/94F1A894667CA4F3407C57B055F8236804264B1F/3379095.png';
         this.skillIcons['Haboob'] = 'https://render.guildwars2.com/file/562F2D0ED67AD8453F9CA60F27DB154F2E7543FC/3379098.png';
