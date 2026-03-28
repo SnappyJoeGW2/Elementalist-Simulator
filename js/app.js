@@ -9,7 +9,7 @@ import {
 import { TRAITS, SPECIALIZATIONS } from './traits-data.js';
 import { GW2API, PLACEHOLDER_ICON } from './gw2-api.js';
 import { calculateSkillDamage } from './damage.js';
-import { SimulationEngine } from './simulation.js?v=7';
+import { SimulationEngine } from './simulation.js?v=8';
 import { GearOptimizer } from './optimizer.js';
 
 // ─── Consumable description helpers ──────────────────────────────────────────
@@ -1576,7 +1576,12 @@ class App {
 
         if (sk.chainSkill) {
             const chainRoot = this._getChainRootName(sk);
-            const expected = es.chainState?.[chainRoot] || chainRoot;
+            let expected = es.chainState?.[chainRoot] || chainRoot;
+            // Non-slot-1 chains: if the 5s window expired, treat as reset to root
+            const expiry = es.chainExpiry?.[chainRoot];
+            if (sk.slot !== '1' && expiry !== undefined && expiry <= (es.time ?? Infinity)) {
+                expected = chainRoot;
+            }
             if (skillName !== expected) return false;
         }
 

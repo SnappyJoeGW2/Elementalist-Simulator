@@ -166,6 +166,8 @@ export class GW2API {
         this.skillIcons['Derecho'] = 'https://render.guildwars2.com/file/94F1A894667CA4F3407C57B055F8236804264B1F/3379095.png';
         this.skillIcons['Haboob'] = 'https://render.guildwars2.com/file/562F2D0ED67AD8453F9CA60F27DB154F2E7543FC/3379098.png';
         this.skillIcons['Aerial Agility (chain)'] = 'https://render.guildwars2.com/file/C42D0718C2AB217B05E8414D514EAEFCC7407EF1/3256332.png';
+        this.skillIcons['Aerial Agility (dash)'] = 'https://render.guildwars2.com/file/B10398A8E33A70A9101F294993673004017916C1/3256333.png';
+        this.skillIcons['Aerial Agility'] = 'https://render.guildwars2.com/file/ADD2E4D6D49F22AF2C033058A6FF02BD316BFBC9/3256331.png';
     }
 
     getSkillIcon(name) {

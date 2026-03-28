@@ -247,6 +247,7 @@ const PISTOL_SKILL_ELEMENT = {
     'Searing Salvo': 'Fire',
     'Frozen Fusillade': 'Water',
     'Aerial Agility': 'Air',   // never consumes, may grant
+    'Aerial Agility (dash)': 'Air',
     'Boulder Blast': 'Earth',
     // Slot 3 (Weaver dual) — handled separately, listed here for lookup convenience
     'Frostfire Flurry': null,  // Fire+Water dual
@@ -266,9 +267,9 @@ const PISTOL_DUAL_ELEMENTS = {
     'Enervating Earth': ['Air', 'Earth'],
 };
 // Skills that NEVER consume a bullet
-const PISTOL_NO_CONSUME = new Set(['Aerial Agility', 'Aerial Agility (chain)']);
+const PISTOL_NO_CONSUME = new Set(['Aerial Agility', 'Aerial Agility (chain)', 'Aerial Agility (dash)']);
 // Skills that NEVER grant a bullet
-const PISTOL_NO_GRANT = new Set(['Aerial Agility (chain)']);
+const PISTOL_NO_GRANT = new Set(['Aerial Agility (chain)', 'Aerial Agility (dash)']);
 
 const PERMA_EXPIRY = 999999999;
 
@@ -514,6 +515,7 @@ export class SimulationEngine {
             skillCD: {},
             charges: {},
             chainState: {},
+            chainExpiry: {}, // { chainRoot: timestamp } — non-slot-1 chains expire after 5s
             eq: [],
             condState: {},
             fields: [],
@@ -1274,6 +1276,7 @@ export class SimulationEngine {
                 skillCD: { ...S.skillCD },
                 charges: JSON.parse(JSON.stringify(S.charges)),
                 chainState: { ...S.chainState },
+                chainExpiry: { ...S.chainExpiry },
                 conjureEquipped: S.conjureEquipped,
                 conjurePickups: S.conjurePickups.filter(p => p.expiresAt > rotEnd).map(p => ({ ...p })),
                 eliteSpec: S.eliteSpec,
@@ -1540,7 +1543,13 @@ export class SimulationEngine {
 
         if (sk.chainSkill) {
             const chainRoot = this._getChainRoot(sk);
-            const expected = S.chainState[chainRoot] || chainRoot;
+            let expected = S.chainState[chainRoot] || chainRoot;
+            // Non-slot-1 chains: if the 5s window expired, reset to root
+            if (sk.slot !== '1' && S.chainExpiry[chainRoot] !== undefined && S.chainExpiry[chainRoot] <= S.t) {
+                S.chainState[chainRoot] = chainRoot;
+                delete S.chainExpiry[chainRoot];
+                expected = chainRoot;
+            }
             if (name !== expected) {
                 S.log.push({ t: S.t, type: 'err', msg: `Chain: need ${expected}, got ${name}` });
                 return;
@@ -1705,6 +1714,10 @@ export class SimulationEngine {
         if (sk.chainSkill) {
             const chainRoot = this._getChainRoot(sk);
             S.chainState[chainRoot] = sk.chainSkill;
+            // Non-slot-1 chains get a 5s window to use the next skill in the chain
+            if (sk.slot !== '1') {
+                S.chainExpiry[chainRoot] = end + 5000;
+            }
         }
 
         // Deferred aaCarryover detection for concurrent attunement swaps:
@@ -2726,7 +2739,10 @@ export class SimulationEngine {
         for (const key of Object.keys(S.chainState)) {
             if (key === ownRoot || key === carryRoot) continue;
             if (S.chainState[key] !== key) {
+                // Non-slot-1 chains have a 5s window — only reset if expired
+                if (S.chainExpiry[key] !== undefined && S.chainExpiry[key] > S.t) continue;
                 S.chainState[key] = key;
+                delete S.chainExpiry[key];
             }
         }
     }
