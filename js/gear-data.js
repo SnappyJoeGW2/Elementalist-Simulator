@@ -327,7 +327,7 @@ export const WEAPON_DATA = {
     // Special / internal
     Unequipped: { wielding: '-', weaponStrength: 690.5 },
     'Profession mechanic': { wielding: '-', weaponStrength: 1100 },
-    'Conjured Weapon': { wielding: '2h', weaponStrength: 968.5 },
+    //'Conjured Weapon': { wielding: '2h', weaponStrength: 968.5 },
 };
 
 // ─── Sigil Data ───────────────────────────────────────────────────────────────
