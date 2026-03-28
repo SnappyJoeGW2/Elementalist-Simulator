@@ -1709,7 +1709,7 @@ export class SimulationEngine {
             // casting A should not put B on A's cooldown — B is immediately available.
             const isSwapChain = sk.chainSkill &&
                 this._skill(sk.chainSkill)?.chainSkill === sk.name;
-            if (!isCharged && !isSwapChain) this._propagateChainCD(S, sk, finalCd);
+            // if (!isCharged && !isSwapChain) this._propagateChainCD(S, sk, finalCd);
         }
 
         if (sk.chainSkill) {
