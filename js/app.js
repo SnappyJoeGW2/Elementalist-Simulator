@@ -970,11 +970,23 @@ class App {
         const elite = this._getEliteSpec();
         const isWeaver = elite === 'Weaver';
 
+        const allBullets = this._allPistolBulletsHeld();
         let html = '';
         for (let slot = 1; slot <= 5; slot++) {
             const weapon = is2h ? mh : (slot <= 3 ? mh : oh);
-            let skills;
 
+            // Elemental Explosion replaces slot 1 for Pistol when all 4 bullets are held
+            if (slot === 1 && weapon === 'Pistol' && allBullets) {
+                const eeSk = this.data.skills.find(s => s.name === 'Elemental Explosion');
+                const icon = eeSk ? this.api.getSkillIcon(eeSk.name) : null;
+                html += `<div class="weapon-slot"><div class="wskill main" title="Elemental Explosion\n(all 4 bullets held)\nCast: ${eeSk?.castTime ?? 0}s | CD: ${eeSk?.recharge ?? 0}s">
+                    <img src="${icon || PLACEHOLDER_ICON}" />
+                    <span class="wslot-num">1</span>
+                </div></div>`;
+                continue;
+            }
+
+            let skills;
             if (isWeaver && slot === 3 && att !== this.secondaryAttunement) {
                 skills = this._getWeaverSlot3Skills(weapon);
             } else if (isWeaver && slot >= 4) {
@@ -1616,7 +1628,20 @@ class App {
         // Tailored Victory: only available while Perfect Weave is active
         if (skillName === 'Tailored Victory' && (es.perfectWeaveUntil || 0) <= t) return false;
 
+        // Elemental Explosion: only available when all 4 bullets are held
+        if (skillName === 'Elemental Explosion') {
+            const b = es.pistolBullets || {};
+            if (!b.Fire || !b.Water || !b.Air || !b.Earth) return false;
+        }
+
         return true;
+    }
+
+    // Returns true if all 4 pistol bullets are currently held (live or preset)
+    _allPistolBulletsHeld() {
+        const liveBullets = this.sim?.results?.endState?.pistolBullets;
+        const b = liveBullets || this._presetPistolBullets || {};
+        return !!(b.Fire && b.Water && b.Air && b.Earth);
     }
 
     _getChainRootName(sk) {
@@ -1820,9 +1845,14 @@ class App {
         } else if (elite === 'Weaver') {
             const priAtt = es?.att || this.activeAttunement;
             const secAtt = es?.att2 || this.secondaryAttunement;
+            const allBullets = this._allPistolBulletsHeld();
             h += `<div class="pal-group"><div class="pal-label" style="color:${ATTUNEMENT_COLORS[priAtt]}">1-2</div><div class="pal-row">`;
             for (let slot = 1; slot <= 2; slot++) {
                 const weapon = is2h ? mh : (slot <= 3 ? mh : oh);
+                if (slot === 1 && weapon === 'Pistol' && allBullets) {
+                    const eeSk = skills.find(s => s.name === 'Elemental Explosion');
+                    if (eeSk) { h += this._palIcon(eeSk, this._isSkillAvailable(eeSk.name)); continue; }
+                }
                 const chain = this._getChainOrder(this._getSkillsForSlot(weapon, priAtt, String(slot)));
                 for (const sk of chain) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
             }
@@ -1857,10 +1887,19 @@ class App {
             }
             h += '</div></div>';
         } else {
+            const allBullets = this._allPistolBulletsHeld();
             for (const att of ATTUNEMENTS) {
                 h += `<div class="pal-group"><div class="pal-label" style="color:${ATTUNEMENT_COLORS[att]}">${att[0]}</div><div class="pal-row">`;
                 for (let slot = 1; slot <= 5; slot++) {
                     const weapon = is2h ? mh : (slot <= 3 ? mh : oh);
+                    if (slot === 1 && weapon === 'Pistol' && allBullets) {
+                        if (att === ATTUNEMENTS[0]) {
+                            // Only add Elemental Explosion once (on the first attunement group)
+                            const eeSk = skills.find(s => s.name === 'Elemental Explosion');
+                            if (eeSk) h += this._palIcon(eeSk, this._isSkillAvailable(eeSk.name));
+                        }
+                        continue;
+                    }
                     const chain = this._getChainOrder(this._getSkillsForSlot(weapon, att, String(slot)));
                     for (const sk of chain) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
                 }

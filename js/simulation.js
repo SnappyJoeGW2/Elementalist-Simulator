@@ -1801,6 +1801,21 @@ export class SimulationEngine {
         }
 
         // ── Pistol bullet system ──────────────────────────────────────────────
+        // Elemental Explosion: requires all 4 bullets, consumes all, grants attunement aura
+        if (name === 'Elemental Explosion') {
+            const auraMap = { Fire: ['Fire Aura', 4000], Water: ['Frost Aura', 4000], Air: ['Shocking Aura', 3000], Earth: ['Magnetic Aura', 3000] };
+            const auraEntry = auraMap[S.att];
+            if (auraEntry) this._applyAura(S, auraEntry[0], auraEntry[1], end, name);
+            for (const el of ['Fire', 'Water', 'Air', 'Earth']) {
+                if (S.pistolBullets[el]) {
+                    S.pistolBullets[el] = false;
+                    const me = S._pistolBulletMapEntry[el];
+                    if (me) { me.expiresAt = end; S._pistolBulletMapEntry[el] = null; }
+                }
+            }
+            S.log.push({ t: end, type: 'skill_proc', skill: name, detail: 'all bullets consumed, aura granted' });
+        }
+
         if (sk.weapon === 'Pistol' && sk.type === 'Weapon skill'
             && (sk.slot === '2' || sk.slot === '3')
             && name !== 'Elemental Explosion') {
