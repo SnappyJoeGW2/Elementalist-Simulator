@@ -1975,6 +1975,7 @@ class App {
         el.querySelectorAll('.pal-skill').forEach(p => {
             p.addEventListener('click', (e) => {
                 const skillName = p.dataset.skill;
+                if (!skillName) return;
                 const sk = this.data.skills.find(s => s.name === skillName);
                 const isInstant = sk && (sk.castTime || 0) === 0;
                 // Shift+click on an instant skill: add as concurrent (fires during previous cast)

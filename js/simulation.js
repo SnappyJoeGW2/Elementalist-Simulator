@@ -265,6 +265,8 @@ const PISTOL_NO_CONSUME = new Set(['Aerial Agility', 'Aerial Agility (chain)']);
 // Skills that NEVER grant a bullet
 const PISTOL_NO_GRANT = new Set(['Aerial Agility (chain)']);
 
+const PERMA_EXPIRY = 999999999;
+
 function insertSorted(arr, ev) {
     let lo = 0, hi = arr.length;
     while (lo < hi) {
@@ -667,6 +669,8 @@ export class SimulationEngine {
                 ? { Fire: !!startPistolBullets.Fire, Water: !!startPistolBullets.Water, Air: !!startPistolBullets.Air, Earth: !!startPistolBullets.Earth }
                 : { Fire: false, Water: false, Air: false, Earth: false },
             _pistolBulletMapEntry: {}, // { Fire: condMap entry ref, ... } for removal on consume
+            _frigidFlurryProcActive: false,
+            _purblindingCDReduce: false,
             dazingDischargeUntil: 0,      // expiry of next-pistol-CD-33% buff (5s window)
             shatteringStoneHits: 0,       // remaining bleed-on-hit procs (max 3)
             shatteringStoneUntil: 0,      // 10s window expiry for shattering stone
@@ -724,7 +728,7 @@ export class SimulationEngine {
             S.attTimeline = [{ t: 0, att: S.evokerElement, att2: realStartAtt2 }];
         }
 
-        const PERMA_EXPIRY = 999999999;
+        // PERMA_EXPIRY is a module-level constant (999999999)
         for (const [effect, val] of Object.entries(permaBoons)) {
             if (!val) continue;
             const count = typeof val === 'number' ? val : 1;
@@ -1614,8 +1618,10 @@ export class SimulationEngine {
         const end = start + castMs;
 
         S.log.push({ t: start, type: 'cast', skill: name, att: S.att, dur: castMs });
-        // Pre-schedule: determine if Frigid Flurry will consume its bullet so hits get Projectile tag
+        // Pre-schedule flags: set before _scheduleHits and before recharge block
         S._frigidFlurryProcActive = (name === 'Frigid Flurry' && S.pistolBullets['Water'] === true);
+        // Purblinding Plasma (Air bullet consumed): flag for CD reduction in recharge block below
+        S._purblindingCDReduce = (name === 'Purblinding Plasma' && S.pistolBullets['Air'] === true);
         // Grand Finale hits are scheduled manually in the post-cast block (one hit per consumed orb)
         if (name !== 'Grand Finale') this._scheduleHits(S, sk, start, scaleOff);
         S._frigidFlurryProcActive = false;
@@ -1795,7 +1801,6 @@ export class SimulationEngine {
         }
 
         // ── Pistol bullet system ──────────────────────────────────────────────
-        S._purblindingCDReduce = false; // reset each cast before potentially setting it below
         if (sk.weapon === 'Pistol' && sk.type === 'Weapon skill'
             && (sk.slot === '2' || sk.slot === '3')
             && name !== 'Elemental Explosion') {
@@ -1831,9 +1836,6 @@ export class SimulationEngine {
                                 att: S.att, att2: S.att2, castStart: start,
                                 isTraitProc: true, noCrit: true,
                             });
-                        } else if (name === 'Frigid Flurry') {
-                            // 20% Projectile chance per hit — tag on scheduled hits via state flag
-                            S._frigidFlurryProcActive = true;
                         } else if (name === 'Frozen Fusillade') {
                             // Delayed hit 4s after cast: 0.75 coeff + 5x Bleed 8s
                             insertSorted(S.eq, {
@@ -3555,9 +3557,8 @@ export class SimulationEngine {
         } else if (name === 'Purblinding Plasma') {
             if (element === 'Fire') {
                 this._applyCondition(S, 'Burning', 3, 4, end, name);
-            } else if (element === 'Air') {
-                S._purblindingCDReduce = true; // consumed by recharge block above
             }
+            // Air: CD reduction already applied in recharge block via S._purblindingCDReduce pre-set flag
         } else if (name === 'Molten Meteor') {
             if (element === 'Earth') {
                 insertSorted(S.eq, {
