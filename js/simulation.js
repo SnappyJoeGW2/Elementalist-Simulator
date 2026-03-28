@@ -2938,7 +2938,6 @@ export class SimulationEngine {
         const finType = ev.finType;
         const finVal = ev.finVal;
 
-        S.log.push({ t: ev.time, type: 'debug', msg: `combo: field=${fieldType} fin=${finType} val=${finVal} skill=${ev.skill} relic=${S.activeRelic}` });
         if (finType === 'Blast' || finType === 'Leap') {
             this._applyComboEffect(S, fieldType, finType, ev.time, ev.skill);
             if (finType === 'Blast' && S.activeRelic === 'Bloodstone') {
