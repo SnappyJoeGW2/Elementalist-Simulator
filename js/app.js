@@ -62,7 +62,7 @@ const DEFAULT_BUILD = {
         { name: 'Weaver', traits: '1-2-1' },
     ],
     infusions: [
-        { stat: 'Power',     count: 0 },
+        { stat: 'Power', count: 0 },
         { stat: 'Precision', count: 0 },
         { stat: 'Condition Damage', count: 0 },
     ],
@@ -93,23 +93,23 @@ const SKILL_TYPE_SPEC = {
 
 // Spear Etching chains (mirrors ETCHING_CHAINS in simulation.js)
 const ETCHING_CHAINS_UI = {
-    'Volcano':    { etching: 'Etching: Volcano',    lesser: 'Lesser Volcano',    full: 'Volcano'    },
-    'Jökulhlaup':{ etching: 'Etching: Jökulhlaup', lesser: 'Lesser Jökulhlaup', full: 'Jökulhlaup' },
-    'Derecho':   { etching: 'Etching: Derecho',     lesser: 'Lesser Derecho',    full: 'Derecho'    },
-    'Haboob':    { etching: 'Etching: Haboob',      lesser: 'Lesser Haboob',     full: 'Haboob'     },
+    'Volcano': { etching: 'Etching: Volcano', lesser: 'Lesser Volcano', full: 'Volcano' },
+    'Jökulhlaup': { etching: 'Etching: Jökulhlaup', lesser: 'Lesser Jökulhlaup', full: 'Jökulhlaup' },
+    'Derecho': { etching: 'Etching: Derecho', lesser: 'Lesser Derecho', full: 'Derecho' },
+    'Haboob': { etching: 'Etching: Haboob', lesser: 'Lesser Haboob', full: 'Haboob' },
 };
 const ETCHING_LOOKUP_UI = new Map();
 for (const chain of Object.values(ETCHING_CHAINS_UI)) {
     ETCHING_LOOKUP_UI.set(chain.etching, chain);
-    ETCHING_LOOKUP_UI.set(chain.lesser,  chain);
-    ETCHING_LOOKUP_UI.set(chain.full,    chain);
+    ETCHING_LOOKUP_UI.set(chain.lesser, chain);
+    ETCHING_LOOKUP_UI.set(chain.full, chain);
 }
 
 // Pistol bullet system
 const PISTOL_BULLET_ICONS = {
-    Fire:  'https://wiki.guildwars2.com/images/9/9f/Scorching_Shot.png',
+    Fire: 'https://wiki.guildwars2.com/wiki/Fire_Bullet#/media/File:Scorching_Shot.png',
     Water: 'https://wiki.guildwars2.com/images/2/2d/Soothing_Splash.png',
-    Air:   'https://wiki.guildwars2.com/images/3/30/Electric_Exposure.png',
+    Air: 'https://wiki.guildwars2.com/images/3/30/Electric_Exposure.png',
     Earth: 'https://wiki.guildwars2.com/images/3/34/Piercing_Pebble.png',
 };
 const PISTOL_BULLET_LABELS = { Fire: 'Fire Bullet', Water: 'Ice Bullet', Air: 'Air Bullet', Earth: 'Earth Bullet' };
@@ -117,12 +117,12 @@ const PISTOL_BULLET_LABELS = { Fire: 'Fire Bullet', Water: 'Ice Bullet', Air: 'A
 // Hammer orb system (mirrors simulation.js constants)
 const HAMMER_ORB_SKILLS_UI = new Set(['Flame Wheel', 'Icy Coil', 'Crescent Wind', 'Rocky Loop']);
 const HAMMER_DUAL_ORB_SKILLS_UI = {
-    'Dual Orbits: Fire and Water':  ['Fire', 'Water'],
-    'Dual Orbits: Fire and Air':    ['Fire', 'Air'],
-    'Dual Orbits: Fire and Earth':  ['Fire', 'Earth'],
-    'Dual Orbits: Water and Air':   ['Water', 'Air'],
+    'Dual Orbits: Fire and Water': ['Fire', 'Water'],
+    'Dual Orbits: Fire and Air': ['Fire', 'Air'],
+    'Dual Orbits: Fire and Earth': ['Fire', 'Earth'],
+    'Dual Orbits: Water and Air': ['Water', 'Air'],
     'Dual Orbits: Water and Earth': ['Water', 'Earth'],
-    'Dual Orbits: Air and Earth':   ['Air', 'Earth'],
+    'Dual Orbits: Air and Earth': ['Air', 'Earth'],
 };
 const HAMMER_ALL_ORB_NAMES_UI = new Set([...HAMMER_ORB_SKILLS_UI, ...Object.keys(HAMMER_DUAL_ORB_SKILLS_UI)]);
 const HAMMER_ORB_DURATION_MS_UI = 15000;
@@ -162,13 +162,13 @@ const EFFECT_COLORS = {
     'Elemental Empowerment': '#44ddaa',
     'Empowering Auras': '#ffaa33',
     "Familiar's Prowess": '#aa55ff',
-    'Hammer Orb Fire':  '#e05530',
+    'Hammer Orb Fire': '#e05530',
     'Hammer Orb Water': '#4488cc',
-    'Hammer Orb Air':   '#c06ad0',
+    'Hammer Orb Air': '#c06ad0',
     'Hammer Orb Earth': '#aa7744',
-    'Fire Bullet':  '#e05530',
-    'Ice Bullet':   '#4488cc',
-    'Air Bullet':   '#c06ad0',
+    'Fire Bullet': '#e05530',
+    'Ice Bullet': '#4488cc',
+    'Air Bullet': '#c06ad0',
     'Earth Bullet': '#aa7744',
 };
 
@@ -348,7 +348,7 @@ class App {
 
         container.innerHTML = GEAR_SLOTS.map(slot => {
             const hidden = is2H && slot === 'Weapon2';
-            const label  = is2H && slot === 'Weapon1' ? 'Weapon (2H)' : slot;
+            const label = is2H && slot === 'Weapon1' ? 'Weapon (2H)' : slot;
             const cur = this.build.gear[slot] || PREFIXES[0];
             const opts = PREFIXES.map(p =>
                 `<option value="${esc(p)}"${p === cur ? ' selected' : ''}>${esc(p)}</option>`
@@ -392,7 +392,7 @@ class App {
             this.build.weapons[0] = e.target.value;
             const is2H = TH_WEAPONS.has(e.target.value);
             if (is2H) this.build.weapons[1] = '';
-            document.getElementById('oh-row').style.opacity    = is2H ? '.4' : '';
+            document.getElementById('oh-row').style.opacity = is2H ? '.4' : '';
             document.getElementById('oh-row').style.pointerEvents = is2H ? 'none' : '';
             this._onBuildChange();
             this.renderAttunementBar();
@@ -405,7 +405,7 @@ class App {
 
         // Equipment info (rune, sigils, relic, food, utility, JBC, infusions)
         const eq = document.getElementById('equipment-info');
-        const b  = this.build;
+        const b = this.build;
         const sigilNames = SIGIL_NAMES;
         const relicNames = RELIC_NAMES;
 
@@ -431,11 +431,11 @@ class App {
         };
 
         eq.innerHTML = `
-            ${selRow('Rune',    'sel-rune',    RUNE_NAMES,    b.rune)}
-            ${selRow('Sigil 1', 'sel-sig1',    sigilNames,    b.sigils[0])}
-            ${selRow('Sigil 2', 'sel-sig2',    sigilNames,    b.sigils[1])}
-            ${selRow('Relic',   'sel-relic',   relicNames,    b.relic)}
-            ${consumableRow('Food',    'sel-food',    FOOD_NAMES,    b.food,    _foodDesc, 'small-select')}
+            ${selRow('Rune', 'sel-rune', RUNE_NAMES, b.rune)}
+            ${selRow('Sigil 1', 'sel-sig1', sigilNames, b.sigils[0])}
+            ${selRow('Sigil 2', 'sel-sig2', sigilNames, b.sigils[1])}
+            ${selRow('Relic', 'sel-relic', relicNames, b.relic)}
+            ${consumableRow('Food', 'sel-food', FOOD_NAMES, b.food, _foodDesc, 'small-select')}
             ${consumableRow('Utility', 'sel-utility', UTILITY_NAMES, b.utility, _utilityDesc)}
             <div class="gear-row">
                 <span class="gear-label">Jade Bot</span>
@@ -458,11 +458,11 @@ class App {
 
         // Attach equipment listeners
         const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('change', fn); };
-        bind('sel-rune',    e => { b.rune = e.target.value; this._onBuildChange(); });
-        bind('sel-sig1',    e => { b.sigils[0] = e.target.value; this._onBuildChange(); });
-        bind('sel-sig2',    e => { b.sigils[1] = e.target.value; this._onBuildChange(); });
-        bind('sel-relic',   e => { b.relic = e.target.value; this._onBuildChange(); });
-        bind('sel-food',    e => { b.food = e.target.value;    const h = document.getElementById('sel-food-hint');    if (h) h.textContent = _foodDesc(e.target.value);    this._onBuildChange(); });
+        bind('sel-rune', e => { b.rune = e.target.value; this._onBuildChange(); });
+        bind('sel-sig1', e => { b.sigils[0] = e.target.value; this._onBuildChange(); });
+        bind('sel-sig2', e => { b.sigils[1] = e.target.value; this._onBuildChange(); });
+        bind('sel-relic', e => { b.relic = e.target.value; this._onBuildChange(); });
+        bind('sel-food', e => { b.food = e.target.value; const h = document.getElementById('sel-food-hint'); if (h) h.textContent = _foodDesc(e.target.value); this._onBuildChange(); });
         bind('sel-utility', e => { b.utility = e.target.value; const h = document.getElementById('sel-utility-hint'); if (h) h.textContent = _utilityDesc(e.target.value); this._onBuildChange(); });
         bind('chk-jbc', e => { b.jadeBotCore = e.target.checked; this._onBuildChange(); });
 
@@ -508,18 +508,18 @@ class App {
         const container = document.getElementById('attributes-list');
         const baseAttrs = this.data.attributes.attributes;
         const condAttrs = this._getConditionalAttrs();
-        const pctSet = new Set(['Critical Chance','Critical Damage','Condition Duration','Boon Duration',
-            'Burning Duration','Bleeding Duration','Torment Duration','Confusion Duration','Poison Duration',
-            'Quickness Duration','Might Duration','Fury Duration']);
+        const pctSet = new Set(['Critical Chance', 'Critical Damage', 'Condition Duration', 'Boon Duration',
+            'Burning Duration', 'Bleeding Duration', 'Torment Duration', 'Confusion Duration', 'Poison Duration',
+            'Quickness Duration', 'Might Duration', 'Fury Duration']);
         const fmt = (n, v) => pctSet.has(n) ? v.toFixed(2) + '%' : Math.round(v).toString();
 
-        const primary = ['Power','Precision','Toughness','Vitality','Ferocity','Condition Damage','Expertise','Concentration','Healing Power'];
-        const derived = ['Critical Chance','Critical Damage','Condition Duration','Boon Duration',
-            'Burning Duration','Bleeding Duration','Torment Duration','Confusion Duration','Poison Duration'];
+        const primary = ['Power', 'Precision', 'Toughness', 'Vitality', 'Ferocity', 'Condition Damage', 'Expertise', 'Concentration', 'Healing Power'];
+        const derived = ['Critical Chance', 'Critical Damage', 'Condition Duration', 'Boon Duration',
+            'Burning Duration', 'Bleeding Duration', 'Torment Duration', 'Confusion Duration', 'Poison Duration'];
 
         // Specific condition durations are additive with the general Condition Duration.
         // Show the effective combined value so displayed numbers match what the sim uses.
-        const SPEC_COND_DUR = new Set(['Burning Duration','Bleeding Duration','Torment Duration','Confusion Duration','Poison Duration']);
+        const SPEC_COND_DUR = new Set(['Burning Duration', 'Bleeding Duration', 'Torment Duration', 'Confusion Duration', 'Poison Duration']);
         const condDurBase = baseAttrs['Condition Duration']?.final ?? 0;
         const condDurCond = condAttrs?.['Condition Duration']?.final ?? condDurBase;
 
@@ -534,8 +534,8 @@ class App {
                 <span class="attr-name">${n}</span>
                 <span class="attr-val">
                     ${hasDelta
-                        ? `<span class="av-base">${fmt(n, base)}</span><span class="av-arrow">→</span><span class="av-cond">${fmt(n, cond)}</span><span class="av-delta">(${sign}${pctSet.has(n) ? delta.toFixed(2)+'%' : Math.round(delta)})</span>`
-                        : fmt(n, base)}
+                    ? `<span class="av-base">${fmt(n, base)}</span><span class="av-arrow">→</span><span class="av-cond">${fmt(n, cond)}</span><span class="av-delta">(${sign}${pctSet.has(n) ? delta.toFixed(2) + '%' : Math.round(delta)})</span>`
+                    : fmt(n, base)}
                 </span>
             </div>`;
         };
@@ -554,23 +554,23 @@ class App {
         if (!container) return;
         const c = this.conditions;
         const activeTraits = this.data.attributes?.activeTraits || [];
-        const specs        = this.data.attributes?.specializations || [];
+        const specs = this.data.attributes?.specializations || [];
 
         const hasTrait = name => activeTraits.some(t => t.name === name);
-        const hasPolyphony         = hasTrait('Elemental Polyphony');
-        const hasEmpoweringFlame   = hasTrait('Empowering Flame');
-        const hasAeroTraining      = hasTrait("Aeromancer's Training");
+        const hasPolyphony = hasTrait('Elemental Polyphony');
+        const hasEmpoweringFlame = hasTrait('Empowering Flame');
+        const hasAeroTraining = hasTrait("Aeromancer's Training");
         const hasPowerOverwhelming = hasTrait('Power Overwhelming');
-        const hasRagingStorm       = hasTrait('Raging Storm');
-        const hasFreshAirTrait     = hasTrait('Fresh Air');
-        const hasBurningPrecision  = hasTrait('Burning Precision');
-        const hasSuperiorElements  = hasTrait('Superior Elements');
-        const hasWeaversProwess    = hasTrait("Weaver's Prowess");
-        const hasEnhancedPotency   = hasTrait('Enhanced Potency');
-        const hasEmpEmpowerment    = hasTrait('Empowered Empowerment');
+        const hasRagingStorm = hasTrait('Raging Storm');
+        const hasFreshAirTrait = hasTrait('Fresh Air');
+        const hasBurningPrecision = hasTrait('Burning Precision');
+        const hasSuperiorElements = hasTrait('Superior Elements');
+        const hasWeaversProwess = hasTrait("Weaver's Prowess");
+        const hasEnhancedPotency = hasTrait('Enhanced Potency');
+        const hasEmpEmpowerment = hasTrait('Empowered Empowerment');
 
         const hasCatalyst = specs.some(s => s.name === 'Catalyst');
-        const isWeaver    = specs.some(s => s.name === 'Weaver');
+        const isWeaver = specs.some(s => s.name === 'Weaver');
 
         // Show attunement section if any attunement-based effect is relevant
         const showAttunement = hasPolyphony || hasEmpoweringFlame || hasAeroTraining;
@@ -585,14 +585,14 @@ class App {
         const attEffects = (att, isPrimary) => {
             if (!att || att === 'None') return '';
             const parts = [];
-            if (hasPolyphony && POLY_STAT[att])                      parts.push(`+200 ${POLY_STAT[att]}`);
-            if (isPrimary && hasEmpoweringFlame && att === 'Fire')    parts.push('+150 Pwr');
-            if (isPrimary && hasAeroTraining    && att === 'Air')     parts.push('+150 Ferocity');
+            if (hasPolyphony && POLY_STAT[att]) parts.push(`+200 ${POLY_STAT[att]}`);
+            if (isPrimary && hasEmpoweringFlame && att === 'Fire') parts.push('+150 Pwr');
+            if (isPrimary && hasAeroTraining && att === 'Air') parts.push('+150 Ferocity');
             return parts.length ? parts.join(', ') : att;
         };
 
-        const furyLabel   = hasEnhancedPotency ? '+40% Crit Chance (Enhanced Potency)' : '+25% Crit Chance';
-        const mightLabel  = hasEnhancedPotency ? '+30 Pwr / +30–35 CondDmg (Enhanced Potency)' : '+30 Pwr/CondDmg';
+        const furyLabel = hasEnhancedPotency ? '+40% Crit Chance (Enhanced Potency)' : '+25% Crit Chance';
+        const mightLabel = hasEnhancedPotency ? '+30 Pwr / +30–35 CondDmg (Enhanced Potency)' : '+30 Pwr/CondDmg';
 
         // EE multiplier description
         const eeDesc = hasEmpEmpowerment
@@ -601,11 +601,11 @@ class App {
 
         // Auto-applied effects: shown as info rows (no checkbox), only when trait is in active build
         const autoRows = [
-            hasEmpoweringFlame   ? { label: 'Empowering Flame',    text: '+150 Power — primary Fire only (secondary Fire gives nothing)' }   : null,
-            hasAeroTraining      ? { label: "Aeromancer's Tr.",    text: '+150 Ferocity — primary Air only (secondary Air gives nothing)' } : null,
-            hasPowerOverwhelming ? { label: 'Power Overwhelm.',    text: '+300 Pwr if primary Fire, +150 Pwr otherwise — requires ≥10 Might' } : null,
-            hasRagingStorm       ? { label: 'Raging Storm',        text: '+12 Crit Dmg when Fury active' }  : null,
-            hasBurningPrecision  ? { label: 'Burning Precision',   text: '+20% Burn Duration (always in base stats) + 33% on-crit burning proc' } : null,
+            hasEmpoweringFlame ? { label: 'Empowering Flame', text: '+150 Power — primary Fire only (secondary Fire gives nothing)' } : null,
+            hasAeroTraining ? { label: "Aeromancer's Tr.", text: '+150 Ferocity — primary Air only (secondary Air gives nothing)' } : null,
+            hasPowerOverwhelming ? { label: 'Power Overwhelm.', text: '+300 Pwr if primary Fire, +150 Pwr otherwise — requires ≥10 Might' } : null,
+            hasRagingStorm ? { label: 'Raging Storm', text: '+12 Crit Dmg when Fury active' } : null,
+            hasBurningPrecision ? { label: 'Burning Precision', text: '+20% Burn Duration (always in base stats) + 33% on-crit burning proc' } : null,
         ].filter(Boolean);
 
         container.innerHTML = `
@@ -681,14 +681,14 @@ class App {
         // autoRows are still built and used by _getConditionalAttrs() via this.conditions — just not displayed.
 
         const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('change', fn); };
-        bind('cond-might',     e => { c.might = Math.max(0, Math.min(25, parseInt(e.target.value) || 0)); e.target.value = c.might; this.renderAttributes(); });
-        bind('cond-fury',      e => { c.fury = e.target.checked; this.renderAttributes(); });
-        bind('cond-att-pri',   e => { c.primaryAtt = e.target.value; this.renderConditions(); this.renderAttributes(); });
-        bind('cond-att-sec',   e => { c.secondaryAtt = e.target.value; this.renderConditions(); this.renderAttributes(); });
-        bind('cond-ee',        e => { c.elemEmpowerment = Math.max(0, Math.min(10, parseInt(e.target.value) || 0)); e.target.value = c.elemEmpowerment; this.renderAttributes(); });
+        bind('cond-might', e => { c.might = Math.max(0, Math.min(25, parseInt(e.target.value) || 0)); e.target.value = c.might; this.renderAttributes(); });
+        bind('cond-fury', e => { c.fury = e.target.checked; this.renderAttributes(); });
+        bind('cond-att-pri', e => { c.primaryAtt = e.target.value; this.renderConditions(); this.renderAttributes(); });
+        bind('cond-att-sec', e => { c.secondaryAtt = e.target.value; this.renderConditions(); this.renderAttributes(); });
+        bind('cond-ee', e => { c.elemEmpowerment = Math.max(0, Math.min(10, parseInt(e.target.value) || 0)); e.target.value = c.elemEmpowerment; this.renderAttributes(); });
         bind('cond-fresh-air', e => { c.freshAir = e.target.checked; this.renderAttributes(); });
-        bind('cond-sup-elem',  e => { c.superiorElements = e.target.checked; this.renderAttributes(); });
-        bind('cond-wp',        e => { c.weaversProwess = e.target.checked; this.renderAttributes(); });
+        bind('cond-sup-elem', e => { c.superiorElements = e.target.checked; this.renderAttributes(); });
+        bind('cond-wp', e => { c.weaversProwess = e.target.checked; this.renderAttributes(); });
     }
 
     // ─── Compute attributes with conditions applied ───
@@ -703,17 +703,17 @@ class App {
         const specs = this.data.attributes?.specializations || [];
 
         const hasTrait = name => activeTraits.some(t => t.name === name);
-        const hasPolyphony         = hasTrait('Elemental Polyphony');
-        const hasEmpoweringFlame   = hasTrait('Empowering Flame');
-        const hasAeroTraining      = hasTrait("Aeromancer's Training");
+        const hasPolyphony = hasTrait('Elemental Polyphony');
+        const hasEmpoweringFlame = hasTrait('Empowering Flame');
+        const hasAeroTraining = hasTrait("Aeromancer's Training");
         const hasPowerOverwhelming = hasTrait('Power Overwhelming');
-        const hasRagingStorm       = hasTrait('Raging Storm');
-        const hasFreshAirTrait     = hasTrait('Fresh Air');
-        const hasSuperiorElements  = hasTrait('Superior Elements');
-        const hasWeaversProwess    = hasTrait("Weaver's Prowess");
-        const hasEnhancedPotency   = hasTrait('Enhanced Potency');
-        const hasEmpEmpowerment    = hasTrait('Empowered Empowerment');
-        const isEvoker             = specs.some(s => s.name === 'Evoker');
+        const hasRagingStorm = hasTrait('Raging Storm');
+        const hasFreshAirTrait = hasTrait('Fresh Air');
+        const hasSuperiorElements = hasTrait('Superior Elements');
+        const hasWeaversProwess = hasTrait("Weaver's Prowess");
+        const hasEnhancedPotency = hasTrait('Enhanced Potency');
+        const hasEmpEmpowerment = hasTrait('Empowered Empowerment');
+        const isEvoker = specs.some(s => s.name === 'Evoker');
 
         // Determine if any condition is effectively active
         const hasAny = c.might > 0 || c.fury
@@ -724,7 +724,7 @@ class App {
             || (hasRagingStorm && c.fury);
         if (!hasAny) return null;
 
-        const PRIMARY_STATS = ['Power','Precision','Toughness','Vitality','Ferocity','Condition Damage','Expertise','Concentration','Healing Power'];
+        const PRIMARY_STATS = ['Power', 'Precision', 'Toughness', 'Vitality', 'Ferocity', 'Condition Damage', 'Expertise', 'Concentration', 'Healing Power'];
         const out = {};
         for (const [k, v] of Object.entries(base)) out[k] = { ...v };
 
@@ -793,33 +793,33 @@ class App {
 
         // ── Recompute derived stats from updated primary finals ──
         const prec = out['Precision']?.final ?? 1000;
-        const fer  = out['Ferocity']?.final ?? 0;
+        const fer = out['Ferocity']?.final ?? 0;
         const conc = out['Concentration']?.final ?? 0;
-        const exp  = out['Expertise']?.final ?? 0;
+        const exp = out['Expertise']?.final ?? 0;
 
-        const traitCC   = base['Critical Chance']?.traits ?? 0;
-        const sigilCC   = base['Critical Chance']?.sigils ?? 0;
+        const traitCC = base['Critical Chance']?.traits ?? 0;
+        const sigilCC = base['Critical Chance']?.sigils ?? 0;
         const newPrecCC = (prec - 895) / 21;
         // Fury: +25% base; Enhanced Potency raises it to +40%
-        const furyCC       = c.fury ? (hasEnhancedPotency ? 40 : 25) : 0;
+        const furyCC = c.fury ? (hasEnhancedPotency ? 40 : 25) : 0;
         // Superior Elements: +15% Crit Chance vs. Weakened enemies
-        const supElemCC    = (c.superiorElements && hasSuperiorElements) ? 15 : 0;
+        const supElemCC = (c.superiorElements && hasSuperiorElements) ? 15 : 0;
         out['Critical Chance'] = { ...out['Critical Chance'], final: newPrecCC + traitCC + sigilCC + furyCC + supElemCC };
 
         // Critical Damage: Raging Storm adds +12 when Fury is active (simulation: ragingFerocity = 12)
-        const ragingBonus  = (hasRagingStorm && c.fury) ? 12 : 0;
+        const ragingBonus = (hasRagingStorm && c.fury) ? 12 : 0;
         out['Critical Damage'] = { ...out['Critical Damage'], final: 150 + fer / 15 + ragingBonus };
 
         // Boon Duration: non-concentration bonus preserved; concentration component updated
-        const boonFixedBonus  = (base['Boon Duration']?.final ?? 0) - (base['Concentration']?.final ?? 0) / 15;
-        out['Boon Duration']  = { ...out['Boon Duration'],  final: conc / 15 + boonFixedBonus };
+        const boonFixedBonus = (base['Boon Duration']?.final ?? 0) - (base['Concentration']?.final ?? 0) / 15;
+        out['Boon Duration'] = { ...out['Boon Duration'], final: conc / 15 + boonFixedBonus };
 
         // Condition Duration: non-expertise bonus preserved; expertise component updated
         // Weaver's Prowess: +20% Condition Duration while dual-attuned with two DIFFERENT attunements
         // Matches simulation: `if (a2 !== null && a1 !== a2) bonus += 20`
         const wpBonus = (c.weaversProwess && hasWeaversProwess
             && c.secondaryAtt !== 'None' && c.primaryAtt !== c.secondaryAtt) ? 20 : 0;
-        const condFixedBonus  = (base['Condition Duration']?.final ?? 0) - (base['Expertise']?.final ?? 0) / 15;
+        const condFixedBonus = (base['Condition Duration']?.final ?? 0) - (base['Expertise']?.final ?? 0) / 15;
         out['Condition Duration'] = { ...out['Condition Duration'], final: exp / 15 + condFixedBonus + wpBonus };
 
         return out;
@@ -839,15 +839,15 @@ class App {
             const choices = spec.traits.split('-').map(Number);
 
             const tierPairs = [
-                { minor: 'Minor Adept',       major: 'Major Adept',       pick: choices[0] },
-                { minor: 'Minor Master',       major: 'Major Master',      pick: choices[1] },
-                { minor: 'Minor Grandmaster',  major: 'Major Grandmaster', pick: choices[2] },
+                { minor: 'Minor Adept', major: 'Major Adept', pick: choices[0] },
+                { minor: 'Minor Master', major: 'Major Master', pick: choices[1] },
+                { minor: 'Minor Grandmaster', major: 'Major Grandmaster', pick: choices[2] },
             ];
 
             const tiersHtml = tierPairs.map((tp, tierIdx) => {
-                const minor  = specTraits.find(t => t.tier === tp.minor);
+                const minor = specTraits.find(t => t.tier === tp.minor);
                 const majors = specTraits.filter(t => t.tier === tp.major).sort((a, b) => a.position - b.position);
-                const mIcon  = minor ? this.api.getTraitIcon(minor.name) : null;
+                const mIcon = minor ? this.api.getTraitIcon(minor.name) : null;
 
                 return `<div class="spec-tier">
                     <div class="spec-trait-minor" title="${esc(minor?.name || '')}">
@@ -855,14 +855,14 @@ class App {
                     </div>
                     <div class="spec-trait-majors">
                         ${majors.map(m => {
-                            const ic  = this.api.getTraitIcon(m.name);
-                            const sel = m.position === tp.pick;
-                            return `<div class="spec-trait-major ${sel ? 'sel' : 'dim'}"
+                    const ic = this.api.getTraitIcon(m.name);
+                    const sel = m.position === tp.pick;
+                    return `<div class="spec-trait-major ${sel ? 'sel' : 'dim'}"
                                         data-slot="${slotIdx}" data-tier="${tierIdx}" data-pos="${m.position}"
                                         title="${esc(m.name)}">
                                 <img src="${ic || PLACEHOLDER_ICON}" />
                             </div>`;
-                        }).join('')}
+                }).join('')}
                     </div>
                 </div>${tierIdx < 2 ? '<div class="spec-line"></div>' : ''}`;
             }).join('');
@@ -891,8 +891,8 @@ class App {
             el.addEventListener('click', () => {
                 const slotIdx = parseInt(el.dataset.slot);
                 const tierIdx = parseInt(el.dataset.tier);
-                const pos     = parseInt(el.dataset.pos);
-                const picks   = this.build.specializations[slotIdx].traits.split('-').map(Number);
+                const pos = parseInt(el.dataset.pos);
+                const picks = this.build.specializations[slotIdx].traits.split('-').map(Number);
                 // Clicking the already-selected trait deselects it (sets to 0)
                 picks[tierIdx] = picks[tierIdx] === pos ? 0 : pos;
                 this.build.specializations[slotIdx].traits = picks.join('-');
@@ -1053,9 +1053,9 @@ class App {
         // Append lesser then full, sourced from all loaded skills
         const allSkills = this.data.skills;
         const lesserSk = allSkills.find(s => s.name === etchChain.lesser);
-        const fullSk   = allSkills.find(s => s.name === etchChain.full);
+        const fullSk = allSkills.find(s => s.name === etchChain.full);
         if (lesserSk && !order.some(s => s.name === lesserSk.name)) order.push(lesserSk);
-        if (fullSk   && !order.some(s => s.name === fullSk.name))   order.push(fullSk);
+        if (fullSk && !order.some(s => s.name === fullSk.name)) order.push(fullSk);
         return order;
     }
 
@@ -1496,8 +1496,10 @@ class App {
         }
         if (sk.type === 'Familiar') {
             if (es.eliteSpec !== 'Evoker') return false;
-            const EVOKER_EL = { Ignite: 'Fire', Splash: 'Water', Zap: 'Air', Calcify: 'Earth',
-                Conflagration: 'Fire', 'Buoyant Deluge': 'Water', 'Lightning Blitz': 'Air', 'Seismic Impact': 'Earth' };
+            const EVOKER_EL = {
+                Ignite: 'Fire', Splash: 'Water', Zap: 'Air', Calcify: 'Earth',
+                Conflagration: 'Fire', 'Buoyant Deluge': 'Water', 'Lightning Blitz': 'Air', 'Seismic Impact': 'Earth'
+            };
             const SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
             const famEl = EVOKER_EL[skillName];
             if (!famEl) return false;
@@ -1571,7 +1573,7 @@ class App {
         if (etchChain) {
             const state = es.etchingState?.[etchChain.etching];
             if (skillName === etchChain.lesser && state !== 'lesser') return false;
-            if (skillName === etchChain.full   && state !== 'full')   return false;
+            if (skillName === etchChain.full && state !== 'full') return false;
         }
 
         // Hammer orb ICD (480ms between any orb skill and Grand Finale)
@@ -1874,9 +1876,9 @@ class App {
             const etchingSkills = [];
             for (const chain of Object.values(ETCHING_CHAINS_UI)) {
                 const lesserSk = skills.find(s => s.name === chain.lesser);
-                const fullSk   = skills.find(s => s.name === chain.full);
+                const fullSk = skills.find(s => s.name === chain.full);
                 if (lesserSk) etchingSkills.push(lesserSk);
-                if (fullSk)   etchingSkills.push(fullSk);
+                if (fullSk) etchingSkills.push(fullSk);
             }
             if (etchingSkills.length > 0) {
                 h += '<div class="pal-group"><div class="pal-label" style="color:#cc8844">Etch</div><div class="pal-row">';
@@ -1896,7 +1898,7 @@ class App {
                 const icon = PISTOL_BULLET_ICONS[el];
                 const label = PISTOL_BULLET_LABELS[el];
                 const color = ATTUNEMENT_COLORS[el];
-                h += `<div class="pal-skill pistol-bullet${active ? ' bullet-active' : ''}" data-bullet-el="${esc(el)}"
+                h += `<div class="pistol-bullet${active ? ' bullet-active' : ''}" data-bullet-el="${esc(el)}"
                     title="${esc(label)}${active ? ' (active — click to remove)' : ' (click to grant)'}"
                     style="--att-border:${color};${active ? `box-shadow:0 0 6px ${color};` : 'opacity:0.4;'}">
                     <img src="${icon}" /></div>`;
@@ -1978,8 +1980,8 @@ class App {
                 // Shift+click on an instant skill: add as concurrent (fires during previous cast)
                 if (e.shiftKey && isInstant && this.sim?.rotation.length > 0) {
                     this._addToRotation(skillName, 0);
-                // Ctrl+click on a non-instant skill: fill the wait gap before it with an
-                // attunement-appropriate auto-attack (Arc Lightning / Stone Shards)
+                    // Ctrl+click on a non-instant skill: fill the wait gap before it with an
+                    // attunement-appropriate auto-attack (Arc Lightning / Stone Shards)
                 } else if (e.ctrlKey && !isInstant) {
                     this._addToRotation(skillName, null, true);
                 } else {
@@ -1990,8 +1992,7 @@ class App {
 
         // Pistol bullet click-to-toggle handler
         el.querySelectorAll('.pistol-bullet').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
+            btn.addEventListener('click', () => {
                 const element = btn.dataset.bulletEl;
                 if (!element) return;
                 if (!this.sim) {
@@ -2225,7 +2226,7 @@ class App {
 
         for (const [name, total, d] of sorted) {
             const icon = _lookupIcon(name);
-            const skillDps   = dpsWindowSec > 0 ? Math.round(total / dpsWindowSec) : 0;
+            const skillDps = dpsWindowSec > 0 ? Math.round(total / dpsWindowSec) : 0;
             const avgPerCast = d.casts > 0 ? Math.round(total / d.casts) : 0;
             const castTimeSec = (d.castTimeMs || 0) / 1000;
             const dct = castTimeSec > 0 ? Math.round(total / castTimeSec) : null;
@@ -2283,9 +2284,9 @@ class App {
             let desc = '', cls = '';
             const d = ev.diag || {};
             switch (ev.type) {
-                case 'cast':      desc = `CAST ${ev.skill} [${ev.att}] (${ev.dur}ms)`; break;
-                case 'cast_end':  desc = `END  ${ev.skill}`; break;
-                case 'swap':      desc = `SWAP ${ev.from} → ${ev.to}`; break;
+                case 'cast': desc = `CAST ${ev.skill} [${ev.att}] (${ev.dur}ms)`; break;
+                case 'cast_end': desc = `END  ${ev.skill}`; break;
+                case 'swap': desc = `SWAP ${ev.from} → ${ev.to}`; break;
                 case 'hit': {
                     let detail = `HIT  ${ev.skill} #${ev.hit}.${ev.sub} → ${ev.strike} dmg (coeff ${ev.coeff?.toFixed(3) || 0})`;
                     if (ev.isField) detail += ' [field]';
@@ -2293,7 +2294,7 @@ class App {
                     desc = detail;
                     break;
                 }
-                case 'apply':     desc = `EFFECT ${ev.effect} ×${ev.stacks}${ev.dur > 0 ? ` (${ev.dur}s)` : ''} [${ev.skill}]`; break;
+                case 'apply': desc = `EFFECT ${ev.effect} ×${ev.stacks}${ev.dur > 0 ? ` (${ev.dur}s)` : ''} [${ev.skill}]`; break;
                 case 'cond_apply': {
                     let detail = `COND+ ${ev.cond} ×${ev.stacks} (${ev.durMs}ms) [${ev.skill}] total:${ev.total}`;
                     if (d.baseDurMs) detail += ` | base:${d.baseDurMs}ms +${d.bonusPct}%${d.weaversProwess ? ' [WP+20%]' : ''}`;
@@ -2306,18 +2307,18 @@ class App {
                     desc = detail;
                     break;
                 }
-                case 'field':     desc = `FIELD ${ev.field} (${ev.dur}ms) [${ev.skill}]`; break;
-                case 'aura':      desc = `AURA  ${ev.aura} (${ev.dur}ms) [${ev.skill}]`; break;
-                case 'conjure':   desc = `CONJURE ${ev.weapon} equipped (pickup expires ${(ev.pickupExpires / 1000).toFixed(1)}s)`; break;
+                case 'field': desc = `FIELD ${ev.field} (${ev.dur}ms) [${ev.skill}]`; break;
+                case 'aura': desc = `AURA  ${ev.aura} (${ev.dur}ms) [${ev.skill}]`; break;
+                case 'conjure': desc = `CONJURE ${ev.weapon} equipped (pickup expires ${(ev.pickupExpires / 1000).toFixed(1)}s)`; break;
                 case 'jade_sphere': desc = `JADE SPHERE ${ev.att} (energy: ${ev.energy}, dur: ${ev.durMs}ms) [${ev.skill}]`; break;
                 case 'familiar_select': desc = `FAMILIAR ${ev.element} selected [${ev.skill}]`; break;
-                case 'drop':      desc = `DROP ${ev.weapon}`; break;
-                case 'pickup':    desc = `PICKUP ${ev.weapon}`; break;
+                case 'drop': desc = `DROP ${ev.weapon}`; break;
+                case 'pickup': desc = `PICKUP ${ev.weapon}`; break;
                 case 'sigil_proc': desc = `SIGIL ${ev.sigil} proc [${ev.skill}]`; cls = ' sigil'; break;
                 case 'relic_proc': desc = `RELIC ${ev.relic} proc [${ev.skill}]`; cls = ' relic'; break;
                 case 'trait_proc': desc = `TRAIT ${ev.trait} proc [${ev.skill}]`; cls = ' trait'; break;
-                case 'err':       desc = ev.msg; cls = ' err'; break;
-                default:          desc = JSON.stringify(ev);
+                case 'err': desc = ev.msg; cls = ' err'; break;
+                default: desc = JSON.stringify(ev);
             }
             h += `<div class="log-line"><span class="log-time">${ts}</span><span class="log-desc${cls}">${desc}</span></div>`;
         }
@@ -2710,7 +2711,7 @@ class App {
             const presets = await res.json();
             if (!Array.isArray(presets) || presets.length === 0) return;
 
-            const bar  = document.getElementById('presets-bar');
+            const bar = document.getElementById('presets-bar');
             const btns = document.getElementById('presets-btns');
             btns.innerHTML = presets.map((p, i) =>
                 `<button class="btn preset-btn" data-idx="${i}">${esc(p.label)}</button>`
@@ -2803,11 +2804,11 @@ class App {
 
     _initOptimizer() {
         this._optimizer = new GearOptimizer({
-            skills:    this.data.skills,
+            skills: this.data.skills,
             skillHits: this.data.skillHits,
-            weapons:   WEAPON_DATA,
-            sigils:    SIGIL_DATA,
-            relics:    RELIC_DATA,
+            weapons: WEAPON_DATA,
+            sigils: SIGIL_DATA,
+            relics: RELIC_DATA,
         });
         this._optResults = [];
         this._optRunning = false;
@@ -2835,7 +2836,7 @@ class App {
             if (!el) return;
             el.innerHTML = items.map(name => {
                 const checked = currentVals.includes(name) ? ' checked' : '';
-                const short   = name.length > 28 ? name.slice(0, 27) + '…' : name;
+                const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
                 return `<label title="${esc(name)}">
                     <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
                     ${esc(short)}
@@ -2848,8 +2849,8 @@ class App {
             if (!el) return;
             el.innerHTML = items.map(name => {
                 const checked = currentVals.includes(name) ? ' checked' : '';
-                const short   = name.length > 28 ? name.slice(0, 27) + '…' : name;
-                const desc    = descFn(name);
+                const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
+                const desc = descFn(name);
                 return `<label class="consumable-label" title="${esc(name)}">
                     <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
                     <span class="opt-consumable-name">${esc(short)}</span>${desc ? `<span class="opt-consumable-desc">${esc(desc)}</span>` : ''}
@@ -2859,12 +2860,12 @@ class App {
 
         // Pre-check the build's current choices as sensible defaults.
         const curPrefix = Object.values(b.gear || {})[0] || PREFIXES[0];
-        makeGrid('opt-prefixes',  PREFIXES,     'prefix',   [curPrefix, "Assassin's"].filter(p => PREFIXES.includes(p)));
-        makeGrid('opt-runes',     RUNE_NAMES,   'rune',     [b.rune].filter(Boolean));
-        makeGrid('opt-sigils',    SIGIL_NAMES,  'sigil',    (b.sigils || []).filter(Boolean));
-        makeGrid('opt-relics',    RELIC_NAMES,  'relic',    [b.relic].filter(Boolean));
-        makeConsumableGrid('opt-food',     FOOD_NAMES,    'food',    [b.food].filter(Boolean),    _foodDesc);
-        makeConsumableGrid('opt-utility',  UTILITY_NAMES, 'utility', [b.utility].filter(Boolean), _utilityDesc);
+        makeGrid('opt-prefixes', PREFIXES, 'prefix', [curPrefix, "Assassin's"].filter(p => PREFIXES.includes(p)));
+        makeGrid('opt-runes', RUNE_NAMES, 'rune', [b.rune].filter(Boolean));
+        makeGrid('opt-sigils', SIGIL_NAMES, 'sigil', (b.sigils || []).filter(Boolean));
+        makeGrid('opt-relics', RELIC_NAMES, 'relic', [b.relic].filter(Boolean));
+        makeConsumableGrid('opt-food', FOOD_NAMES, 'food', [b.food].filter(Boolean), _foodDesc);
+        makeConsumableGrid('opt-utility', UTILITY_NAMES, 'utility', [b.utility].filter(Boolean), _utilityDesc);
 
         // Infusions — stat type checkboxes + total count input.
         const infEl = document.getElementById('opt-infusions');
@@ -2900,7 +2901,7 @@ class App {
         const checked = this._getChecked('opt-prefixes');
         container.innerHTML = activeSlots.map(slot => {
             const label = SLOT_LABELS[slot] || slot;
-            const opts  = checked.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+            const opts = checked.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
             return `<div class="opt-slot-constraint">
                 <label>${esc(label)}</label>
                 <select data-slot="${esc(slot)}">
@@ -3000,12 +3001,12 @@ class App {
             parseInt(document.getElementById('opt-inf-total')?.value ?? '18') || 0));
 
         const space = {
-            prefixes:      this._getChecked('opt-prefixes'),
-            runes:         this._getChecked('opt-runes'),
-            sigils:        this._getChecked('opt-sigils'),
-            relics:        this._getChecked('opt-relics'),
-            foods:         this._getChecked('opt-food'),
-            utilities:     this._getChecked('opt-utility'),
+            prefixes: this._getChecked('opt-prefixes'),
+            runes: this._getChecked('opt-runes'),
+            sigils: this._getChecked('opt-sigils'),
+            relics: this._getChecked('opt-relics'),
+            foods: this._getChecked('opt-food'),
+            utilities: this._getChecked('opt-utility'),
             infusionStats,
             infusionTotal,
         };
@@ -3016,9 +3017,9 @@ class App {
         };
         const constraints = {
             minBoonDuration: _parseConstraint('opt-min-boon-dur'),
-            minCritChance:   _parseConstraint('opt-min-crit'),
-            minToughness:    _parseConstraint('opt-min-tough'),
-            minVitality:     _parseConstraint('opt-min-vit'),
+            minCritChance: _parseConstraint('opt-min-crit'),
+            minToughness: _parseConstraint('opt-min-tough'),
+            minVitality: _parseConstraint('opt-min-vit'),
         };
 
         const slotConstraints = this._readSlotConstraints();
@@ -3036,10 +3037,10 @@ class App {
             * infCombos;
 
         this._optRunning = true;
-        const runBtn    = document.getElementById('btn-opt-run');
+        const runBtn = document.getElementById('btn-opt-run');
         const cancelBtn = document.getElementById('btn-opt-cancel');
-        const progWrap  = document.getElementById('opt-progress-wrap');
-        const progFill  = document.getElementById('opt-progress-fill');
+        const progWrap = document.getElementById('opt-progress-wrap');
+        const progFill = document.getElementById('opt-progress-fill');
         const progLabel = document.getElementById('opt-progress-label');
         const exportBtn = document.getElementById('btn-opt-export');
         const resultsEl = document.getElementById('opt-results');
@@ -3053,21 +3054,21 @@ class App {
         try {
             const results = await this._optimizer.optimize(
                 {
-                    build:          JSON.parse(JSON.stringify(this.build)),
+                    build: JSON.parse(JSON.stringify(this.build)),
                     selectedSkills: Object.values(this.selectedSkills).filter(Boolean),
-                    rotation:       this.sim.rotation,
+                    rotation: this.sim.rotation,
                     space,
                     constraints,
                     slotConstraints,
-                    startAtt:       this.activeAttunement,
-                    startAtt2:      this.secondaryAttunement,
-                    evokerElement:  this.evokerElement,
-                    permaBoons:     this.permaBoons,
-                    targetHP:       this._getTargetHP(),
+                    startAtt: this.activeAttunement,
+                    startAtt2: this.secondaryAttunement,
+                    evokerElement: this.evokerElement,
+                    permaBoons: this.permaBoons,
+                    targetHP: this._getTargetHP(),
                 },
                 (done, total, top10, statusMsg) => {
                     const pct = total > 0 ? Math.min(100, (done / total) * 100) : 0;
-                    progFill.style.width  = pct.toFixed(1) + '%';
+                    progFill.style.width = pct.toFixed(1) + '%';
                     progLabel.textContent = statusMsg
                         ? statusMsg
                         : `${done.toLocaleString()} / ~${total.toLocaleString()} evals (${pct.toFixed(0)}%)`;
@@ -3093,8 +3094,8 @@ class App {
     }
 
     _renderOptimizerResults(results) {
-        const body   = document.getElementById('opt-results-body');
-        const wrap   = document.getElementById('opt-results');
+        const body = document.getElementById('opt-results-body');
+        const wrap = document.getElementById('opt-results');
         if (!body || !results.length) return;
 
         const PFX_ABBR = {
@@ -3117,7 +3118,7 @@ class App {
 
         const slotBadge = (prefix) => {
             const abbr = PFX_ABBR[prefix] || prefix?.slice(0, 4) || '?';
-            const cls  = PFX_CSS[prefix] || 'pfx-default';
+            const cls = PFX_CSS[prefix] || 'pfx-default';
             return `<span class="opt-slot-badge ${cls}" title="${esc(prefix || '')}">${esc(abbr)}</span>`;
         };
 
@@ -3133,7 +3134,7 @@ class App {
 
         body.innerHTML = results.map((r, i) => {
             const sigilStr = [r.sigil1, r.sigil2].filter(Boolean).join('+') || '—';
-            const dpsStr   = r.dps > 0 ? Math.round(r.dps).toLocaleString() : (r.rawDps > 0 ? Math.round(r.rawDps).toLocaleString() + '*' : '—');
+            const dpsStr = r.dps > 0 ? Math.round(r.dps).toLocaleString() : (r.rawDps > 0 ? Math.round(r.rawDps).toLocaleString() + '*' : '—');
 
             const is2H = TH_WEAPONS.has(this.build.weapons?.[0] || '');
             const slotCells = GEAR_SLOTS.map(slot => {
@@ -3168,11 +3169,11 @@ class App {
     _applyOptimizerResult(r) {
         if (!r) return;
         this.build.gear = { ...r.gear };
-        if (r.rune)      this.build.rune      = r.rune;
-        if (r.relic)     this.build.relic     = r.relic;
-        if (r.sigil1)    this.build.sigils    = [r.sigil1, r.sigil2].filter(Boolean);
-        if (r.food)      this.build.food      = r.food;
-        if (r.utility)   this.build.utility   = r.utility;
+        if (r.rune) this.build.rune = r.rune;
+        if (r.relic) this.build.relic = r.relic;
+        if (r.sigil1) this.build.sigils = [r.sigil1, r.sigil2].filter(Boolean);
+        if (r.food) this.build.food = r.food;
+        if (r.utility) this.build.utility = r.utility;
         if (r.infusions) this.build.infusions = r.infusions.map(x => ({ ...x }));
         this._onBuildChange();
         this.renderGear();
@@ -3181,19 +3182,19 @@ class App {
     _exportOptimizerResults() {
         if (!this._optResults?.length) return;
         const data = this._optResults.map((r, i) => ({
-            rank:      i + 1,
-            dps:       Math.round(r.dps),
-            gear:      r.gear,
-            rune:      r.rune      || null,
-            relic:     r.relic     || null,
-            sigils:    [r.sigil1, r.sigil2].filter(Boolean),
-            food:      r.food      || null,
-            utility:   r.utility   || null,
+            rank: i + 1,
+            dps: Math.round(r.dps),
+            gear: r.gear,
+            rune: r.rune || null,
+            relic: r.relic || null,
+            sigils: [r.sigil1, r.sigil2].filter(Boolean),
+            food: r.food || null,
+            utility: r.utility || null,
             infusions: r.infusions || null,
         }));
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
         a.href = url; a.download = 'gw2-optimized-builds.json';
         document.body.appendChild(a); a.click();
         document.body.removeChild(a); URL.revokeObjectURL(url);
