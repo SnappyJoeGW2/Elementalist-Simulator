@@ -107,10 +107,10 @@ for (const chain of Object.values(ETCHING_CHAINS_UI)) {
 
 // Pistol bullet system
 const PISTOL_BULLET_ICONS = {
-    Fire: 'https://wiki.guildwars2.com/wiki/Fire_Bullet#/media/File:Scorching_Shot.png',
-    Water: 'https://wiki.guildwars2.com/images/2/2d/Soothing_Splash.png',
-    Air: 'https://wiki.guildwars2.com/images/3/30/Electric_Exposure.png',
-    Earth: 'https://wiki.guildwars2.com/images/3/34/Piercing_Pebble.png',
+    Fire: 'https://wiki.guildwars2.com/images/2/2e/Scorching_Shot.png',
+    Water: 'https://wiki.guildwars2.com/images/8/8c/Soothing_Splash.png',
+    Air: 'https://wiki.guildwars2.com/images/8/82/Electric_Exposure.png',
+    Earth: 'https://wiki.guildwars2.com/images/f/f1/Piercing_Pebble.png',
 };
 const PISTOL_BULLET_LABELS = { Fire: 'Fire Bullet', Water: 'Ice Bullet', Air: 'Air Bullet', Earth: 'Earth Bullet' };
 
