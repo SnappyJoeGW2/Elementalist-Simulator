@@ -247,6 +247,7 @@ const PISTOL_SKILL_ELEMENT = {
     'Searing Salvo': 'Fire',
     'Frozen Fusillade': 'Water',
     'Aerial Agility': 'Air',   // never consumes, may grant
+    'Aerial Agility (chain)': 'Air',
     'Aerial Agility (dash)': 'Air',
     'Boulder Blast': 'Earth',
     // Slot 3 (Weaver dual) — handled separately, listed here for lookup convenience
