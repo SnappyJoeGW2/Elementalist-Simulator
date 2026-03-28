@@ -189,34 +189,34 @@ const SPEAR_NEXT_BUFF_SKILLS = new Set(['Seethe', 'Ripple', 'Energize', 'Harden'
 // Each orb skill grants one elemental orb (15s duration, ticking damage).
 // Grand Finale consumes all active orbs, dealing hits and applying conditions per orb.
 const HAMMER_ORB_SKILLS = {
-    'Flame Wheel':  'Fire',
-    'Icy Coil':     'Water',
-    'Crescent Wind':'Air',
-    'Rocky Loop':   'Earth',
+    'Flame Wheel': 'Fire',
+    'Icy Coil': 'Water',
+    'Crescent Wind': 'Air',
+    'Rocky Loop': 'Earth',
 };
 // Dual orbit skills grant two orbs each
 const HAMMER_DUAL_ORB_SKILLS = {
-    'Dual Orbits: Fire and Water':  ['Fire', 'Water'],
-    'Dual Orbits: Fire and Air':    ['Fire', 'Air'],
-    'Dual Orbits: Fire and Earth':  ['Fire', 'Earth'],
-    'Dual Orbits: Water and Air':   ['Water', 'Air'],
+    'Dual Orbits: Fire and Water': ['Fire', 'Water'],
+    'Dual Orbits: Fire and Air': ['Fire', 'Air'],
+    'Dual Orbits: Fire and Earth': ['Fire', 'Earth'],
+    'Dual Orbits: Water and Air': ['Water', 'Air'],
     'Dual Orbits: Water and Earth': ['Water', 'Earth'],
-    'Dual Orbits: Air and Earth':   ['Air', 'Earth'],
+    'Dual Orbits: Air and Earth': ['Air', 'Earth'],
 };
 const HAMMER_ORB_DURATION_MS = 15000;
 const HAMMER_ORB_ICD_MS = 480; // between orb skills and Grand Finale
 // Per-orb conditions applied by Grand Finale when that orb is consumed
 const HAMMER_GF_CONDITIONS = {
-    Fire:  { cond: 'Burning',       stacks: 2, dur: 5 },
+    Fire: { cond: 'Burning', stacks: 2, dur: 5 },
     Water: { cond: 'Vulnerability', stacks: 6, dur: 10 },
-    Air:   { cond: 'Weakness',      stacks: 1, dur: 5 },
-    Earth: { cond: 'Bleeding',      stacks: 4, dur: 5 },
+    Air: { cond: 'Weakness', stacks: 1, dur: 5 },
+    Earth: { cond: 'Bleeding', stacks: 4, dur: 5 },
 };
 // Orbs that grant buffs to the caster (tracked as pseudo-effects in _condMap)
 const HAMMER_ORB_BUFF_KEY = {
-    Fire:  'Hammer Orb Fire',   // +5% strike and condi
+    Fire: 'Hammer Orb Fire',   // +5% strike and condi
     Water: 'Hammer Orb Water',  // tracked for display only
-    Air:   'Hammer Orb Air',    // +15% crit chance
+    Air: 'Hammer Orb Air',    // +15% crit chance
     Earth: 'Hammer Orb Earth',  // tracked for display only
 };
 // All Hammer orb-category skill names (base + dual), used for ICD and chain checks
@@ -234,31 +234,31 @@ const PISTOL_BULLET_COLOR = {
 // Which element does each base pistol skill belong to?
 const PISTOL_SKILL_ELEMENT = {
     // Slot 2
-    'Raging Ricochet':  'Fire',
-    'Frigid Flurry':    'Water',
+    'Raging Ricochet': 'Fire',
+    'Frigid Flurry': 'Water',
     'Dazing Discharge': 'Air',
     'Shattering Stone': 'Earth',
     // Slot 3 (base)
-    'Searing Salvo':    'Fire',
+    'Searing Salvo': 'Fire',
     'Frozen Fusillade': 'Water',
-    'Aerial Agility':   'Air',   // never consumes, may grant
-    'Boulder Blast':    'Earth',
+    'Aerial Agility': 'Air',   // never consumes, may grant
+    'Boulder Blast': 'Earth',
     // Slot 3 (Weaver dual) — handled separately, listed here for lookup convenience
-    'Frostfire Flurry':   null,  // Fire+Water dual
+    'Frostfire Flurry': null,  // Fire+Water dual
     'Purblinding Plasma': null,  // Fire+Air dual
-    'Molten Meteor':      null,  // Fire+Earth dual
-    'Flowing Finesse':    null,  // Air+Water dual
-    'Echoing Erosion':    null,  // Water+Earth dual
-    'Enervating Earth':   null,  // Air+Earth dual
+    'Molten Meteor': null,  // Fire+Earth dual
+    'Flowing Finesse': null,  // Air+Water dual
+    'Echoing Erosion': null,  // Water+Earth dual
+    'Enervating Earth': null,  // Air+Earth dual
 };
 // Dual pistol slot-3 skill → [priElement, secElement] (Fire is always listed first when present)
 const PISTOL_DUAL_ELEMENTS = {
-    'Frostfire Flurry':   ['Fire', 'Water'],
+    'Frostfire Flurry': ['Fire', 'Water'],
     'Purblinding Plasma': ['Fire', 'Air'],
-    'Molten Meteor':      ['Fire', 'Earth'],
-    'Flowing Finesse':    ['Water', 'Air'],
-    'Echoing Erosion':    ['Water', 'Earth'],
-    'Enervating Earth':   ['Air',  'Earth'],
+    'Molten Meteor': ['Fire', 'Earth'],
+    'Flowing Finesse': ['Water', 'Air'],
+    'Echoing Erosion': ['Water', 'Earth'],
+    'Enervating Earth': ['Air', 'Earth'],
 };
 // Skills that NEVER consume a bullet
 const PISTOL_NO_CONSUME = new Set(['Aerial Agility', 'Aerial Agility (chain)']);
@@ -931,7 +931,7 @@ export class SimulationEngine {
                 const supElemCrit = (S._hasSuperiorElements
                     && this._effectStacksAt(S, 'Weakness', ev.time) > 0) ? 15 : 0;
                 const hammerFireOrbUp = this._effectStacksAt(S, 'Hammer Orb Fire', ev.time) > 0;
-                const hammerAirOrbUp  = this._effectStacksAt(S, 'Hammer Orb Air',  ev.time) > 0;
+                const hammerAirOrbUp = this._effectStacksAt(S, 'Hammer Orb Air', ev.time) > 0;
                 const hammerAirCritBonus = hammerAirOrbUp ? 15 : 0;
                 const cc = ev.noCrit ? 0 : (ev.spearForceCrit ? 100 : Math.min(
                     baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit + empCritCh + conjurePrec + hammerAirCritBonus, 100));
@@ -1147,7 +1147,7 @@ export class SimulationEngine {
                     S.steps.push({
                         skill: 'Electric Enchantment', start: ev.time, end: ev.time,
                         att: S.att, type: 'trait_proc', ri: -1,
-                        icon: 'https://render.guildwars2.com/file/00A93FDC4F99D29749B27C4D73C5A1644A0F3726/104675.png',
+                        icon: 'https://wiki.guildwars2.com/images/7/7b/Hare%27s_Agility.png',
                     });
                 }
 
@@ -1579,7 +1579,7 @@ export class SimulationEngine {
             // For Weaver: must have an orb granted by a skill that required att or att2
             const hasQualifyingOrb = this._hammerGFAvailable(S, S.t);
             if (!hasQualifyingOrb) {
-                S.log.push({ t: S.t, type: 'err', msg: `Grand Finale: need an orb from current attunement (${S.att}${S.att2 ? '/'+S.att2 : ''})` });
+                S.log.push({ t: S.t, type: 'err', msg: `Grand Finale: need an orb from current attunement (${S.att}${S.att2 ? '/' + S.att2 : ''})` });
                 return;
             }
         }
@@ -1827,7 +1827,7 @@ export class SimulationEngine {
                 const el = PISTOL_SKILL_ELEMENT[name];
                 if (el) {
                     const canConsume = !PISTOL_NO_CONSUME.has(name);
-                    const canGrant   = !PISTOL_NO_GRANT.has(name);
+                    const canGrant = !PISTOL_NO_GRANT.has(name);
                     const hasIt = S.pistolBullets[el];
 
                     if (canConsume && hasIt) {
@@ -1935,8 +1935,8 @@ export class SimulationEngine {
         // ── Hammer orb system ─────────────────────────────────────────────────
         if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
             const singleEl = HAMMER_ORB_SKILLS[name];
-            const dualEls  = HAMMER_DUAL_ORB_SKILLS[name];
-            const isGF     = name === 'Grand Finale';
+            const dualEls = HAMMER_DUAL_ORB_SKILLS[name];
+            const isGF = name === 'Grand Finale';
 
             if (singleEl || dualEls) {
                 // Orb skill: grant orb(s), refresh all existing orbs, apply buff(s)
@@ -2267,7 +2267,7 @@ export class SimulationEngine {
         S.attTimeline.push({ t: S.t, att: target });
 
         S.log.push({ t: S.t, type: 'swap', from: prev, to: target });
-        S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri });
+        S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri, icon: 'https://render.guildwars2.com/file/F0C7F54A6FC70D079E1628FFE871980CAEBFD70D/1012290.png' });
     }
 
     _doWeaverSwap(S, sk, target, isConcurrent = false) {
@@ -3062,7 +3062,7 @@ export class SimulationEngine {
         });
 
         S.log.push({ t: time, type: 'trait_proc', trait: 'Earthen Blast', skill: 'Earthen Blast' });
-        S.steps.push({ skill: 'Earthen Blast', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
+        S.steps.push({ skill: 'Earthen Blast', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1, icon: 'https://render.guildwars2.com/file/2531DCAFAEAB452C90C4572E1ADCE8236DCF5636/1012304.png' });
     }
 
     _grantRockSolid(S, time) {
@@ -3102,7 +3102,7 @@ export class SimulationEngine {
 
     _applyFreshAirBuff(S, time) {
         this._pushCondStack(S, { t: time, cond: 'Fresh Air', expiresAt: time + 5000 });
-        S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air' });
+        S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air', icon: 'https://render.guildwars2.com/file/FA64C9F2750F986E52E8376F22EDBA3844A8C603/1012277.png' });
     }
 
     _triggerLightningRod(S, time) {
@@ -3118,7 +3118,7 @@ export class SimulationEngine {
         S.log.push({ t: time, type: 'trait_proc', trait: 'Lightning Rod', skill: 'Lightning Rod' });
         S.steps.push({
             skill: 'Lightning Rod', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1,
-            icon: 'https://render.guildwars2.com/file/00A93FDC4F99D29749B27C4D73C5A1644A0F3726/104675.png',
+            icon: 'https://render.guildwars2.com/file/0D26024404D06BBB0A3BD70340251740C73E0F2C/1012278.png',
         });
     }
 
@@ -3244,7 +3244,7 @@ export class SimulationEngine {
         S.traitICD['BurningPrecision'] = time + 5000;
         this._applyCondition(S, 'Burning', 1, 3, time, 'Burning Precision');
         S.log.push({ t: time, type: 'trait_proc', trait: 'Burning Precision', skill: 'Burning Precision' });
-        S.steps.push({ skill: 'Burning Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
+        S.steps.push({ skill: 'Burning Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1, icon: 'https://render.guildwars2.com/file/774471FA3841BB90EB6F935A76D8017A0C4B005E/1012306.png' });
     }
 
     _checkArcanePrecision(S, time, critChancePct, attunement) {
@@ -3259,7 +3259,7 @@ export class SimulationEngine {
         else if (attunement === 'Air') this._trackEffect(S, 'Weakness', 1, 3, time);
         else if (attunement === 'Earth') this._applyCondition(S, 'Bleeding', 1, 5, time, 'Arcane Precision');
         S.log.push({ t: time, type: 'trait_proc', trait: 'Arcane Precision', skill: 'Arcane Precision' });
-        S.steps.push({ skill: 'Arcane Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1 });
+        S.steps.push({ skill: 'Arcane Precision', start: time, end: time, att: S.att, type: 'trait_proc', ri: -1, icon: 'https://render.guildwars2.com/file/1CB6B7903F10246E9405DD625380161FCD4E6C23/1012282.png' });
     }
 
     _checkRenewingStamina(S, time, critChancePct) {
