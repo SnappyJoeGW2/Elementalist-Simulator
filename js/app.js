@@ -9,7 +9,7 @@ import {
 import { TRAITS, SPECIALIZATIONS } from './traits-data.js';
 import { GW2API, PLACEHOLDER_ICON } from './gw2-api.js';
 import { calculateSkillDamage } from './damage.js';
-import { SimulationEngine } from './simulation.js?v=2';
+import { SimulationEngine } from './simulation.js?v=3';
 import { GearOptimizer } from './optimizer.js';
 
 // ─── Consumable description helpers ──────────────────────────────────────────
@@ -1592,8 +1592,8 @@ class App {
         if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
             const isGF = skillName === 'Grand Finale';
             const isOrb = HAMMER_ALL_ORB_NAMES_UI.has(skillName);
-            // Orb skills require Grand Finale to have been cast since the last orb skill
-            if (isOrb && es.hammerGFNeeded) return false;
+            // Can't reuse the same orb skill without Grand Finale in between
+            if (isOrb && (es.hammerOrbsUsed || []).includes(skillName)) return false;
             if ((isGF || isOrb) && (es.hammerOrbLastCast ?? -Infinity) > -Infinity) {
                 if (t - es.hammerOrbLastCast < HAMMER_ORB_ICD_MS_UI) return false;
             }

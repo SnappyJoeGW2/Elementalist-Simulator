@@ -665,7 +665,7 @@ export class SimulationEngine {
             hammerOrbs: { Fire: null, Water: null, Air: null, Earth: null },
             hammerOrbGrantedBy: { Fire: null, Water: null, Air: null, Earth: null },
             hammerOrbLastCast: -Infinity, // last time any orb skill (incl. GF) was cast, for ICD
-            hammerGFNeeded: false, // true after any orb skill cast; cleared when Grand Finale cast
+            hammerOrbsUsed: new Set(), // orb skill names cast since last GF; can't reuse same orb without GF
             // Pistol bullet system
             pistolBullets: startPistolBullets
                 ? { Fire: !!startPistolBullets.Fire, Water: !!startPistolBullets.Water, Air: !!startPistolBullets.Air, Earth: !!startPistolBullets.Earth }
@@ -1293,7 +1293,7 @@ export class SimulationEngine {
                 hammerOrbs: { ...S.hammerOrbs },
                 hammerOrbGrantedBy: { ...S.hammerOrbGrantedBy },
                 hammerOrbLastCast: S.hammerOrbLastCast,
-                hammerGFNeeded: S.hammerGFNeeded,
+                hammerOrbsUsed: [...S.hammerOrbsUsed],
                 pistolBullets: { ...S.pistolBullets },
                 dazingDischargeUntil: S.dazingDischargeUntil,
                 shatteringStoneHits: S.shatteringStoneHits,
@@ -1566,9 +1566,9 @@ export class SimulationEngine {
         if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
             const isGF = name === 'Grand Finale';
             const isOrbSkill = HAMMER_ALL_ORB_NAMES.has(name);
-            // Orb skills require Grand Finale to have been cast since the last orb skill
-            if (isOrbSkill && S.hammerGFNeeded) {
-                S.log.push({ t: S.t, type: 'err', msg: `${name}: must cast Grand Finale before using another orb skill` });
+            // Can't reuse the same orb skill without Grand Finale in between
+            if (isOrbSkill && S.hammerOrbsUsed.has(name)) {
+                S.log.push({ t: S.t, type: 'err', msg: `${name}: must cast Grand Finale before using this orb skill again` });
                 return;
             }
             if ((isGF || isOrbSkill) && S.hammerOrbLastCast > -Infinity) {
@@ -1977,11 +1977,11 @@ export class SimulationEngine {
                     S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${el} orb granted (until +${HAMMER_ORB_DURATION_MS / 1000}s)` });
                 }
                 S.hammerOrbLastCast = end;
-                S.hammerGFNeeded = true; // must use Grand Finale before next orb skill
+                S.hammerOrbsUsed.add(name);
             } else if (isGF) {
                 // Grand Finale: consume all active orbs, schedule hits, apply conditions
                 S.hammerOrbLastCast = end;
-                S.hammerGFNeeded = false; // Grand Finale cast — orb skills unlocked again
+                S.hammerOrbsUsed.clear();
                 const consumed = this._hammerActiveOrbs(S, end);
                 // Expire all orbs and their buffs immediately
                 for (const el of consumed) {
