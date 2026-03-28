@@ -1592,6 +1592,8 @@ class App {
         if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
             const isGF = skillName === 'Grand Finale';
             const isOrb = HAMMER_ALL_ORB_NAMES_UI.has(skillName);
+            // Orb skills require Grand Finale to have been cast since the last orb skill
+            if (isOrb && es.hammerGFNeeded) return false;
             if ((isGF || isOrb) && (es.hammerOrbLastCast ?? -Infinity) > -Infinity) {
                 if (t - es.hammerOrbLastCast < HAMMER_ORB_ICD_MS_UI) return false;
             }

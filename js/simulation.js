@@ -665,6 +665,7 @@ export class SimulationEngine {
             hammerOrbs: { Fire: null, Water: null, Air: null, Earth: null },
             hammerOrbGrantedBy: { Fire: null, Water: null, Air: null, Earth: null },
             hammerOrbLastCast: -Infinity, // last time any orb skill (incl. GF) was cast, for ICD
+            hammerGFNeeded: false, // true after any orb skill cast; cleared when Grand Finale cast
             // Pistol bullet system
             pistolBullets: startPistolBullets
                 ? { Fire: !!startPistolBullets.Fire, Water: !!startPistolBullets.Water, Air: !!startPistolBullets.Air, Earth: !!startPistolBullets.Earth }
@@ -1292,6 +1293,7 @@ export class SimulationEngine {
                 hammerOrbs: { ...S.hammerOrbs },
                 hammerOrbGrantedBy: { ...S.hammerOrbGrantedBy },
                 hammerOrbLastCast: S.hammerOrbLastCast,
+                hammerGFNeeded: S.hammerGFNeeded,
                 pistolBullets: { ...S.pistolBullets },
                 dazingDischargeUntil: S.dazingDischargeUntil,
                 shatteringStoneHits: S.shatteringStoneHits,
@@ -1491,12 +1493,12 @@ export class SimulationEngine {
         }
 
         if (sk.type === 'Attunement' && !sk.name.startsWith('Overload')) {
-            this._doSwap(S, sk, skipCastUntil);
+            this._doSwap(S, sk, skipCastUntil, concurrents);
             return;
         }
 
         if (sk.name.startsWith('Overload')) {
-            this._doOverload(S, sk);
+            this._doOverload(S, sk, concurrents);
             return;
         }
 
@@ -1564,6 +1566,11 @@ export class SimulationEngine {
         if (sk.weapon === 'Hammer' && sk.type === 'Weapon skill') {
             const isGF = name === 'Grand Finale';
             const isOrbSkill = HAMMER_ALL_ORB_NAMES.has(name);
+            // Orb skills require Grand Finale to have been cast since the last orb skill
+            if (isOrbSkill && S.hammerGFNeeded) {
+                S.log.push({ t: S.t, type: 'err', msg: `${name}: must cast Grand Finale before using another orb skill` });
+                return;
+            }
             if ((isGF || isOrbSkill) && S.hammerOrbLastCast > -Infinity) {
                 const sinceLast = S.t - S.hammerOrbLastCast;
                 if (sinceLast < HAMMER_ORB_ICD_MS) S.t = S.hammerOrbLastCast + HAMMER_ORB_ICD_MS;
@@ -1970,9 +1977,11 @@ export class SimulationEngine {
                     S.log.push({ t: end, type: 'skill_proc', skill: name, detail: `${el} orb granted (until +${HAMMER_ORB_DURATION_MS / 1000}s)` });
                 }
                 S.hammerOrbLastCast = end;
+                S.hammerGFNeeded = true; // must use Grand Finale before next orb skill
             } else if (isGF) {
                 // Grand Finale: consume all active orbs, schedule hits, apply conditions
                 S.hammerOrbLastCast = end;
+                S.hammerGFNeeded = false; // Grand Finale cast — orb skills unlocked again
                 const consumed = this._hammerActiveOrbs(S, end);
                 // Expire all orbs and their buffs immediately
                 for (const el of consumed) {
@@ -2185,11 +2194,11 @@ export class SimulationEngine {
         }
     }
 
-    _doSwap(S, sk, isConcurrent = false) {
+    _doSwap(S, sk, isConcurrent = false, concurrents = []) {
         const target = sk.name.replace(' Attunement', '');
 
         if (S.eliteSpec === 'Weaver') {
-            this._doWeaverSwap(S, sk, target, isConcurrent);
+            this._doWeaverSwap(S, sk, target, isConcurrent, concurrents);
             return;
         }
 
@@ -2291,9 +2300,21 @@ export class SimulationEngine {
 
         S.log.push({ t: S.t, type: 'swap', from: prev, to: target });
         S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri, icon: 'https://render.guildwars2.com/file/F0C7F54A6FC70D079E1628FFE871980CAEBFD70D/1012290.png' });
+
+        if (concurrents.length > 0) {
+            const swapTime = S.t;
+            const anchorRi = S._ri;
+            for (const c of concurrents) {
+                S.t = swapTime + (c.offset || 0);
+                S._ri = c._ri;
+                this._step(S, c.name, true /* skipCastUntil */);
+            }
+            S._ri = anchorRi;
+            S.t = swapTime;
+        }
     }
 
-    _doWeaverSwap(S, sk, target, isConcurrent = false) {
+    _doWeaverSwap(S, sk, target, isConcurrent = false, concurrents = []) {
         if (target === S.att && target === S.att2) {
             S.log.push({ t: S.t, type: 'err', msg: `Already in ${target}/${target}` });
             return;
@@ -2387,9 +2408,21 @@ export class SimulationEngine {
 
         S.log.push({ t: S.t, type: 'swap', from: `${prevPrimary}/${prevSecondary}`, to: `${target}/${prevPrimary}` });
         S.steps.push({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri });
+
+        if (concurrents.length > 0) {
+            const swapTime = S.t;
+            const anchorRi = S._ri;
+            for (const c of concurrents) {
+                S.t = swapTime + (c.offset || 0);
+                S._ri = c._ri;
+                this._step(S, c.name, true /* skipCastUntil */);
+            }
+            S._ri = anchorRi;
+            S.t = swapTime;
+        }
     }
 
-    _doOverload(S, sk) {
+    _doOverload(S, sk, concurrents = []) {
         if (S.eliteSpec !== 'Tempest') {
             S.log.push({ t: S.t, type: 'err', msg: `Overloads require Tempest specialization` });
             return;
@@ -2431,6 +2464,19 @@ export class SimulationEngine {
         S.castUntil = end;
         S.t = end;
         S.log.push({ t: end, type: 'cast_end', skill: sk.name });
+
+        // Fire any shift-click concurrent skills scheduled during the overload cast window
+        if (concurrents.length > 0) {
+            const anchorRi = S._ri;
+            for (const c of concurrents) {
+                const fireAt = start + (c.offset || 0);
+                S.t = Math.max(fireAt, start);
+                S._ri = c._ri;
+                this._step(S, c.name, true /* skipCastUntil */);
+            }
+            S._ri = anchorRi;
+            S.t = end; // restore after concurrent steps may have advanced S.t
+        }
 
         const olBaseCd = this._attCdMs(S, Math.round(sk.recharge * 1000));
         const olEffCd = this._alaCd(S, olBaseCd, end);
