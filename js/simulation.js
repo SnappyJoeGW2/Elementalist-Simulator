@@ -137,6 +137,11 @@ const RELIC_PROCS = {
         conditions: { Bleeding: { stacks: 6, dur: 6 } },
         icon: 'https://render.guildwars2.com/file/A7327A7EDB4705EA05261110526D72AFEAF7DAB4/3629397.png',
     },
+    Steamshrieker: {
+        trigger: 'water_blast_leap_combo', icd: 0,
+        conditions: { Burning: { stacks: 2, dur: 5 } },
+        icon: 'https://render.guildwars2.com/file/23B0F0A5BF05E05C9F527BF7EB4962C9F49C6F42/3441975.png',
+    },
 };
 const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
 const OFF_ATT_CD = 1500;
@@ -2946,6 +2951,14 @@ export class SimulationEngine {
             this._applyComboEffect(S, fieldType, finType, ev.time, ev.skill);
             if (finType === 'Blast' && S.activeRelic === 'Bloodstone') {
                 this._checkBloodstoneBlast(S, ev.time);
+            }
+            if (fieldType === 'Water' && S.activeRelic === 'Steamshrieker') {
+                const rc = RELIC_PROCS.Steamshrieker.conditions;
+                for (const [cond, v] of Object.entries(rc)) {
+                    this._applyCondition(S, cond, v.stacks, v.dur, ev.time, 'Relic of Steamshrieker');
+                }
+                S.log.push({ t: ev.time, type: 'relic_proc', relic: 'Steamshrieker', skill: 'Relic of Steamshrieker' });
+                S.steps.push({ skill: 'Relic of Steamshrieker', start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: RELIC_PROCS.Steamshrieker.icon });
             }
         } else if (finType === 'Projectile') {
             // Accumulator gives deterministic expected-value procs for fractional chances

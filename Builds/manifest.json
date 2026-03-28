@@ -23,5 +23,10 @@
     "label": "Inverno Evoker SE",
     "build": "Builds/inferno-evoker-se.json",
     "rotation": "Rotations/inferno-evoker-se.json"
+  },
+  {
+    "label": "Power Tempest (Hammer)",
+    "build": "Builds/power-tempest-hammer.json",
+    "rotation": "Rotations/power-tempest-hammer.json"
   }
 ]
