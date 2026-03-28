@@ -23,7 +23,7 @@ Every meaningful piece of the Elementalist build is modelled:
 | Category | Coverage |
 |---|---|
 | Gear | All 12 equipment slots, full prefix list (Berserker's, Viper's, Assassin's, etc.), mixed prefixes |
-| Weapon | Sword, Dagger, Staff, Scepter + off-hand; correct weapon strength for utility/profession mechanics |
+| Weapon | All weapons implemented, correct weapon strength for utility/profession mechanics |
 | Runes | Stat bonuses and relevant set bonuses |
 | Sigils | Stat sigils (Accuracy, Force, Bursting, …) and proc sigils (Air, Earth, …) |
 | Relics | Proc relics with their correct trigger conditions and cooldowns |
@@ -59,7 +59,7 @@ Once you have a rotation, the optimizer finds the **best gear combination** for 
 
 Because the optimizer runs your actual rotation through the full simulator for every evaluation, the results account for all trait synergies, proc timing, and boon interactions — not just a stat formula.
 
-**NOTE:** Optimization is much heavier than Discretize's optimizer, since we run whole rotation for each build. Using optimizer mainly with 1 prefix selected, but multiple Sigils/Relics (accurate procs) is advised.
+**NOTE:** Optimization is much heavier than Discretize's optimizer, since we run whole rotation for each build (and re-calculate any trait/relic/sigil triggers). Using optimizer mainly with 1 prefix selected, but multiple Sigils/Relics (accurate procs) is advised.
 
 ---
 
@@ -86,8 +86,11 @@ python -m http.server
 
 ## Limitations & known assumptions
 
-- **Weapons:** Pistol, Spear and Hammer are not yet implemented.
 - **Skill list is intentionally incomplete** — only skills relevant to DPS are included. Utility skills, healing skills, and elite skills that have no meaningful damage contribution are omitted.
 - **No elemental/pet simulation** — Elementals (Fire Elemental, Earth Elemental, etc.) are not simulated.
 - **No healing or dodge simulation** — outgoing healing, barrier, and evade frames are not modelled. Healing Power is tracked in attributes but has no effect on the simulation output.
 - Healer and support builds are not the focus of this tool.
+
+---
+
+If you spot any bugs or have any suggestions, please report them (https://github.com/SnappyJoeGW2/Elementalist-Simulator/issues) or contact me on Discord at https://discord.com/users/327133184665845770 (SnappyJoe#8710).

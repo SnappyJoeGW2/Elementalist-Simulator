@@ -25,7 +25,7 @@
         </header>
 
         <details class="about-box">
-            <summary class="about-toggle">About this tool</summary>
+            <summary class="about-toggle"> tool</summary>
             <div class="about-body">
                 <p>This tool <strong>accurately simulates Elementalist DPS</strong> the same way the game calculates it.
                     It doesn't use simplified formulas — it replays every combat event in order: weapon swings, skill
@@ -35,7 +35,7 @@
                         infusions, and all three traitlines with minor/major selections.</li>
                     <li><strong>Accurate simulation</strong> — critical hits, condition stacking, boon tracking (Might,
                         Fury, Alacrity, Quickness, etc.), and proc cooldowns are all modelled. Even handles
-                        Alacrity/Quickness loss <em>mid-cast</em>.</li>
+                        Alacrity/Quickness loss mid-cast.</li>
                     <li><strong>Expected values</strong> — no real RNG. Critical hit chance, weapon strength variance,
                         and probabilistic procs use expected values, giving consistent, reproducible numbers.</li>
                     <li><strong>Rotation builder</strong> — build your skill rotation manually and see the simulated
@@ -46,11 +46,13 @@
                 </ul>
                 <p class="about-limitations-label">Current limitations:</p>
                 <ul class="about-limitations">
-                    <li>Pistol, Hammer and Spear not yet implemented.</li>
                     <li>Skill list is intentionally incomplete — only DPS-relevant skills are included.</li>
-                    <li>Elementals are not simulated.</li>
+                    <li>Summoned Elementals are not simulated.</li>
                     <li>No healing, barrier, or dodge simulation.</li>
                 </ul>
+                <p> If you spot any bugs or have any suggestions, please <a
+                        href="https://github.com/SnappyJoeGW2/Elementalist-Simulator/issues">report them</a> or contact
+                    me on Discord at <a href="https://discord.com/users/327133184665845770">SnappyJoe#8710</a>.</p>
             </div>
         </details>
 
@@ -113,7 +115,9 @@
             <div class="panel rotation-panel">
                 <h3>Rotation Builder</h3>
                 <div id="rotation-palette" class="rotation-palette"></div>
-                <p class="palette-hint">Click to add to rotation &nbsp;·&nbsp; <b>Shift+click</b> an instant-cast skill to fire it mid-animation of the previous skill &nbsp;·&nbsp; <b>Ctrl+click</b> a skill on cooldown to fill the wait with Arc Lightning / Stone Shards (Air / Earth only)</p>
+                <p class="palette-hint">Click to add to rotation &nbsp;·&nbsp; <b>Shift+click</b> an instant-cast skill
+                    to fire it mid-animation of the previous skill &nbsp;·&nbsp; <b>Ctrl+click</b> a skill on cooldown
+                    to fill the wait with Arc Lightning / Stone Shards (Air / Earth only)</p>
                 <div class="rotation-mid">
                     <div class="rotation-tl-label">Rotation</div>
                     <div id="start-att-selector" class="start-att-selector"></div>
@@ -233,7 +237,8 @@
             <!-- Slot Constraints (lock gear pieces to specific prefixes) -->
             <div class="opt-slot-constraints-block">
                 <div class="opt-space-label">
-                    <span>Slot Constraints <span class="opt-max-note">(lock a slot to a specific prefix — "Any" = optimized freely)</span></span>
+                    <span>Slot Constraints <span class="opt-max-note">(lock a slot to a specific prefix — "Any" =
+                            optimized freely)</span></span>
                 </div>
                 <div class="opt-slot-constraints-grid" id="opt-slot-constraints"></div>
             </div>
