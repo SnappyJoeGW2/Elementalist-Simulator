@@ -2958,7 +2958,7 @@ export class SimulationEngine {
                     this._applyCondition(S, cond, v.stacks, v.dur, ev.time, 'Relic of Steamshrieker');
                 }
                 S.log.push({ t: ev.time, type: 'relic_proc', relic: 'Steamshrieker', skill: 'Relic of Steamshrieker' });
-                S.steps.push({ skill: 'Relic of Steamshrieker', start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: RELIC_PROCS.Steamshrieker.icon });
+                S.steps.push({ skill: 'Relic of Steamshrieker', start: ev.time, end: ev.time, att: S.att, type: 'relic_proc', ri: -1, icon: 'https://render.guildwars2.com/file/23B0F0A5BF05E05C9F527BF7EB4962C9F49C6F42/3441975.png' });
             }
         } else if (finType === 'Projectile') {
             // Accumulator gives deterministic expected-value procs for fractional chances
