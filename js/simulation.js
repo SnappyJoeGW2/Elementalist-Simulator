@@ -3106,13 +3106,13 @@ export class SimulationEngine {
     }
 
     // Find the earliest queued hit event in [fromTime, upTo] that would trigger a Fresh Air
-    // CD reset, and return its time. Returns null if no such event exists.
-    // Used by _doSwap/_doWeaverSwap to skip waiting the full attunement CD when Fresh Air fires.
+    // CD reset. If found, eagerly applies the reset to S.attCD['Air'] and updates
+    // S.freshAirAccum so the main event loop's _checkFreshAir call doesn't double-proc.
+    // Returns the hit time, or null if no Fresh Air reset would occur before upTo.
     _freshAirResetTimeInRange(S, fromTime, upTo) {
         if (!S._hasFreshAir) return null;
         const a = this.attributes.attributes;
         const baseCritCh = a['Critical Chance']?.final ?? 0;
-        // Include Fury if active at fromTime
         const furyBonus = this._effectStacksAt(S, 'Fury', fromTime) > 0 ? S._furyCritBonus : 0;
         const ccPct = Math.min(baseCritCh + furyBonus, 100);
         if (ccPct <= 0) return null;
@@ -3128,7 +3128,17 @@ export class SimulationEngine {
             const hitAtt = this._attAt(S, ev.time);
             if (hitAtt === 'Air') continue;
             accum += ccPct / 100;
-            if (accum >= 1) return ev.time;
+            if (accum >= 1) {
+                // Eagerly apply the reset so S.attCD['Air'] and S.skillCD['Overload Air']
+                // reflect it before the swap proceeds.
+                // Deduct 1 from the accumulator; _checkFreshAir in the main loop will skip
+                // applying another reset since attCD['Air'] will already be ≤ ev.time.
+                S.freshAirAccum = accum - 1;
+                S.attCD['Air'] = Math.min(S.attCD['Air'] || 0, ev.time);
+                S.skillCD['Overload Air'] = Math.min(S.skillCD['Overload Air'] || 0, ev.time);
+                S.log.push({ t: ev.time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air (CD reset)', detail: 'Air attunement recharged (pre-swap)' });
+                return ev.time;
+            }
         }
         return null;
     }
@@ -3142,6 +3152,9 @@ export class SimulationEngine {
         if (S.freshAirAccum >= 1) {
             S.freshAirAccum -= 1;
             S.attCD['Air'] = Math.min(S.attCD['Air'] || 0, time);
+            // Also reset the Overload Air skill CD — after Fresh Air you only wait the dwell,
+            // not the remaining overload recharge.
+            S.skillCD['Overload Air'] = Math.min(S.skillCD['Overload Air'] || 0, time);
             S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air (CD reset)', detail: 'Air attunement recharged' });
         }
     }
