@@ -651,6 +651,7 @@ export class SimulationEngine {
             traitArcanePrecAccum: 0,
             traitRenewingStaminaAccum: 0,
             freshAirAccum: 0,
+            freshAirResetAt: -Infinity, // time of last Fresh Air CD reset; swap logic respects this
             electricEnchantmentStacks: 0,
             elemBalanceCount: 0,
             elemBalanceActive: false,
@@ -2211,15 +2212,23 @@ export class SimulationEngine {
         let cdReady = S.attCD[target] || 0;
         // Fresh Air: if a pending crit hit would reset the Air CD before cdReady, advance
         // only to that hit's time instead of the full CD expiry.
+        // Also check already-set freshAirResetAt (set by hits already processed via _checkFreshAir).
         if (target === 'Air' && S.t < cdReady) {
-            const faTime = this._freshAirResetTimeInRange(S, S.t, cdReady);
-            if (faTime !== null) cdReady = faTime;
+            if (S.freshAirResetAt >= 0 && S.freshAirResetAt <= S.t) {
+                // Fresh Air already fired (hit processed before swap) — use it
+                cdReady = S.freshAirResetAt;
+            } else {
+                // Scan pending hit events for a future Fresh Air reset
+                const faTime = this._freshAirResetTimeInRange(S, 0, cdReady);
+                if (faTime !== null) cdReady = faTime;
+            }
         }
         if (S.t < cdReady) S.t = cdReady;
 
         const prev = S.att;
         S.att = target;
         S.attEnteredAt = S.t;
+        if (target === 'Air') S.freshAirResetAt = -Infinity; // consumed
 
         const isEvoker = S.eliteSpec === 'Evoker';
         const evoEl = S.evokerElement;
@@ -2231,7 +2240,13 @@ export class SimulationEngine {
         for (const other of ATTUNEMENTS) {
             if (other === target || other === prev) continue;
             const existingOther = S.attCD[other] || 0;
-            S.attCD[other] = Math.max(existingOther, S.t + this._alaCd(S, this._attCdMs(S, OFF_ATT_CD), S.t));
+            let newCD = Math.max(existingOther, S.t + this._alaCd(S, this._attCdMs(S, OFF_ATT_CD), S.t));
+            // Fresh Air reset: if Air's CD was reset by Fresh Air after the current time,
+            // don't let the swap re-apply a longer CD — the reset takes priority.
+            if (other === 'Air' && S._hasFreshAir && S.freshAirResetAt >= S.t) {
+                newCD = Math.min(newCD, S.freshAirResetAt);
+            }
+            S.attCD[other] = newCD;
         }
 
         this._scheduleHits(S, sk, S.t);
@@ -2293,9 +2308,14 @@ export class SimulationEngine {
         let cdReady = S.attCD[target] || 0;
         // Fresh Air: if a pending crit hit would reset the Air CD before cdReady, advance
         // only to that hit's time instead of the full CD expiry.
+        // Also check already-set freshAirResetAt (set by hits already processed via _checkFreshAir).
         if (target === 'Air' && S.t < cdReady) {
-            const faTime = this._freshAirResetTimeInRange(S, S.t, cdReady);
-            if (faTime !== null) cdReady = faTime;
+            if (S.freshAirResetAt >= 0 && S.freshAirResetAt <= S.t) {
+                cdReady = S.freshAirResetAt;
+            } else {
+                const faTime = this._freshAirResetTimeInRange(S, 0, cdReady);
+                if (faTime !== null) cdReady = faTime;
+            }
         }
         if (S.t < cdReady) S.t = cdReady;
 
@@ -2304,6 +2324,7 @@ export class SimulationEngine {
         S.att2 = prevPrimary;
         S.att = target;
         S.attEnteredAt = S.t;
+        if (target === 'Air') S.freshAirResetAt = -Infinity; // consumed
 
         // Capture before the expiry logic below can clear weaveSelfUntil
         const weaveSelfWasActive = S.weaveSelfUntil > S.t;
@@ -2323,7 +2344,12 @@ export class SimulationEngine {
         // The 4th swap that ends Weave Self still gets the 2s cooldown (weaveSelfWasActive)
         const weaveSelfSwapCD = weaveSelfWasActive ? 2000 : this._attCdMs(S, WEAVER_SWAP_CD);
         for (const a of ATTUNEMENTS) {
-            S.attCD[a] = S.t + this._alaCd(S, weaveSelfSwapCD, S.t);
+            let newCD = S.t + this._alaCd(S, weaveSelfSwapCD, S.t);
+            // Fresh Air reset: don't let the swap re-apply a longer CD to Air
+            if (a === 'Air' && S._hasFreshAir && S.freshAirResetAt >= S.t) {
+                newCD = Math.min(newCD, S.freshAirResetAt);
+            }
+            S.attCD[a] = newCD;
         }
 
         this._scheduleHits(S, sk, S.t);
@@ -3136,6 +3162,7 @@ export class SimulationEngine {
                 S.freshAirAccum = accum - 1;
                 S.attCD['Air'] = Math.min(S.attCD['Air'] || 0, ev.time);
                 S.skillCD['Overload Air'] = Math.min(S.skillCD['Overload Air'] || 0, ev.time);
+                S.freshAirResetAt = ev.time;
                 S.log.push({ t: ev.time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air (CD reset)', detail: 'Air attunement recharged (pre-swap)' });
                 return ev.time;
             }
@@ -3155,6 +3182,8 @@ export class SimulationEngine {
             // Also reset the Overload Air skill CD — after Fresh Air you only wait the dwell,
             // not the remaining overload recharge.
             S.skillCD['Overload Air'] = Math.min(S.skillCD['Overload Air'] || 0, time);
+            // Record the reset time so _doSwap/_doWeaverSwap don't re-apply a higher CD to Air
+            S.freshAirResetAt = time;
             S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air (CD reset)', detail: 'Air attunement recharged' });
         }
     }
