@@ -28,5 +28,10 @@
     "label": "Power Tempest (Hammer)",
     "build": "Builds/power-tempest-hammer.json",
     "rotation": "Rotations/power-tempest-hammer.json"
+  },
+  {
+    "label": "Condi Catalyst (Pistol)",
+    "build": "Builds/condi-catalyst-pistol.json",
+    "rotation": "Rotations/condi-catalyst-pistol.json"
   }
 ]
