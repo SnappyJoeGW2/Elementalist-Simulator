@@ -1856,16 +1856,7 @@ export class SimulationEngine {
                         if (name === 'Raging Ricochet') {
                             this._trackEffect(S, 'Might', 1, 10, end);
                         } else if (name === 'Searing Salvo') {
-                            // Blast finisher + Fire Aura: inject a hit with Blast finisher tag
                             this._applyAura(S, 'Fire Aura', 4000, end, 'Searing Salvo');
-                            insertSorted(S.eq, {
-                                time: end, type: 'hit',
-                                skill: 'Searing Salvo', hitIdx: 99, sub: 1, totalSubs: 1,
-                                dmg: 0, ws: 0, isField: false, cc: false, conds: null,
-                                finType: 'Blast', finVal: 1,
-                                att: S.att, att2: S.att2, castStart: start,
-                                isTraitProc: true, noCrit: true,
-                            });
                         } else if (name === 'Frozen Fusillade') {
                             // Delayed hit 4s after cast: 0.75 coeff + 5x Bleed 8s
                             insertSorted(S.eq, {
