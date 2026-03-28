@@ -1891,7 +1891,8 @@ class App {
         // Show bullet state when Pistol is equipped. Clicking a bullet grants/removes it.
         const pistolEquipped = mh === 'Pistol' || oh === 'Pistol';
         if (pistolEquipped) {
-            const bullets = es?.pistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
+            // Show the user's intended STARTING bullets, not the end-of-rotation state
+            const bullets = this._presetPistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
             h += '<div class="pal-group"><div class="pal-label" style="color:#ddbb88">Bullet</div><div class="pal-row">';
             for (const el of ATTUNEMENTS) {
                 const active = bullets[el];
@@ -1996,18 +1997,16 @@ class App {
             btn.addEventListener('click', () => {
                 const element = btn.dataset.bulletEl;
                 if (!element) return;
-                if (!this.sim) {
-                    // No sim yet: initialise a simple bullet state
-                    this._presetPistolBullets = this._presetPistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
-                    this._presetPistolBullets[element] = !this._presetPistolBullets[element];
+                // Always update _presetPistolBullets (the authoritative starting state)
+                this._presetPistolBullets = this._presetPistolBullets
+                    || { Fire: false, Water: false, Air: false, Earth: false };
+                this._presetPistolBullets[element] = !this._presetPistolBullets[element];
+                // Re-run simulation with updated starting bullets, then re-render
+                if (this.sim?.rotation.length > 0) {
+                    this._autoRun();
                 } else {
-                    // Patch the endState bullets and re-render palette
-                    const es = this.sim.results?.endState;
-                    if (es?.pistolBullets) {
-                        es.pistolBullets[element] = !es.pistolBullets[element];
-                    }
+                    this._renderPalette();
                 }
-                this._renderPalette();
             });
         });
     }
@@ -2585,10 +2584,9 @@ class App {
     }
 
     _getStartPistolBullets() {
-        // Use endState bullets from last run if available (reflecting user toggles),
-        // otherwise fall back to any preset toggles made before first run.
-        const es = this.sim?.results?.endState;
-        if (es?.pistolBullets) return { ...es.pistolBullets };
+        // Return only the user's explicitly pre-set starting bullets.
+        // Never use the end-state bullets — those reflect where bullets ended up
+        // after the rotation, not where the user wants to start.
         if (this._presetPistolBullets) return { ...this._presetPistolBullets };
         return null;
     }
