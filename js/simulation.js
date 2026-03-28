@@ -657,7 +657,7 @@ export class SimulationEngine {
             elemBalanceExpiry: 0,
             // Spear Etching chain: null = on Etching, 'lesser' = lesser available, 'full' = full available
             etchingState: {},        // { [etchingName]: 'lesser' | 'full' }
-            etchingOtherCasts: {},   // { [etchingName]: count of non-slot-1/non-Etching weapon casts since Etching }
+            etchingOtherCasts: {},   // { [etchingName]: count of any skill casts (excl. etching/lesser/full) since Etching }
             // Hammer orb system
             // hammerOrbs: { Fire: expiresAt|null, Water: ..., Air: ..., Earth: ... }
             // orbsGrantedInAtt: { Fire: Set<attunement>, ... } — which attunement unlocked each orb
@@ -1749,9 +1749,9 @@ export class SimulationEngine {
         this._checkRelicOnCast(S, sk, start, end);
 
         // ── Spear Etching chain state management ──────────────────────────────
-        if (sk.weapon === 'Spear' && sk.type === 'Weapon skill') {
+        {
             const etchCast = ETCHING_LOOKUP.get(name);
-            if (etchCast) {
+            if (etchCast && sk.weapon === 'Spear') {
                 if (name === etchCast.etching) {
                     // Casting an Etching arms the lesser variant; no CD propagation to lesser/full
                     S.etchingState[etchCast.etching] = 'lesser';
@@ -1762,8 +1762,9 @@ export class SimulationEngine {
                     S.etchingState[etchCast.etching] = null;
                     S.etchingOtherCasts[etchCast.etching] = 0;
                 }
-            } else {
-                // Count non-slot-1 Spear weapon casts (excluding etchings/lesser/full themselves)
+            } else if (!etchCast) {
+                // ANY skill (weapon, utility, heal, elite, profession mechanic) counts toward
+                // flipping lesser → full, except the etching/lesser/full skills themselves
                 for (const chain of Object.values(ETCHING_CHAINS)) {
                     if (S.etchingState[chain.etching] === 'lesser') {
                         S.etchingOtherCasts[chain.etching] = (S.etchingOtherCasts[chain.etching] || 0) + 1;

@@ -6,17 +6,12 @@
   },
   {
     "label": "Condi Alac Tempest",
-    "build": "Builds/condi-alac-tempest.json",
-    "rotation": "Rotations/condi-alac-tempest.json"
+    "build": "Builds/condi-alac-tempest-scepter.json",
+    "rotation": "Rotations/condi-alac-tempest-scepter.json"
   },
   {
     "label": "Condi Weaver",
-    "build": "Builds/condi-weaver.json",
-    "rotation": "Rotations/condi-weaver.json"
-  },
-  {
-    "label": "Inferno Catalyst",
-    "build": "Builds/inferno-catalyst.json",
-    "rotation": "Rotations/inferno-catalyst.json"
+    "build": "Builds/condi-weaver-scepter.json",
+    "rotation": "Rotations/condi-weaver-scepter.json"
   }
 ]
