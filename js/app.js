@@ -1519,7 +1519,7 @@ class App {
             const isBasic = SELECTORS.has(skillName);
             if (isBasic) {
                 if ((es.evokerEmpowered ?? 0) >= 3) return false;
-                if ((es.evokerCharges ?? 0) < 6) return false;
+                if ((es.evokerCharges ?? 0) < (es.evokerMaxCharges ?? 6)) return false;
             } else {
                 if ((es.evokerEmpowered ?? 0) < 3) return false;
             }
@@ -1781,13 +1781,14 @@ class App {
             const EVOKER_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
             const curEl = es?.evokerElement || this.evokerElement || null;
             const charges = es?.evokerCharges ?? 6;
+            const maxCharges = es?.evokerMaxCharges ?? 6;
             const empowered = es?.evokerEmpowered ?? 0;
             const elLabel = curEl ? curEl[0] : '?';
             h += `<div class="pal-group"><div class="pal-label" style="color:${curEl ? ATTUNEMENT_COLORS[curEl] : '#888'}">F5<br><small>${elLabel}</small></div><div class="pal-row" style="flex-wrap:wrap;gap:4px">`;
             if (curEl) {
                 h += `<div class="evoker-charge-wrap">`;
                 h += `<div class="evoker-charge-outer">`;
-                for (let i = 0; i < 6; i++) h += `<span class="evoker-pip${i < charges ? ' filled' : ''}"></span>`;
+                for (let i = 0; i < maxCharges; i++) h += `<span class="evoker-pip${i < charges ? ' filled' : ''}"></span>`;
                 h += `</div>`;
                 h += `<div class="evoker-charge-inner">`;
                 for (let i = 0; i < 3; i++) h += `<span class="evoker-emp${i < empowered ? ' filled' : ''}"></span>`;

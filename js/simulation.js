@@ -1276,6 +1276,7 @@ export class SimulationEngine {
                 evokerElement: S.evokerElement,
                 evokerCharges: S.evokerCharges,
                 evokerEmpowered: S.evokerEmpowered,
+                evokerMaxCharges: S._hasSpecializedElements ? 4 : 6,
                 aaCarryover: S.aaCarryover ? { ...S.aaCarryover } : null,
                 quicknessUntil: S.quicknessUntil,
                 alacrityUntil: S.alacrityUntil,
