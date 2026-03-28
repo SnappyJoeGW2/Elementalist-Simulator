@@ -2208,7 +2208,13 @@ export class SimulationEngine {
             S._pendingAACPrev = S.att;
         }
 
-        const cdReady = S.attCD[target] || 0;
+        let cdReady = S.attCD[target] || 0;
+        // Fresh Air: if a pending crit hit would reset the Air CD before cdReady, advance
+        // only to that hit's time instead of the full CD expiry.
+        if (target === 'Air' && S.t < cdReady) {
+            const faTime = this._freshAirResetTimeInRange(S, S.t, cdReady);
+            if (faTime !== null) cdReady = faTime;
+        }
         if (S.t < cdReady) S.t = cdReady;
 
         const prev = S.att;
@@ -2284,7 +2290,13 @@ export class SimulationEngine {
             S._pendingAACPrev = S.att;
         }
 
-        const cdReady = S.attCD[target] || 0;
+        let cdReady = S.attCD[target] || 0;
+        // Fresh Air: if a pending crit hit would reset the Air CD before cdReady, advance
+        // only to that hit's time instead of the full CD expiry.
+        if (target === 'Air' && S.t < cdReady) {
+            const faTime = this._freshAirResetTimeInRange(S, S.t, cdReady);
+            if (faTime !== null) cdReady = faTime;
+        }
         if (S.t < cdReady) S.t = cdReady;
 
         const prevPrimary = S.att;
@@ -3093,12 +3105,44 @@ export class SimulationEngine {
         });
     }
 
+    // Find the earliest queued hit event in [fromTime, upTo] that would trigger a Fresh Air
+    // CD reset, and return its time. Returns null if no such event exists.
+    // Used by _doSwap/_doWeaverSwap to skip waiting the full attunement CD when Fresh Air fires.
+    _freshAirResetTimeInRange(S, fromTime, upTo) {
+        if (!S._hasFreshAir) return null;
+        const a = this.attributes.attributes;
+        const baseCritCh = a['Critical Chance']?.final ?? 0;
+        // Include Fury if active at fromTime
+        const furyBonus = this._effectStacksAt(S, 'Fury', fromTime) > 0 ? S._furyCritBonus : 0;
+        const ccPct = Math.min(baseCritCh + furyBonus, 100);
+        if (ccPct <= 0) return null;
+
+        let accum = S.freshAirAccum;
+        for (const ev of S.eq) {
+            if (ev.time < fromTime) continue;
+            if (ev.time > upTo) break;
+            if (ev.type !== 'hit') continue;
+            if (ev.isSigilProc || ev.isRelicProc || ev.isTraitProc) continue;
+            if (ev.noCrit) continue;
+            if (ev.dmg <= 0 || !ev.ws) continue;
+            const hitAtt = this._attAt(S, ev.time);
+            if (hitAtt === 'Air') continue;
+            accum += ccPct / 100;
+            if (accum >= 1) return ev.time;
+        }
+        return null;
+    }
+
     _checkFreshAir(S, time, critChancePct) {
         if (critChancePct <= 0) return;
+        // Only recharges Air attunement when hitting in Fire, Water, or Earth — not while already in Air
+        const hitAtt = this._attAt(S, time);
+        if (hitAtt === 'Air') return;
         S.freshAirAccum += critChancePct / 100;
         if (S.freshAirAccum >= 1) {
             S.freshAirAccum -= 1;
-            S.attCD['Air'] = 0;
+            S.attCD['Air'] = Math.min(S.attCD['Air'] || 0, time);
+            S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air (CD reset)', detail: 'Air attunement recharged' });
         }
     }
 

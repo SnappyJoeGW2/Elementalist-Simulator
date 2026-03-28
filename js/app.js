@@ -43,26 +43,26 @@ function _utilityDesc(name) {
 // ─── Default build (Weaver Sword/Dagger DPS) ─────────────────────────────────
 const DEFAULT_BUILD = {
     gear: {
-        Helm: "Assassin's", Shoulders: "Assassin's",
+        Helm: "Berserker's", Shoulders: "Berserker's",
         Chest: "Berserker's", Gloves: "Berserker's", Leggins: "Berserker's", Boots: "Berserker's",
         Amulet: "Berserker's", Ring1: "Berserker's", Ring2: "Berserker's",
         Accessory1: "Berserker's", Accessory2: "Berserker's", Back: "Berserker's",
         Weapon1: "Berserker's", Weapon2: "Berserker's",
     },
     weapons: ['Sword', 'Dagger'],
-    rune: 'Dragonhunter',
-    sigils: ['Force', 'Accuracy'],
-    relic: 'Claw',
+    rune: 'Scholar',
+    sigils: ['Force', 'Impact'],
+    relic: 'Fireworks',
     food: 'Bowl of Sweet and Spicy Butternut Squash Soup',
     utility: 'Superior Sharpening Stone',
     jadeBotCore: true,
     specializations: [
         { name: 'Fire', traits: '1-3-1' },
-        { name: 'Air', traits: '3-3-2' },
+        { name: 'Air', traits: '3-3-1' },
         { name: 'Weaver', traits: '1-2-1' },
     ],
     infusions: [
-        { stat: 'Power', count: 0 },
+        { stat: 'Power', count: 18 },
         { stat: 'Precision', count: 0 },
         { stat: 'Condition Damage', count: 0 },
     ],
