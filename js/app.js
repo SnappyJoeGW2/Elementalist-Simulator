@@ -1888,20 +1888,32 @@ class App {
         }
 
         // ── Pistol bullet tracker ─────────────────────────────────────────────
-        // Show bullet state when Pistol is equipped. Clicking a bullet grants/removes it.
+        // Always show when Pistol is equipped. Shows current live bullet state
+        // (end-of-rotation after a run, or preset starting state before first run).
+        // All 4 elements are always shown. Click toggles the preset starting bullet.
         const pistolEquipped = mh === 'Pistol' || oh === 'Pistol';
         if (pistolEquipped) {
-            // Show the user's intended STARTING bullets, not the end-of-rotation state
-            const bullets = this._presetPistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
+            // Display live end-state if available, otherwise fall back to preset
+            const liveBullets = es?.pistolBullets;
+            const presetBullets = this._presetPistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
+            const displayBullets = liveBullets || presetBullets;
+
             h += '<div class="pal-group"><div class="pal-label" style="color:#ddbb88">Bullet</div><div class="pal-row">';
             for (const el of ATTUNEMENTS) {
-                const active = bullets[el];
+                const active = displayBullets[el];
+                const presetActive = presetBullets[el];
                 const icon = PISTOL_BULLET_ICONS[el];
                 const label = PISTOL_BULLET_LABELS[el];
                 const color = ATTUNEMENT_COLORS[el];
-                h += `<div class="pistol-bullet${active ? ' bullet-active' : ''}" data-bullet-el="${esc(el)}"
-                    title="${esc(label)}${active ? ' (active — click to remove)' : ' (click to grant)'}"
-                    style="--att-border:${color};${active ? `box-shadow:0 0 6px ${color};` : 'opacity:0.4;'}">
+                // Dim bullets not available in current attunement context (purely cosmetic hint)
+                const inAtt = !es || es.att === el || es.att2 === el;
+                const titleSuffix = active
+                    ? ` (held — preset start: ${presetActive ? 'on' : 'off'})`
+                    : ` (not held — preset start: ${presetActive ? 'on' : 'off'})`;
+                h += `<div class="pistol-bullet${active ? ' bullet-active' : ''}${!inAtt ? ' bullet-off-att' : ''}"
+                    data-bullet-el="${esc(el)}"
+                    title="${esc(label)}${titleSuffix} — click to toggle start"
+                    style="--att-border:${color};${active ? `box-shadow:0 0 6px ${color};` : ''}${!active ? 'opacity:0.35;' : ''}">
                     <img src="${icon}" /></div>`;
             }
             h += '</div></div>';
