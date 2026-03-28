@@ -5,13 +5,23 @@
     "rotation": "Rotations/power-weaver.json"
   },
   {
-    "label": "Condi Alac Tempest",
+    "label": "Condi Alac Tempest (Scepter)",
     "build": "Builds/condi-alac-tempest-scepter.json",
     "rotation": "Rotations/condi-alac-tempest-scepter.json"
   },
   {
-    "label": "Condi Weaver",
+    "label": "Condi Weaver (Scepter)",
     "build": "Builds/condi-weaver-scepter.json",
     "rotation": "Rotations/condi-weaver-scepter.json"
+  },
+  {
+    "label": "Power Catalyst (Spear)",
+    "build": "Builds/power-catalyst-spear.json",
+    "rotation": "Rotations/power-catalyst-spear.json"
+  },
+  {
+    "label": "Inverno Evoker SE",
+    "build": "Builds/inferno-evoker-se.json",
+    "rotation": "Rotations/inferno-evoker-se.json"
   }
 ]
