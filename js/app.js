@@ -1496,7 +1496,7 @@ class App {
             if (olAtt !== es.att) return false;
             if ((es.skillCD[skillName] || 0) > t) return false;
             const dwell = es._hasTranscendentTempest ? 4000 : 6000;
-            const dwellReady = es.attEnteredAt + dwell;
+            const dwellReady = es.attEnteredAt + this._esAlaCd(es, dwell, es.attEnteredAt);
             if (t < dwellReady) return false;
             return true;
         }
@@ -1665,6 +1665,19 @@ class App {
         return false;
     }
 
+    // Mirror of simulation's _alaCd: compute alacrity-reduced cooldown from endState context.
+    _esAlaCd(es, baseCdMs, cdStart) {
+        if (baseCdMs <= 0) return 0;
+        const alaEnd = es.alacrityUntil || 0;
+        if (alaEnd <= cdStart) return baseCdMs;
+        const readyIfFull = Math.round(baseCdMs / 1.25);
+        if (alaEnd >= cdStart + readyIfFull) return readyIfFull;
+        const alaRealMs = alaEnd - cdStart;
+        const alaProgress = alaRealMs * 1.25;
+        const remaining = baseCdMs - alaProgress;
+        return Math.round(alaRealMs + remaining);
+    }
+
     _getSkillCD(skill) {
         const es = this.sim?.results?.endState;
         if (!es) return null;
@@ -1682,7 +1695,8 @@ class App {
         if (name.startsWith('Overload ')) {
             const skillCd = ((es.skillCD[name] || 0) - t) / 1000;
             const dwell = es._hasTranscendentTempest ? 4000 : 6000;
-            const dwellCd = (es.attEnteredAt + dwell - t) / 1000;
+            const dwellEffMs = this._esAlaCd(es, dwell, es.attEnteredAt);
+            const dwellCd = (es.attEnteredAt + dwellEffMs - t) / 1000;
             const cd = Math.max(skillCd, dwellCd);
             return cd > 0 ? cd : null;
         }
