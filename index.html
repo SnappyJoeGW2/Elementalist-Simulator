@@ -75,6 +75,36 @@
                         as fixed values
                         (even when in-game behavior can vary depending on skill chaining or aftercasts).
                     </li>
+                    <li>
+                        For <strong>DPS calculations</strong>, "start time" is the first hit event time, not the cast
+                        start time. "End time" is the end of the last cast event time (not hit time!) or the target
+                        death time,
+                        whichever is later.
+                    </li>
+                    <li>
+                        Without Quickness, cast times are multiplied by 4/3 (hit times are also affected).
+                    </li>
+                    <li>
+                        <Strong>Instant-cast skills</Strong> can be fired during another skill's cast window
+                        (Shift+click). This is
+                        handled by marking the instant-cast skill with an offset (in ms) from the start of the
+                        <strong>previous</strong> skill's cast window.
+                        skill's cast window.
+                    </li>
+                    <li>
+                        The tool supports <strong>interrupting Scepter Air/Earth auto-attack</strong>. To do this, use
+                        Ctrl+click on the
+                        skill you want to use, but is currently on cooldown (e.g. Ride the Lightning). The tool will
+                        cast Arc Lightning / Stone Shards (Air / Earth) to fill the waiting time, but interrupt it once
+                        Ride the Lightning is ready to cast.
+                    </li>
+                    <li>
+                        <Strong>Gear optimizer</Strong> searches whole combinatory space of gear prefixes, runes,
+                        sigils, relics, food, utility, and infusions. It uses current rotation to evaluate each build,
+                        making it <strong>much heavier</strong> than other optimizers. It is advised to use optimizer
+                        with 1 prefix
+                        selected, but multiple Sigils/Relics (accurate procs), or vice versa.
+                    </li>
                 </ul>
             </div>
         </details>

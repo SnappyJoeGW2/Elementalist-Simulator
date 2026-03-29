@@ -1647,6 +1647,19 @@ header .accent {
     padding-top: 2px;
 }
 
+.subtext {
+    display: block;
+    /* forces new line */
+    font-size: 0.85em;
+    /* smaller text */
+    font-weight: normal;
+    /* less bold than h3 */
+    opacity: 0.8;
+    /* softer look */
+    margin-top: 2px;
+    /* small spacing */
+}
+
 .rot-offset-badge {
     position: absolute;
     bottom: -2px;
