@@ -2804,6 +2804,7 @@ export class SimulationEngine {
     }
 
     _applyAura(S, auraName, durMs, time, skill) {
+        console.log('applyAura', auraName, time, skill);
         if (S._hasSmothering) durMs = Math.round(durMs * 1.33);
         S.auras.push({ type: auraName, end: time + durMs, skill });
         this._pushCondStack(S, { t: time, cond: auraName, expiresAt: time + durMs });
