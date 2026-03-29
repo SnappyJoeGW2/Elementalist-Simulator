@@ -89,51 +89,5 @@
     "Weakness": true,
     "Vulnerability": 25
   },
-  "rotation": [
-    "Etching: Derecho",
-    "Glyph of Storms (Air)",
-    "Twister",
-    "Fulgor",
-    "Energize",
-    "Derecho",
-    {
-      "name": "Deploy Jade Sphere (Air)",
-      "offset": 0
-    },
-    "Fire Attunement",
-    "Deploy Jade Sphere (Fire)",
-    "Etching: Volcano",
-    "Relentless Fire",
-    "Blazing Barrage",
-    "Meteor",
-    "Seethe",
-    "Volcano",
-    "Elemental Celerity",
-    "Etching: Volcano",
-    "Blazing Barrage",
-    "Meteor",
-    "Seethe",
-    "Volcano",
-    {
-      "name": "Earth Attunement",
-      "offset": 0
-    },
-    "Etching: Haboob",
-    "Fissure",
-    "Harden",
-    "Earthen Spear",
-    "Haboob",
-    {
-      "name": "Water Attunement",
-      "offset": 0
-    },
-    "Etching: Jökulhlaup",
-    {
-      "name": "Deploy Jade Sphere (Water)",
-      "offset": 0
-    },
-    "Shattering Ice",
-    "Undertow",
-    "Ice Beam"
-  ]
+  "rotation": []
 }

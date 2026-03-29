@@ -1,5 +1,5 @@
 const API_BASE = 'https://api.guildwars2.com/v2';
-const CACHE_KEY = 'gw2_icon_cache_v17';
+const CACHE_KEY = 'gw2_icon_cache_v18';
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 const EXTRA_ELEM_SKILL_IDS = [
