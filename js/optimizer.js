@@ -9,19 +9,19 @@
 // Each non-gear combo (rune × relic × sigil pair × food × utility × infusions)
 // is sent to a Web Worker for parallel exhaustive evaluation.
 
-import { SimulationEngine } from './simulation.js?v=8';
-import { calcAttributes }   from './calc-attributes.js';
+import { SimulationEngine } from './simulation.js?v=9';
+import { calcAttributes } from './calc-attributes.js';
 import { GEAR_SLOTS, GEAR_STATS, WEAPON_DATA, getActiveGearSlots } from './gear-data.js';
 
 export class GearOptimizer {
     constructor({ skills, skillHits, weapons, sigils, relics }) {
-        this.skills     = skills;
-        this.skillHits  = skillHits;
-        this.weapons    = weapons;
+        this.skills = skills;
+        this.skillHits = skillHits;
+        this.weapons = weapons;
         this.sigilsData = sigils;
         this.relicsData = relics;
         this._cancelled = false;
-        this._workers   = [];
+        this._workers = [];
     }
 
     cancel() {
@@ -32,12 +32,12 @@ export class GearOptimizer {
 
     async optimize(config, onProgress) {
         this._cancelled = false;
-        this._workers   = [];
+        this._workers = [];
 
         const { build, selectedSkills, rotation, space, constraints = {},
-                slotConstraints = {},
-                startAtt, startAtt2, evokerElement, permaBoons,
-                targetHP = 0 } = config;
+            slotConstraints = {},
+            startAtt, startAtt2, evokerElement, permaBoons,
+            targetHP = 0 } = config;
 
         if (!space.prefixes.length) throw new Error('Select at least one prefix.');
 
@@ -45,31 +45,31 @@ export class GearOptimizer {
 
         const nonGearCombos = this._nonGearCombos(space);
 
-        const numCores   = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
+        const numCores = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
         const numWorkers = Math.max(1, Math.min(numCores, nonGearCombos.length));
 
         const batches = Array.from({ length: numWorkers }, () => []);
         nonGearCombos.forEach((combo, i) => batches[i % numWorkers].push(combo));
 
         const workerPayload = {
-            skills:       this.skills,
-            skillHits:    this.skillHits,
-            weapons:      this.weapons,
-            sigilsData:   this.sigilsData,
-            relicsData:   this.relicsData,
-            baseBuild:    JSON.parse(JSON.stringify(build)),
+            skills: this.skills,
+            skillHits: this.skillHits,
+            weapons: this.weapons,
+            sigilsData: this.sigilsData,
+            relicsData: this.relicsData,
+            baseBuild: JSON.parse(JSON.stringify(build)),
             selectedSkills,
             rotation,
-            prefixes:     space.prefixes,
+            prefixes: space.prefixes,
             constraints,
             slotConstraints,
             activeSlots,
             startAtt, startAtt2, evokerElement, permaBoons,
         };
 
-        const top10    = [];
+        const top10 = [];
         const seenKeys = new Set();
-        let   evalsDone = 0;
+        let evalsDone = 0;
 
         const gearComboCount = this._estimateGearCombos(activeSlots, space.prefixes, slotConstraints);
         const totalEst = Math.max(nonGearCombos.length * gearComboCount, 1);
@@ -134,7 +134,7 @@ export class GearOptimizer {
         const sim = this._makeSim(build, selectedSkills, rotation);
         for (const r of top10) {
             r.dps = this._evalFull(sim, build, selectedSkills, r,
-                                   startAtt, startAtt2, evokerElement, permaBoons, targetHP);
+                startAtt, startAtt2, evokerElement, permaBoons, targetHP);
         }
         top10.sort((a, b) => b.dps - a.dps);
 
@@ -176,9 +176,11 @@ export class GearOptimizer {
     }
 
     _evalFull(sim, baseBuild, selectedSkills, r,
-              startAtt, startAtt2, evokerElement, permaBoons, targetHP) {
-        const combo = { rune: r.rune, relic: r.relic, sigil1: r.sigil1, sigil2: r.sigil2,
-                        food: r.food, utility: r.utility, infusions: r.infusions };
+        startAtt, startAtt2, evokerElement, permaBoons, targetHP) {
+        const combo = {
+            rune: r.rune, relic: r.relic, sigil1: r.sigil1, sigil2: r.sigil2,
+            food: r.food, utility: r.utility, infusions: r.infusions
+        };
         this._applyCombo(sim, baseBuild, selectedSkills, combo, r.gear);
         sim.run(startAtt, startAtt2, evokerElement, permaBoons, null, targetHP);
         return sim.results?.dps ?? 0;
@@ -187,46 +189,46 @@ export class GearOptimizer {
     _applyCombo(sim, baseBuild, selectedSkills, combo, gear) {
         const testBuild = {
             ...baseBuild,
-            gear:      { ...gear },
-            rune:      combo.rune      || baseBuild.rune,
-            relic:     combo.relic     || baseBuild.relic,
-            sigils:    combo.sigil1 != null
-                           ? [combo.sigil1, combo.sigil2].filter(Boolean)
-                           : (baseBuild.sigils || []),
-            food:      combo.food      || baseBuild.food,
-            utility:   combo.utility   || baseBuild.utility,
+            gear: { ...gear },
+            rune: combo.rune || baseBuild.rune,
+            relic: combo.relic || baseBuild.relic,
+            sigils: combo.sigil1 != null
+                ? [combo.sigil1, combo.sigil2].filter(Boolean)
+                : (baseBuild.sigils || []),
+            food: combo.food || baseBuild.food,
+            utility: combo.utility || baseBuild.utility,
             infusions: combo.infusions != null ? combo.infusions : (baseBuild.infusions || []),
         };
         const attrs = calcAttributes(testBuild, selectedSkills);
-        sim.attributes       = attrs;
+        sim.attributes = attrs;
         sim.activeTraitNames = new Set((attrs.activeTraits || []).map(t => t.name));
     }
 
     _makeSim(build, selectedSkills, rotation) {
         const attrs = calcAttributes(build, selectedSkills);
-        const sim   = new SimulationEngine({
-            skills:       this.skills,
-            skillHits:    this.skillHits,
-            weapons:      this.weapons,
-            attributes:   attrs,
-            sigils:       this.sigilsData,
-            relics:       this.relicsData,
+        const sim = new SimulationEngine({
+            skills: this.skills,
+            skillHits: this.skillHits,
+            weapons: this.weapons,
+            attributes: attrs,
+            sigils: this.sigilsData,
+            relics: this.relicsData,
             activeTraits: attrs.activeTraits,
         });
-        sim.rotation         = rotation;
-        sim.fastMode         = true;
+        sim.rotation = rotation;
+        sim.fastMode = true;
         sim.activeTraitNames = new Set((attrs.activeTraits || []).map(t => t.name));
         return sim;
     }
 
     _nonGearCombos(space) {
-        const runes     = space.runes.length     ? space.runes     : [null];
-        const relics    = space.relics.length    ? space.relics    : [null];
-        const foods     = space.foods.length     ? space.foods     : [null];
+        const runes = space.runes.length ? space.runes : [null];
+        const relics = space.relics.length ? space.relics : [null];
+        const foods = space.foods.length ? space.foods : [null];
         const utilities = space.utilities.length ? space.utilities : [null];
 
         const infStats = space.infusionStats || [];
-        const infTotal = space.infusionTotal  ?? 0;
+        const infTotal = space.infusionTotal ?? 0;
         const infusions = infStats.length === 0 ? [null]
             : this._infusionDistributions(infStats, infTotal);
 
@@ -241,20 +243,20 @@ export class GearOptimizer {
         }
 
         const out = [];
-        for (const rune     of runes)
-        for (const relic    of relics)
-        for (const [s1, s2] of sigilPairs)
-        for (const food     of foods)
-        for (const utility  of utilities)
-        for (const infusion of infusions)
-            out.push({ rune, relic, sigil1: s1, sigil2: s2, food, utility, infusions: infusion });
+        for (const rune of runes)
+            for (const relic of relics)
+                for (const [s1, s2] of sigilPairs)
+                    for (const food of foods)
+                        for (const utility of utilities)
+                            for (const infusion of infusions)
+                                out.push({ rune, relic, sigil1: s1, sigil2: s2, food, utility, infusions: infusion });
         return out;
     }
 
     _infusionDistributions(stats, total) {
         if (total === 0) return [[]];
         const results = [];
-        const counts  = new Array(stats.length).fill(0);
+        const counts = new Array(stats.length).fill(0);
         const recurse = (idx, remaining) => {
             if (idx === stats.length - 1) {
                 counts[idx] = remaining;
@@ -273,7 +275,7 @@ export class GearOptimizer {
     }
 
     _key(r) {
-        const g   = GEAR_SLOTS.map(s => r.gear[s] || '').join(',');
+        const g = GEAR_SLOTS.map(s => r.gear[s] || '').join(',');
         const inf = r.infusions == null ? 'keep'
             : (r.infusions.map(x => `${x.stat}×${x.count}`).join('+') || 'none');
         return `${g}|${r.rune}|${r.relic}|${r.sigil1}|${r.sigil2}|${r.food}|${r.utility}|${inf}`;
