@@ -299,17 +299,45 @@ class App {
     }
 
     // ─── Build change handler ───
+    // _onBuildChange() {
+    //     this.data.attributes = calcAttributes(
+    //         this.build,
+    //         Object.values(this.selectedSkills).filter(Boolean),
+    //     );
+    //     if (this.sim) {
+    //         this.sim.attributes = this.data.attributes;
+    //         this.sim.activeTraitNames = new Set(
+    //             (this.data.attributes.activeTraits || []).map(t => t.name)
+    //         );
+    //     }
+    //     this.renderTraits();
+    //     this.renderAttributes();
+    //     this.renderConditions();
+    //     this.renderAttunementBar();
+    //     this.renderWeaponBar();
+    //     this.renderSkillBar();
+    //     this.renderSkillInfoTable();
+    //     if (this.sim?.rotation.length > 0) this._autoRun();
+    //     else this._renderPalette();
+    //     this._persistBuild();
+    // }
+
     _onBuildChange() {
         this.data.attributes = calcAttributes(
             this.build,
             Object.values(this.selectedSkills).filter(Boolean),
         );
-        if (this.sim) {
-            this.sim.attributes = this.data.attributes;
-            this.sim.activeTraitNames = new Set(
-                (this.data.attributes.activeTraits || []).map(t => t.name)
-            );
-        }
+        const rotation = this.sim ? this.sim.rotation : [];
+        this.sim = new SimulationEngine({
+            skills: this.data.skills,
+            skillHits: this.data.skillHits,
+            weapons: WEAPON_DATA,
+            attributes: this.data.attributes,
+            sigils: SIGIL_DATA,
+            relics: RELIC_DATA,
+            activeTraits: this.data.attributes.activeTraits,
+        });
+        this.sim.rotation = rotation;
         this.renderTraits();
         this.renderAttributes();
         this.renderConditions();
@@ -317,7 +345,7 @@ class App {
         this.renderWeaponBar();
         this.renderSkillBar();
         this.renderSkillInfoTable();
-        if (this.sim?.rotation.length > 0) this._autoRun();
+        if (this.sim.rotation.length > 0) this._autoRun();
         else this._renderPalette();
         this._persistBuild();
     }
@@ -2815,6 +2843,11 @@ class App {
                     if (Array.isArray(items)) this._deserializeRotation(items);
                 }
             }
+            // new addition
+            this.data.attributes = calcAttributes(
+                this.build,
+                Object.values(this.selectedSkills).filter(Boolean),
+            );
 
             this._onBuildChange();
             this.render();
@@ -2836,6 +2869,12 @@ class App {
             } catch (err) {
                 alert('Failed to load build file: ' + err.message);
             }
+            this.data.attributes = calcAttributes(
+                this.build,
+                Object.values(this.selectedSkills).filter(Boolean),
+            );
+            this._onBuildChange();
+            this.render();
         };
         reader.readAsText(file);
     }
