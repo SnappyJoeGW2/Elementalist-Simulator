@@ -337,7 +337,7 @@ export const WEAPON_DATA = {
 // Energy, Geomancy, Hydromancy) are included for the dropdown but have no fields.
 export const SIGIL_DATA = {
     Accuracy: { criticalChance: 7 },
-    Force: { strikeDamageM: 5 },
+    Force: { strikeDamageA: 5 },
     Bursting: { conditionDamageA: 5 },
     Malice: { conditionDuration: 10 },
     Agony: { bleedingDuration: 20 },
