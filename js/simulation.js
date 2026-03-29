@@ -2915,6 +2915,7 @@ export class SimulationEngine {
 
     _grantEmpoweringAuras(S, time) {
         console.trace('grantEmpoweringAuras called', time, new Error().stack);
+        console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'condMap size:', S._condMap.get('Empowering Auras')?.length);
         const durMs = 10000;
         const arr = S._condMap.get('Empowering Auras');
         const existing = arr ? arr.filter(s => s.expiresAt > time && !s.perma) : [];
