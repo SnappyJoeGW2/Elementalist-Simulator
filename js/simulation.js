@@ -3332,15 +3332,9 @@ export class SimulationEngine {
 
     _grantPersistingFlames(S, time) {
         if (S._inSetup) return;
-        const arr = S._condMap.get('Persisting Flames');
-        const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
-        if (active.length >= 5) {
-            const shortest = active.reduce((a, b) => a.expiresAt < b.expiresAt ? a : b);
-            shortest.t = time;
-            shortest.expiresAt = time + 15000;
-        } else {
-            this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
-        }
+        const active = this._effectStacksAt(S, 'Persisting Flames', time);
+        if (active >= 5) return;
+        this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
     }
 
     _scheduleHits(S, sk, castStart, scaleOff = off => off) {
