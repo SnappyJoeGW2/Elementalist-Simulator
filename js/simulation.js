@@ -2907,7 +2907,6 @@ export class SimulationEngine {
     }
 
     _grantElemEmpowerment(S, stacks, time, source) {
-        if (S._inSetup) return;
         const arr = S._condMap.get('Elemental Empowerment');
         const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
         const current = Math.min(active.length, 10);
@@ -2946,7 +2945,6 @@ export class SimulationEngine {
     // }
 
     _grantEmpoweringAuras(S, time) {
-        if (S._inSetup) return;
         const durMs = 10000;
         const arr = S._condMap.get('Empowering Auras');
         const existing = arr ? arr.filter(s => s.t <= time && s.expiresAt > time && !s.perma) : [];
