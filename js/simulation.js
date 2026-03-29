@@ -2918,6 +2918,10 @@ export class SimulationEngine {
         for (const s of existing) s.expiresAt = time + durMs;
         if (existing.length < 5) {
             this._pushCondStack(S, { t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
+            S.log.push({ t: time, type: 'apply', effect: 'Empowering Auras', stacks: 1, dur: durMs / 1000, skill: 'Empowering Auras' });
+        } else {
+            // Refresh only — log the refresh so the graph reflects the updated duration
+            S.log.push({ t: time, type: 'refresh', effect: 'Empowering Auras', stacks: existing.length, dur: durMs / 1000, skill: 'Empowering Auras' });
         }
     }
 

@@ -273,17 +273,6 @@
       "name": "Feel the Burn!",
       "offset": 0
     },
-    "Fire Attunement",
-    "Triple Sear",
-    {
-      "name": "Flame Wheel",
-      "offset": 0
-    },
-    "Molten End",
-    {
-      "name": "Air Attunement",
-      "offset": 0
-    },
-    "Glyph of Storms (Air)"
+    "Fire Attunement"
   ]
 }
