@@ -694,6 +694,9 @@ export class SimulationEngine {
             _mightCondDmgBonus: 30,
             _furyCritBonus: 25,
         };
+
+        console.log('run() start, condMap Empowering Auras:', S._condMap.get('Empowering Auras'));
+
         // Flag-based trait disables for contribution analysis
         if (disTrait) {
             const TRAIT_FLAGS = {
