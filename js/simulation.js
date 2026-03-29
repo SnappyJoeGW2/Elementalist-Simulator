@@ -781,6 +781,9 @@ export class SimulationEngine {
             }
         }
 
+        // prevent EmpAuras
+        S._inSetup = true;
+
         for (let ri = 0; ri < this.rotation.length; ri++) {
             const item = this.rotation[ri];
 
@@ -833,6 +836,8 @@ export class SimulationEngine {
 
         const tgtHP = targetHP > 0 ? targetHP : Infinity;
         let deathTime = null;
+
+        S._inSetup = false;
 
         S.eq.sort((a, b) => a.time - b.time);
         while (S.eq.length > 0) {
@@ -2934,6 +2939,7 @@ export class SimulationEngine {
     // }
 
     _grantEmpoweringAuras(S, time) {
+        if (S._inSetup) return;
         const durMs = 10000;
         const arr = S._condMap.get('Empowering Auras');
         const existing = arr ? arr.filter(s => s.t <= time && s.expiresAt > time && !s.perma) : [];
