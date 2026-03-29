@@ -274,6 +274,8 @@ const PISTOL_NO_GRANT = new Set(['Aerial Agility (chain)', 'Aerial Agility (dash
 
 const PERMA_EXPIRY = 999999999;
 
+console.log('simulation.js loaded, version 13');
+
 function insertSorted(arr, ev) {
     let lo = 0, hi = arr.length;
     while (lo < hi) {
