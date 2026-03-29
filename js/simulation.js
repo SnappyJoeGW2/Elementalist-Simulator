@@ -2829,11 +2829,15 @@ export class SimulationEngine {
         if (S._hasElementalBastion) {
             this._trackEffect(S, 'Alacrity', 1, 4, time);
         }
-        if (S._hasEmpoweringAuras) {
-            this._grantEmpoweringAuras(S, time);
+        if (ev.sunspotAura) {
+            if (S._hasEmpoweringAuras) {
+                this._grantEmpoweringAuras(S, time);
+            }
         }
-        if (S._hasElemEpitome) {
-            this._grantElemEmpowerment(S, 1, time, skill);
+        if (ev.sunspotAura) {
+            if (S._hasElemEpitome) {
+                this._grantElemEmpowerment(S, 1, time, skill);
+            }
         }
     }
 
@@ -3121,6 +3125,7 @@ export class SimulationEngine {
             dmg: 0.6, ws: 690.5,
             isField: false, cc: false, conds: null,
             noCrit: true, att: S.att, isTraitProc: true,
+            sunspotAura: true,  // ← add this flag
         });
 
         if (S._hasBurningRage) {
