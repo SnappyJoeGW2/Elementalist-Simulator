@@ -87,7 +87,7 @@ python -m http.server
 ## Limitations & known assumptions
 
 - **Skill list is intentionally incomplete** — only skills relevant to DPS are included. Utility skills, healing skills, and elite skills that have no meaningful damage contribution are omitted.
-- **No elemental/pet simulation** — Elementals (Fire Elemental, Earth Elemental, etc.) are not simulated.
+- **No elemental/pet simulation** — Lesser Elementals (Fire Elemental, Earth Elemental, etc.) are not simulated. Elite Glyph of Elementals always casts Fire variant and only (automatically) applies burning. Strike damage is not included (~520 DPS loss).
 - **No healing or dodge simulation** — outgoing healing, barrier, and evade frames are not modelled. Healing Power is tracked in attributes but has no effect on the simulation output.
 - Healer and support builds are not the focus of this tool.
 
