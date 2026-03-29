@@ -2410,7 +2410,7 @@ export class SimulationEngine {
             if (S._hasRockSolid) this._grantRockSolid(S, S.t);
         }
         if (S._hasWeaversProwess && target !== prevPrimary) {
-            this._pushCondStack(S, { t: S.t, cond: "Weaver's Prowess", expiresAt: S.t + 8000 });
+            this._refreshEffect(S, "Weaver's Prowess", 8, S.t);
         }
         if (S._hasElementsOfRage && target === prevPrimary) {
             this._refreshEffect(S, 'Elements of Rage', 8, S.t);
@@ -2907,13 +2907,28 @@ export class SimulationEngine {
     }
 
     _grantElemEmpowerment(S, stacks, time, source) {
-        const current = Math.min(this._effectStacksAt(S, 'Elemental Empowerment', time), 10);
+        const arr = S._condMap.get('Elemental Empowerment');
+        const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
+        const current = Math.min(active.length, 10);
         const toAdd = Math.min(stacks, 10 - current);
+        const toReplace = stacks - toAdd; // stacks that go over cap → replace shortest
+
+        // Replace shortest-lived stacks when over cap
+        if (toReplace > 0) {
+            active.sort((a, b) => a.expiresAt - b.expiresAt);
+            for (let i = 0; i < toReplace; i++) {
+                active[i].t = time;
+                active[i].expiresAt = time + 15000;
+            }
+        }
+
+        // Add new stacks if under cap
         for (let i = 0; i < toAdd; i++) {
             this._pushCondStack(S, { t: time, cond: 'Elemental Empowerment', expiresAt: time + 15000 });
         }
-        if (toAdd > 0 && source) {
-            S.log.push({ t: time, type: 'apply', effect: 'Elemental Empowerment', stacks: toAdd, dur: 15, skill: source });
+
+        if ((toAdd + toReplace) > 0 && source) {
+            S.log.push({ t: time, type: 'apply', effect: 'Elemental Empowerment', stacks: toAdd + toReplace, dur: 15, skill: source });
         }
     }
 
@@ -3282,7 +3297,7 @@ export class SimulationEngine {
     }
 
     _applyFreshAirBuff(S, time) {
-        this._pushCondStack(S, { t: time, cond: 'Fresh Air', expiresAt: time + 5000 });
+        this._refreshEffect(S, 'Fresh Air', 5, time);
         S.log.push({ t: time, type: 'trait_proc', trait: 'Fresh Air', skill: 'Fresh Air', icon: 'https://render.guildwars2.com/file/FA64C9F2750F986E52E8376F22EDBA3844A8C603/1012277.png' });
     }
 
@@ -3315,9 +3330,16 @@ export class SimulationEngine {
     }
 
     _grantPersistingFlames(S, time) {
-        const active = this._effectStacksAt(S, 'Persisting Flames', time);
-        if (active >= 5) return;
-        this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
+        const arr = S._condMap.get('Persisting Flames');
+        const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
+        if (active.length >= 5) {
+            // Replace the stack that would expire soonest
+            const shortest = active.reduce((a, b) => a.expiresAt < b.expiresAt ? a : b);
+            shortest.t = time;
+            shortest.expiresAt = time + 15000;
+        } else {
+            this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
+        }
     }
 
     _scheduleHits(S, sk, castStart, scaleOff = off => off) {
