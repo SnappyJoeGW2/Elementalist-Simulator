@@ -63,7 +63,7 @@
     "util1": "Signet of Fire",
     "util2": "Glyph of Storms (Fire)",
     "util3": "Signet of Earth",
-    "elite": "Elemental Celerity"
+    "elite": "Glyph of Elementals"
   },
   "activeAttunement": "Earth",
   "secondaryAttunement": "Air",
@@ -90,6 +90,7 @@
     "Vulnerability": 25
   },
   "rotation": [
+    "Glyph of Elementals",
     "Elemental Explosion",
     {
       "name": "Deploy Jade Sphere (Earth)",

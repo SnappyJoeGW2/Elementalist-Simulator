@@ -63,7 +63,7 @@
     "util1": "Glyph of Elemental Power (Air)",
     "util2": "Signet of Fire",
     "util3": "Signet of Earth",
-    "elite": "Conjure Fiery Greatsword"
+    "elite": "Glyph of Elementals"
   },
   "activeAttunement": "Earth",
   "secondaryAttunement": "Air",
@@ -90,6 +90,7 @@
     "Vulnerability": 25
   },
   "rotation": [
+    "Glyph of Elementals",
     "Rock Barrier",
     "Dust Storm",
     "Hurl",

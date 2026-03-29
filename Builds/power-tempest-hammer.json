@@ -63,7 +63,7 @@
     "util1": "Feel the Burn!",
     "util2": "Glyph of Storms (Fire)",
     "util3": "Signet of Fire",
-    "elite": "Conjure Fiery Greatsword"
+    "elite": "Glyph of Elementals"
   },
   "activeAttunement": "Air",
   "secondaryAttunement": "Air",
@@ -90,6 +90,7 @@
     "Vulnerability": 25
   },
   "rotation": [
+    "Glyph of Elementals",
     "Crescent Wind",
     "Overload Air",
     "Shock Blast",
