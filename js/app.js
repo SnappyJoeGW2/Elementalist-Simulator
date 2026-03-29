@@ -9,7 +9,7 @@ import {
 import { TRAITS, SPECIALIZATIONS } from './traits-data.js';
 import { GW2API, PLACEHOLDER_ICON } from './gw2-api.js';
 import { calculateSkillDamage } from './damage.js';
-import { SimulationEngine } from './simulation.js?v=25';
+import { SimulationEngine } from './simulation.js?v=26';
 import { GearOptimizer } from './optimizer.js';
 
 // ─── Consumable description helpers ──────────────────────────────────────────

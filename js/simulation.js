@@ -2912,9 +2912,8 @@ export class SimulationEngine {
         const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
         const current = Math.min(active.length, 10);
         const toAdd = Math.min(stacks, 10 - current);
-        const toReplace = stacks - toAdd; // stacks that go over cap → replace shortest
+        const toReplace = stacks - toAdd;
 
-        // Replace shortest-lived stacks when over cap
         if (toReplace > 0) {
             active.sort((a, b) => a.expiresAt - b.expiresAt);
             for (let i = 0; i < toReplace; i++) {
@@ -2922,12 +2921,9 @@ export class SimulationEngine {
                 active[i].expiresAt = time + 15000;
             }
         }
-
-        // Add new stacks if under cap
         for (let i = 0; i < toAdd; i++) {
             this._pushCondStack(S, { t: time, cond: 'Elemental Empowerment', expiresAt: time + 15000 });
         }
-
         if ((toAdd + toReplace) > 0 && source) {
             S.log.push({ t: time, type: 'apply', effect: 'Elemental Empowerment', stacks: toAdd + toReplace, dur: 15, skill: source });
         }
@@ -3332,9 +3328,15 @@ export class SimulationEngine {
 
     _grantPersistingFlames(S, time) {
         if (S._inSetup) return;
-        const active = this._effectStacksAt(S, 'Persisting Flames', time);
-        if (active >= 5) return;
-        this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
+        const arr = S._condMap.get('Persisting Flames');
+        const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
+        if (active.length >= 5) {
+            const shortest = active.reduce((a, b) => a.expiresAt < b.expiresAt ? a : b);
+            shortest.t = time;
+            shortest.expiresAt = time + 15000;
+        } else {
+            this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
+        }
     }
 
     _scheduleHits(S, sk, castStart, scaleOff = off => off) {
