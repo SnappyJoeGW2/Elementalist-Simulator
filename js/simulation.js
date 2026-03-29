@@ -978,7 +978,7 @@ export class SimulationEngine {
                     || ev.time < S.perfectWeaveUntil;
                 const addStrike = pfStacks * 0.02
                     + (tempAriaUp ? 0.10 : 0)
-                    + (transcTempUp ? 0.20 : 0)
+                    + (transcTempUp ? 0.25 : 0)
                     + (elemRageUp ? 0.07 : 0)   // strike bonus unchanged by patch (only cond was reduced)
                     + (hasSpeed ? 0.07 : 0)
                     + empAurasStacks * 0.01
