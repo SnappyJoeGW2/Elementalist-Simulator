@@ -2917,8 +2917,8 @@ export class SimulationEngine {
         if (toReplace > 0) {
             active.sort((a, b) => a.expiresAt - b.expiresAt);
             for (let i = 0; i < toReplace; i++) {
-                active[i].t = time;
-                active[i].expiresAt = time + 15000;
+                active[i].expiresAt = time; // expire in place
+                this._pushCondStack(S, { t: time, cond: 'Elemental Empowerment', expiresAt: time + 15000 });
             }
         }
         for (let i = 0; i < toAdd; i++) {
