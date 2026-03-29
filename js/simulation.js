@@ -2409,7 +2409,7 @@ export class SimulationEngine {
             this._triggerEarthenBlast(S, S.t);
             if (S._hasRockSolid) this._grantRockSolid(S, S.t);
         }
-        if (S._hasWeaversProwess && target !== prevPrimary) {
+        if (S._hasWeaversProwess && target !== prevPrimary && !S._inSetup) {
             this._refreshEffect(S, "Weaver's Prowess", 8, S.t);
         }
         if (S._hasElementsOfRage && target === prevPrimary) {
@@ -2519,7 +2519,7 @@ export class SimulationEngine {
         if (sk.attunement === 'Air') this._triggerElectricDischarge(S, start);
         if (sk.attunement === 'Earth') this._triggerEarthenBlast(S, start);
 
-        if (S._hasTranscendentTempest) {
+        if (S._hasTranscendentTempest && !S._inSetup) {
             this._refreshEffect(S, 'Transcendent Tempest', 7, end);
         }
 
@@ -2823,7 +2823,7 @@ export class SimulationEngine {
             this._trackEffect(S, 'Vigor', 1, 5, time);
             this._trackEffect(S, 'Regeneration', 1, 5, time);
         }
-        if (S._hasTempestuousAria) {
+        if (S._hasTempestuousAria && !S._inSetup) {
             this._refreshEffect(S, 'Tempestuous Aria', 5, time);
         }
         if (S._hasElementalBastion) {
@@ -2907,6 +2907,7 @@ export class SimulationEngine {
     }
 
     _grantElemEmpowerment(S, stacks, time, source) {
+        if (S._inSetup) return;
         const arr = S._condMap.get('Elemental Empowerment');
         const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
         const current = Math.min(active.length, 10);
@@ -3330,10 +3331,10 @@ export class SimulationEngine {
     }
 
     _grantPersistingFlames(S, time) {
+        if (S._inSetup) return;
         const arr = S._condMap.get('Persisting Flames');
         const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
         if (active.length >= 5) {
-            // Replace the stack that would expire soonest
             const shortest = active.reduce((a, b) => a.expiresAt < b.expiresAt ? a : b);
             shortest.t = time;
             shortest.expiresAt = time + 15000;
