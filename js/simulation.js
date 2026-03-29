@@ -3332,9 +3332,11 @@ export class SimulationEngine {
         const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
         if (active.length >= 5) {
             const shortest = active.reduce((a, b) => a.expiresAt < b.expiresAt ? a : b);
+            console.log('PF replace', time, 'shortest exp:', shortest.expiresAt, '→', time + 15000);
             shortest.t = time;
             shortest.expiresAt = time + 15000;
         } else {
+            console.log('PF add', time, 'active:', active.length);
             this._pushCondStack(S, { t: time, cond: 'Persisting Flames', expiresAt: time + 15000 });
         }
     }
