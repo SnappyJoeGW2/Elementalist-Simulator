@@ -2937,6 +2937,7 @@ export class SimulationEngine {
         const durMs = 10000;
         const arr = S._condMap.get('Empowering Auras');
         const existing = arr ? arr.filter(s => s.t <= time && s.expiresAt > time && !s.perma) : [];
+        console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'all stacks:', arr ? arr.map(s => `t=${s.t} exp=${s.expiresAt}`) : []);
         console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'total in map:', arr?.length ?? 0);
         for (const s of existing) s.expiresAt = time + durMs;
         if (existing.length < 5) {
