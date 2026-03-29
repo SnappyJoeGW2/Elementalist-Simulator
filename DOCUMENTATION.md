@@ -34,6 +34,7 @@ GW2/
 ├── csv input/
 │   ├── Tool_Elementalist - Skills_data.csv
 │   └── Tool_Elementalist - Skill_hits_data.csv
+├── Builds/                            # Saved build JSON files
 └── Rotations/                         # Saved rotation JSON files
 ```
 
@@ -151,7 +152,7 @@ calcAttributes(build, equippedSkills) → { attributeBreakdowns, derivedStats }
 
 **Trait conversion pool (`convBase`):**
 
-`base + gear + runes + jbc` — this is the pool used for Ferocious Winds, Strength of Stone, Elements of Rage conversions. Food is included for Ferocious Winds and Elements of Rage but not Strength of Stone.
+`base + gear + runes + infusions + jade bot core` — this is the pool used for Ferocious Winds, Strength of Stone, Elements of Rage conversions. Food is included for Ferocious Winds and Elements of Rage but not Strength of Stone.
 
 **Key design rule — no double-counting:**
 
@@ -598,7 +599,7 @@ Applied in `calcAttributes()` in a specific order to handle interdependencies:
 | Elemental Polyphony | Each unique attunement (deduped): Fire→+200 Power, Air→+200 Ferocity, Water→+200 Healing Power, Earth→+200 Vitality |
 | Fresh Air | +250 Ferocity for 5s on Air swap |
 | Raging Storm | +180 Ferocity under Fury |
-| Elemental Empowerment | +1%/1.5%/2% of base+gear+runes+**infusions**+food per stack (max 10, Catalyst) |
+| Elemental Empowerment | +1%/1.5%/2% of base+gear+runes+infusions+food per stack (max 10, Catalyst) |
 
 **Additive strike/condition modifiers** (accumulated into `addStrike`/`addCond`):
 
@@ -726,19 +727,6 @@ Applied in `calcAttributes()` in a specific order to handle interdependencies:
 
 ---
 
-## EVTC Parser (`evtc-parser.html`)
-
-A standalone HTML page for analysing ArcDPS combat logs. Drop a `.evtc` or `.zevtc` file to load it.
-
-**Tabs:**
-- **Hit Offsets** — Per-skill, per-cast hit timing table with damage/result breakdown. Export to CSV.
-- **Full Timeline** — Chronological list of all activations, strikes, and buff applications (up to 5,000 events).
-- **Cast Log** — All completed/cancelled casts with start/end times and durations.
-- **All Damage Events** — Raw strike and condition tick events.
-- **Damage Solver** — Back-calculates weapon strength and damage coefficients from raw hit data given known Power/Ferocity/Armor values.
-- **Buff Durations** — All buff/condition application events (duration, overstack).
-- **Rotation Export** — Builds a rotation JSON compatible with the main DPS tool's "Load Rotation" button.
-
 **Rotation Export tab details:**
 
 - Configurable instant threshold (ms), start/end time window.
@@ -766,7 +754,7 @@ A standalone HTML page for analysing ArcDPS combat logs. Drop a `.evtc` or `.zev
 
 7. **Target HP / death tracking** — Once total damage reaches `targetHP`, the target is dead. DPS = `targetHP / killTime`. Events after death are not processed.
 
-8. **Trait flags cached once** — All `_hasTrait()` checks are done once during state init and stored as `_has*` boolean flags. Avoids repeated lookups in the hot event loop.
+8. **Trait flags cached once** — All `_hasTrait()` checks are done once during state init and stored as `_has*` boolean flags. Avoids repeated lookups in the hit event loop.
 
 9. **Attunement timeline for historical lookup** — `S.attTimeline` records every attunement change. `_attAt(t)` and `_att2At(t)` binary-search this timeline to find the player's attunement at any historical time.
 
@@ -784,4 +772,4 @@ A standalone HTML page for analysing ArcDPS combat logs. Drop a `.evtc` or `.zev
 
 16. **DPS window starts at first hit** — `S.firstHitTime` is set on the first damaging event. The DPS denominator is `effectiveEnd − firstHitTime`, not `0 − firstHitTime`. This matches the GW2 benchmark convention.
 
-17. **Conjured weapon stat locking** — Hit events embed `conjure: S.conjureEquipped || null` at schedule time. This ensures the stat bonus reflects the equipped weapon at cast time, not at hit resolution time.
+17. **Conjured weapon stat locking** — Hit events embed `conjure: S.conjureEquipped || null` at schedule time. This ensures the stat bonus reflects the equipped weapon at cast time.
