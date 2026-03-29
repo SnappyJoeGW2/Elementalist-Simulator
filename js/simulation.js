@@ -2913,18 +2913,32 @@ export class SimulationEngine {
         }
     }
 
+    // _grantEmpoweringAuras(S, time) {
+    //     console.trace('grantEmpoweringAuras called', time, new Error().stack);
+    //     const durMs = 10000;
+    //     const arr = S._condMap.get('Empowering Auras');
+    //     const existing = arr ? arr.filter(s => s.expiresAt > time && !s.perma) : [];
+    //     console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'condMap size:', S._condMap.get('Empowering Auras')?.length);
+    //     for (const s of existing) s.expiresAt = time + durMs;
+    //     if (existing.length < 5) {
+    //         this._pushCondStack(S, { t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
+    //         S.log.push({ t: time, type: 'apply', effect: 'Empowering Auras', stacks: 1, dur: durMs / 1000, skill: 'Empowering Auras' });
+    //     } else {
+    //         // Refresh only — log the refresh so the graph reflects the updated duration
+    //         S.log.push({ t: time, type: 'refresh', effect: 'Empowering Auras', stacks: existing.length, dur: durMs / 1000, skill: 'Empowering Auras' });
+    //     }
+    // }
+
     _grantEmpoweringAuras(S, time) {
-        console.trace('grantEmpoweringAuras called', time, new Error().stack);
         const durMs = 10000;
         const arr = S._condMap.get('Empowering Auras');
         const existing = arr ? arr.filter(s => s.expiresAt > time && !s.perma) : [];
-        console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'condMap size:', S._condMap.get('Empowering Auras')?.length);
+        if (existing.length > 0) console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'total in map:', arr?.length);
         for (const s of existing) s.expiresAt = time + durMs;
         if (existing.length < 5) {
             this._pushCondStack(S, { t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
             S.log.push({ t: time, type: 'apply', effect: 'Empowering Auras', stacks: 1, dur: durMs / 1000, skill: 'Empowering Auras' });
         } else {
-            // Refresh only — log the refresh so the graph reflects the updated duration
             S.log.push({ t: time, type: 'refresh', effect: 'Empowering Auras', stacks: existing.length, dur: durMs / 1000, skill: 'Empowering Auras' });
         }
     }
