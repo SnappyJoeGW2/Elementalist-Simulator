@@ -274,8 +274,6 @@ const PISTOL_NO_GRANT = new Set(['Aerial Agility (chain)', 'Aerial Agility (dash
 
 const PERMA_EXPIRY = 999999999;
 
-console.log('simulation.js loaded, version 13');
-
 function insertSorted(arr, ev) {
     let lo = 0, hi = arr.length;
     while (lo < hi) {
@@ -694,8 +692,6 @@ export class SimulationEngine {
             _mightCondDmgBonus: 30,
             _furyCritBonus: 25,
         };
-
-        console.log('run() start, condMap Empowering Auras:', S._condMap.get('Empowering Auras'));
 
         // Flag-based trait disables for contribution analysis
         if (disTrait) {
@@ -1979,7 +1975,7 @@ export class SimulationEngine {
                         const buffKey = HAMMER_ORB_BUFF_KEY[el];
                         if (buffKey) {
                             const arr = S._condMap.get(buffKey);
-                            if (arr) for (const s of arr) if (s.expiresAt > end) s.expiresAt = end + HAMMER_ORB_DURATION_MS;
+                            if (arr) for (const s of arr) if (s.t <= end && s.expiresAt > end) s.expiresAt = end + HAMMER_ORB_DURATION_MS;
                         }
                     }
                 }
@@ -2812,7 +2808,6 @@ export class SimulationEngine {
     }
 
     _applyAura(S, auraName, durMs, time, skill) {
-        console.log('applyAura', auraName, time, skill);
         if (S._hasSmothering) durMs = Math.round(durMs * 1.33);
         S.auras.push({ type: auraName, end: time + durMs, skill });
         this._pushCondStack(S, { t: time, cond: auraName, expiresAt: time + durMs });
@@ -2846,7 +2841,7 @@ export class SimulationEngine {
         const arr = S._condMap.get(effectName);
         if (arr) {
             for (const s of arr) {
-                if (s.expiresAt > time) s.expiresAt = time;
+                if (s.t <= time && s.expiresAt > time) s.expiresAt = time;
             }
         }
         this._trackEffect(S, effectName, 1, durSec, time);
@@ -2854,7 +2849,7 @@ export class SimulationEngine {
 
     _grantFamiliarProwess(S, time) {
         const arr = S._condMap.get("Familiar's Prowess");
-        const existing = arr?.find(s => s.expiresAt > time && !s.perma);
+        const existing = arr?.find(s => s.t <= time && s.expiresAt > time && !s.perma);
         if (existing) {
             existing.expiresAt = Math.min(existing.expiresAt + 5000, time + 15000);
         } else {
@@ -2943,8 +2938,6 @@ export class SimulationEngine {
         const durMs = 10000;
         const arr = S._condMap.get('Empowering Auras');
         const existing = arr ? arr.filter(s => s.t <= time && s.expiresAt > time && !s.perma) : [];
-        console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'all stacks:', arr ? arr.map(s => `t=${s.t} exp=${s.expiresAt}`) : []);
-        console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'total in map:', arr?.length ?? 0);
         for (const s of existing) s.expiresAt = time + durMs;
         if (existing.length < 5) {
             this._pushCondStack(S, { t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
@@ -3475,7 +3468,7 @@ export class SimulationEngine {
     // Arcane Lightning: 150 Ferocity buff (15s, refreshes on each Arcane cast)
     _refreshArcaneLightningBuff(S, time) {
         const arr = S._condMap.get('Arcane Lightning');
-        const existing = arr?.find(s => s.expiresAt > time && !s.perma);
+        const existing = arr?.find(s => s.t <= time && s.expiresAt > time && !s.perma);
         if (existing) existing.expiresAt = time + 15000;
         else this._pushCondStack(S, { t: time, cond: 'Arcane Lightning', expiresAt: time + 15000 });
     }
@@ -4063,7 +4056,7 @@ export class SimulationEngine {
         const volArr = S._condMap.get('Bloodstone Volatility');
         if (volArr) {
             for (const s of volArr) {
-                if (s.expiresAt > time) s.expiresAt = time + proc.volatilityDuration;
+                if (s.t <= time && s.expiresAt > time) s.expiresAt = time + proc.volatilityDuration;
             }
         }
         this._pushCondStack(S, { t: time, cond: 'Bloodstone Volatility', expiresAt: time + proc.volatilityDuration });
@@ -4075,7 +4068,7 @@ export class SimulationEngine {
             const volArr2 = S._condMap.get('Bloodstone Volatility');
             if (volArr2) {
                 for (const s of volArr2) {
-                    if (s.expiresAt > time) s.expiresAt = time;
+                    if (s.t <= time && s.expiresAt > time) s.expiresAt = time;
                 }
             }
             this._pushCondStack(S, { t: time, cond: 'Bloodstone Explosion', expiresAt: time + proc.effectDuration });
