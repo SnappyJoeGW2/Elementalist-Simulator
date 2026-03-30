@@ -2935,6 +2935,12 @@ export class SimulationEngine {
         this._pushCondStack(S, { t: time, cond: auraName, expiresAt: time + durMs });
         S.log.push({ t: time, type: 'aura', aura: auraName, skill, dur: durMs });
 
+        // Only trigger Empowering / ElemEmpowerment if not deferred
+        if (!opts.deferEmpowerProcs) {
+            if (S._hasEmpoweringAuras) this._grantEmpoweringAuras(S, time);
+            if (S._hasElemEpitome) this._grantElemEmpowerment(S, 1, time, skill);
+        }
+
         if (S._hasZephyrsBoon) {
             this._trackEffect(S, 'Fury', 1, 5, time);
             this._trackEffect(S, 'Swiftness', 1, 5, time);
@@ -2953,17 +2959,9 @@ export class SimulationEngine {
             this._trackEffect(S, 'Alacrity', 1, 4, time);
         }
 
+        // Also defer aura procs during setup
         if (S._inSetup) {
             S._deferredAuraProcs.push({ time, skill });
-            return; // don't run them now
-        }
-
-        if (S._hasEmpoweringAuras) {
-            this._grantEmpoweringAuras(S, time);
-        }
-
-        if (S._hasElemEpitome) {
-            this._grantElemEmpowerment(S, 1, time, skill);
         }
     }
 
@@ -3229,7 +3227,7 @@ export class SimulationEngine {
         if (S.eliteSpec === 'Evoker' && time < (S.traitICD['Sunspot'] || 0)) return;
         if (S.eliteSpec === 'Evoker') S.traitICD['Sunspot'] = time + 5000;
 
-        this._applyAura(S, 'Fire Aura', 3000, time, 'Sunspot');
+        this._applyAura(S, 'Fire Aura', 3000, time, 'Sunspot', { deferEmpowerProcs: true });
 
         insertSorted(S.eq, {
             time, type: 'hit',
