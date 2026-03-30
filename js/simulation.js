@@ -2928,7 +2928,7 @@ export class SimulationEngine {
         S.log.push({ t: castEnd, type: 'field', field: sk.comboField, skill: sk.name, dur });
     }
 
-    _applyAura(S, auraName, durMs, time, skill) {
+    _applyAura(S, auraName, durMs, time, skill, opts = {}) {
         if (S._hasSmothering) durMs = Math.round(durMs * 1.33);
 
         S.auras.push({ type: auraName, end: time + durMs, skill });
