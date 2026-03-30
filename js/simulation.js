@@ -887,6 +887,16 @@ export class SimulationEngine {
             const vulnMul = skipVuln ? 1 : 1 + this._vulnStacksAt(S, ev.time) * 0.01;
 
             if (ev.type === 'hit') {
+
+                console.log('HIT', ev.time, {
+                    skill: ev.skill,
+                    isTraitProc: ev.isTraitProc,
+                    isSigilProc: ev.isSigilProc,
+                    isRelicProc: ev.isRelicProc,
+                    isField: ev.isField,
+                    dmg: ev.dmg,
+                    ws: ev.ws
+                });
                 // Hammer orb ticks: skip if Grand Finale consumed the orb before this tick fires
                 if (ev.hammerOrbElement) {
                     if (ev.hammerOrbElement === 'Dual') {
@@ -1128,11 +1138,34 @@ export class SimulationEngine {
                     S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Overload Air Bonus' });
                 }
 
+                console.log('SI check', {
+                    time: ev.time,
+                    stacks: siStacks,
+                    icd: siICD,
+                    icdReady,
+                });
+
+                const canProc =
+                    siStacks > 0 &&
+                    !ev.isSigilProc &&
+                    !ev.isRelicProc &&
+                    !ev.isTraitProc &&
+                    !ev.isField &&
+                    ev.dmg > 0 &&
+                    ev.ws > 0 &&
+                    icdReady;
+
+                console.log('SI result', {
+                    time: ev.time,
+                    canProc
+                });
+
+                // this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
+                // && !ev.isTraitProc && !ev.isField && ev.dmg > 0 && ev.ws > 0
+                // && ev.time >= (S.traitICD['ShatteringIce'] || 0)
+
                 // Shattering Ice buff: proc an additional strike with 1s ICD
-                if (this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
-                    && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc
-                    && !ev.isField && ev.dmg > 0 && ev.ws > 0
-                    && ev.time >= (S.traitICD['ShatteringIce'] || 0)) {
+                if (canProc) {
                     S.traitICD['ShatteringIce'] = ev.time + 1000;
                     insertSorted(S.eq, {
                         time: ev.time, type: 'hit',
@@ -1142,7 +1175,24 @@ export class SimulationEngine {
                         conds: { Chilled: { stacks: 1, duration: 1 } },
                         noCrit: false, att: ev.att, isTraitProc: true,
                     });
+
                     S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Shattering Ice Proc' });
+                }
+
+                if (!canProc) {
+                    console.log('SI FAIL', {
+                        time: ev.time,
+                        reason: {
+                            noStacks: siStacks <= 0,
+                            sigil: ev.isSigilProc,
+                            relic: ev.isRelicProc,
+                            trait: ev.isTraitProc,
+                            field: ev.isField,
+                            noDmg: ev.dmg <= 0,
+                            noWs: ev.ws <= 0,
+                            icdBlocked: !icdReady
+                        }
+                    });
                 }
 
                 if (S.sigilDoomPending && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc && !ev.isField && ev.dmg > 0) {
