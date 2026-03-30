@@ -888,15 +888,6 @@ export class SimulationEngine {
 
             if (ev.type === 'hit') {
 
-                console.log('HIT', ev.time, {
-                    skill: ev.skill,
-                    isTraitProc: ev.isTraitProc,
-                    isSigilProc: ev.isSigilProc,
-                    isRelicProc: ev.isRelicProc,
-                    isField: ev.isField,
-                    dmg: ev.dmg,
-                    ws: ev.ws
-                });
                 // Hammer orb ticks: skip if Grand Finale consumed the orb before this tick fires
                 if (ev.hammerOrbElement) {
                     if (ev.hammerOrbElement === 'Dual') {
