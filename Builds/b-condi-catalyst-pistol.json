@@ -124,11 +124,11 @@
       "name": "Deploy Jade Sphere (Water)",
       "offset": 0
     },
+    "Frigid Flurry",
     {
       "name": "Frost Aura",
       "offset": 0
     },
-    "Frigid Flurry",
     "Arcane Brilliance",
     {
       "name": "Air Attunement",
@@ -167,7 +167,6 @@
     "Scorching Shot",
     "Scorching Shot",
     "Scorching Shot",
-    "Scorching Shot",
     "Raging Ricochet",
     "Searing Salvo",
     {
@@ -183,10 +182,7 @@
       "name": "Frost Aura",
       "offset": 0
     },
-    {
-      "name": "Air Attunement",
-      "offset": 0
-    },
+    "Air Attunement",
     {
       "name": "Deploy Jade Sphere (Air)",
       "offset": 0
@@ -286,11 +282,11 @@
       "name": "Deploy Jade Sphere (Water)",
       "offset": 0
     },
+    "Frigid Flurry",
     {
       "name": "Frost Aura",
       "offset": 0
     },
-    "Frigid Flurry",
     "Arcane Brilliance",
     {
       "name": "Air Attunement",
@@ -361,11 +357,11 @@
     },
     "Shattering Stone",
     "Earthquake",
-    "Arcane Brilliance",
     "Churning Earth",
     "Signet of Fire",
     "Elemental Explosion",
     "Boulder Blast",
+    "Piercing Pebble",
     "Shattering Stone",
     {
       "name": "Fire Attunement",
@@ -390,11 +386,11 @@
       "name": "Deploy Jade Sphere (Water)",
       "offset": 0
     },
+    "Frigid Flurry",
     {
       "name": "Frost Aura",
       "offset": 0
     },
-    "Frigid Flurry",
     {
       "name": "Air Attunement",
       "offset": 0

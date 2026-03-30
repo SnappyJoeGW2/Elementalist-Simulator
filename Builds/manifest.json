@@ -11,27 +11,32 @@
   },
   {
     "label": "Power Tempest (Hammer)",
-    "build": "Builds/power-tempest-hammer.json",
-    "rotation": "Rotations/power-tempest-hammer.json"
+    "build": "Builds/b-power-tempest-hammer.json",
+    "rotation": "Rotations/r-power-tempest-hammer.json"
+  },
+  {
+    "label": "Power Tempest (Sword)",
+    "build": "Builds/b-power-tempest-sword.json",
+    "rotation": "Rotations/r-power-tempest-sword.json"
   },
   {
     "label": "Condi Alac Tempest (Scepter)",
-    "build": "Builds/condi-alac-tempest-scepter.json",
-    "rotation": "Rotations/condi-alac-tempest-scepter.json"
+    "build": "Builds/b-condi-alac-tempest-scepter.json",
+    "rotation": "Rotations/r-condi-alac-tempest-scepter.json"
   },
   {
     "label": "Power Catalyst (Spear)",
-    "build": "Builds/power-catalyst-spear.json",
-    "rotation": "Rotations/power-catalyst-spear.json"
+    "build": "Builds/b-power-catalyst-spear.json",
+    "rotation": "Rotations/r-power-catalyst-spear.json"
   },
   {
     "label": "Condi Catalyst (Pistol)",
-    "build": "Builds/condi-catalyst-pistol.json",
-    "rotation": "Rotations/condi-catalyst-pistol.json"
+    "build": "Builds/b-condi-alac-tempest-scepter.json",
+    "rotation": "Rotations/r-condi-catalyst-pistol.json"
   },
   {
     "label": "Inverno Evoker SE",
-    "build": "Builds/inferno-evoker-se.json",
-    "rotation": "Rotations/inferno-evoker-se.json"
+    "build": "Builds/b-inferno-evoker-se.json",
+    "rotation": "Rotations/r-inferno-evoker-se.json"
   }
 ]
