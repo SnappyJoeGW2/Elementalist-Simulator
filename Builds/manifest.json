@@ -1,8 +1,8 @@
 [
   {
     "label": "Power Weaver",
-    "build": "Builds/power-weaver.json",
-    "rotation": "Rotations/power-weaver.json"
+    "build": "Builds/b-power-weaver.json",
+    "rotation": "Rotations/r-power-weaver.json"
   },
   {
     "label": "Condi Weaver (Scepter)",

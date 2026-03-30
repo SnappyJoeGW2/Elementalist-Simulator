@@ -2415,7 +2415,7 @@ export class SimulationEngine {
             this._triggerEarthenBlast(S, S.t);
             if (S._hasRockSolid) this._grantRockSolid(S, S.t);
         }
-        if (S._hasWeaversProwess && target !== prevPrimary && !S._inSetup) {
+        if (S._hasWeaversProwess && target !== prevPrimary) {
             this._refreshEffect(S, "Weaver's Prowess", 8, S.t);
         }
         if (S._hasElementsOfRage && target === prevPrimary) {
