@@ -1129,6 +1129,11 @@ export class SimulationEngine {
                     S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Overload Air Bonus' });
                 }
 
+
+                const siStacks = this._effectStacksAt(S, 'Shattering Ice', ev.time);
+                const siICD = S.traitICD['ShatteringIce'] || 0;
+                const icdReady = ev.time >= siICD;
+
                 console.log('SI check', {
                     time: ev.time,
                     stacks: siStacks,
