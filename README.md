@@ -90,6 +90,8 @@ python -m http.server
 - **No elemental/pet simulation** — Lesser Elementals (Fire Elemental, Earth Elemental, etc.) are not simulated. Elite Glyph of Elementals always casts Fire variant and only (automatically) applies burning. Strike damage is not included (~520 DPS loss).
 - **No healing or dodge simulation** — outgoing healing, barrier, and evade frames are not modelled. Healing Power is tracked in attributes but has no effect on the simulation output.
 - Healer and support builds are not the focus of this tool.
+- Currently, it's not possible to precast skills before the combat (e.g. Frost Aura and swap to Earth)
+- Currently, it's not possible to precast Overload skills, so that they start combat at the last tick.
 
 ---
 
