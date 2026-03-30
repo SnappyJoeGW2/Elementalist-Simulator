@@ -1061,6 +1061,12 @@ export class SimulationEngine {
                     };
                 }
 
+                // Sunspot aura grants (deferred from setup phase)
+                if (ev.sunspotAura) {
+                    if (S._hasEmpoweringAuras) this._grantEmpoweringAuras(S, ev.time);
+                    if (S._hasElemEpitome) this._grantElemEmpowerment(S, 1, ev.time, 'Sunspot');
+                }
+
                 if (!ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc && !ev.isField && ev.dmg > 0 && ev.ws > 0) {
                     this._checkOnCritSigils(S, ev.time, cc);
                     if (S._hasBurningPrecision) this._checkBurningPrecision(S, ev.time, cc);
@@ -2829,15 +2835,12 @@ export class SimulationEngine {
         if (S._hasElementalBastion) {
             this._trackEffect(S, 'Alacrity', 1, 4, time);
         }
-        if (ev.sunspotAura) {
-            if (S._hasEmpoweringAuras) {
-                this._grantEmpoweringAuras(S, time);
-            }
+        if (S._hasEmpoweringAuras) {
+            this._grantEmpoweringAuras(S, time);
         }
-        if (ev.sunspotAura) {
-            if (S._hasElemEpitome) {
-                this._grantElemEmpowerment(S, 1, time, skill);
-            }
+
+        if (S._hasElemEpitome) {
+            this._grantElemEmpowerment(S, 1, time, skill);
         }
     }
 
@@ -2911,6 +2914,7 @@ export class SimulationEngine {
     }
 
     _grantElemEmpowerment(S, stacks, time, source) {
+        if (S._inSetup) return;
         const arr = S._condMap.get('Elemental Empowerment');
         const active = arr ? arr.filter(s => s.t <= time && s.expiresAt > time) : [];
         const current = Math.min(active.length, 10);
@@ -2932,23 +2936,8 @@ export class SimulationEngine {
         }
     }
 
-    // _grantEmpoweringAuras(S, time) {
-    //     console.trace('grantEmpoweringAuras called', time, new Error().stack);
-    //     const durMs = 10000;
-    //     const arr = S._condMap.get('Empowering Auras');
-    //     const existing = arr ? arr.filter(s => s.expiresAt > time && !s.perma) : [];
-    //     console.log('grantEmpoweringAuras', time, 'existing:', existing.length, 'condMap size:', S._condMap.get('Empowering Auras')?.length);
-    //     for (const s of existing) s.expiresAt = time + durMs;
-    //     if (existing.length < 5) {
-    //         this._pushCondStack(S, { t: time, cond: 'Empowering Auras', expiresAt: time + durMs });
-    //         S.log.push({ t: time, type: 'apply', effect: 'Empowering Auras', stacks: 1, dur: durMs / 1000, skill: 'Empowering Auras' });
-    //     } else {
-    //         // Refresh only — log the refresh so the graph reflects the updated duration
-    //         S.log.push({ t: time, type: 'refresh', effect: 'Empowering Auras', stacks: existing.length, dur: durMs / 1000, skill: 'Empowering Auras' });
-    //     }
-    // }
-
     _grantEmpoweringAuras(S, time) {
+        if (S._inSetup) return;
         const durMs = 10000;
         const arr = S._condMap.get('Empowering Auras');
         const existing = arr ? arr.filter(s => s.t <= time && s.expiresAt > time && !s.perma) : [];
