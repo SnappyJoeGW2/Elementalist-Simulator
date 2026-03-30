@@ -693,6 +693,8 @@ export class SimulationEngine {
             _furyCritBonus: 25,
         };
 
+        S._deferredAuraProcs = []; // new array to hold procs to fire in main loop
+
         // Flag-based trait disables for contribution analysis
         if (disTrait) {
             const TRAIT_FLAGS = {
@@ -844,6 +846,12 @@ export class SimulationEngine {
             // Trailing condition ticks beyond the rotation are excluded — if the target
             // didn't die during the active rotation, it survived.
             if (stopAtTime === null && ev.time > rotEnd) break;
+
+            for (const proc of S._deferredAuraProcs) {
+                if (S._hasEmpoweringAuras) this._grantEmpoweringAuras(S, proc.time);
+                if (S._hasElemEpitome) this._grantElemEmpowerment(S, 1, proc.time, proc.skill);
+            }
+            S._deferredAuraProcs = []; // clear after processing
 
             if ((ev.type === 'hit' && ev.dmg > 0) || ev.type === 'ctick') {
                 if (S.firstHitTime === null) S.firstHitTime = ev.time;
@@ -2922,9 +2930,11 @@ export class SimulationEngine {
 
     _applyAura(S, auraName, durMs, time, skill) {
         if (S._hasSmothering) durMs = Math.round(durMs * 1.33);
+
         S.auras.push({ type: auraName, end: time + durMs, skill });
         this._pushCondStack(S, { t: time, cond: auraName, expiresAt: time + durMs });
         S.log.push({ t: time, type: 'aura', aura: auraName, skill, dur: durMs });
+
         if (S._hasZephyrsBoon) {
             this._trackEffect(S, 'Fury', 1, 5, time);
             this._trackEffect(S, 'Swiftness', 1, 5, time);
@@ -2942,6 +2952,12 @@ export class SimulationEngine {
         if (S._hasElementalBastion) {
             this._trackEffect(S, 'Alacrity', 1, 4, time);
         }
+
+        if (S._inSetup) {
+            S._deferredAuraProcs.push({ time, skill });
+            return; // don't run them now
+        }
+
         if (S._hasEmpoweringAuras) {
             this._grantEmpoweringAuras(S, time);
         }
