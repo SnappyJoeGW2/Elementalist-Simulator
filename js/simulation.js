@@ -907,6 +907,51 @@ export class SimulationEngine {
 
             if (ev.type === 'hit') {
 
+                console.log('ICD DEBUG', {
+                    time: ev.time,
+                    icd: S.traitICD['ShatteringIce'],
+                    ready: ev.time >= (S.traitICD['ShatteringIce'] || 0)
+                });
+
+                console.log('STACKS',
+                    this._effectStacksAt(S, 'Shattering Ice', ev.time)
+                );
+
+                if (this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
+                    && !ev.isTraitProc
+                    && !ev.isField
+                    && ev.dmg > 0
+                    && ev.ws > 0
+                    && ev.time >= (S.traitICD['ShatteringIce'] || 0)) {
+
+                    console.log('✅ SI PROC TRIGGERED at', ev.time);
+
+                    S.traitICD['ShatteringIce'] = ev.time + 1000;
+
+                    insertSorted(S.eq, {
+                        time: ev.time,
+                        type: 'hit',
+                        skill: 'Shattering Ice Proc',
+                        hitIdx: 1,
+                        sub: 1,
+                        totalSubs: 1,
+                        dmg: 0.6,
+                        ws: 690.5,
+                        isField: false,
+                        cc: false,
+                        conds: { Chilled: { stacks: 1, duration: 1 } },
+                        noCrit: false,
+                        att: ev.att,
+                        isTraitProc: true,
+                    });
+
+                    S.log.push({
+                        t: ev.time,
+                        type: 'skill_proc',
+                        skill: 'Shattering Ice Proc'
+                    });
+                }
+
                 // Hammer orb ticks: skip if Grand Finale consumed the orb before this tick fires
                 if (ev.hammerOrbElement) {
                     if (ev.hammerOrbElement === 'Dual') {
