@@ -2525,7 +2525,7 @@ export class SimulationEngine {
         if (sk.attunement === 'Air') this._triggerElectricDischarge(S, start);
         if (sk.attunement === 'Earth') this._triggerEarthenBlast(S, start);
 
-        if (S._hasTranscendentTempest && !S._inSetup) {
+        if (S._hasTranscendentTempest) {
             this._refreshEffect(S, 'Transcendent Tempest', 7, end);
         }
 
@@ -2829,7 +2829,7 @@ export class SimulationEngine {
             this._trackEffect(S, 'Vigor', 1, 5, time);
             this._trackEffect(S, 'Regeneration', 1, 5, time);
         }
-        if (S._hasTempestuousAria && !S._inSetup) {
+        if (S._hasTempestuousAria) {
             this._refreshEffect(S, 'Tempestuous Aria', 5, time);
         }
         if (S._hasElementalBastion) {

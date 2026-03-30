@@ -6,8 +6,8 @@
   },
   {
     "label": "Condi Weaver (Scepter)",
-    "build": "Builds/condi-weaver-scepter.json",
-    "rotation": "Rotations/condi-weaver-scepter.json"
+    "build": "Builds/b-condi-weaver-scepter.json",
+    "rotation": "Rotations/r-condi-weaver-scepter.json"
   },
   {
     "label": "Power Tempest (Hammer)",
