@@ -2935,8 +2935,8 @@ export class SimulationEngine {
         this._pushCondStack(S, { t: time, cond: auraName, expiresAt: time + durMs });
         S.log.push({ t: time, type: 'aura', aura: auraName, skill, dur: durMs });
 
-        // Only trigger Empowering / ElemEmpowerment if not deferred
-        if (!opts.deferEmpowerProcs) {
+        // skip empowering/elem procs if deferred OR if this is Sunspot (will trigger via hit)
+        if (!(opts.deferEmpowerProcs || skill === 'Sunspot')) {
             if (S._hasEmpoweringAuras) this._grantEmpoweringAuras(S, time);
             if (S._hasElemEpitome) this._grantElemEmpowerment(S, 1, time, skill);
         }
@@ -2959,8 +2959,7 @@ export class SimulationEngine {
             this._trackEffect(S, 'Alacrity', 1, 4, time);
         }
 
-        // Also defer aura procs during setup
-        if (S._inSetup) {
+        if (S._inSetup && skill !== 'Sunspot') {
             S._deferredAuraProcs.push({ time, skill });
         }
     }
