@@ -51,10 +51,15 @@
                 <p class="about-limitations-label">Current limitations:</p>
                 <ul class="about-limitations">
                     <li>Skill list is intentionally incomplete — only DPS-relevant skills are included.</li>
-                    <li>Lesser Elementals are not simulated.</li>
-                    <li>Elite Elemental assumes Fire variant and only (automatically) applies burning. No strike damage
-                        is dealt (~520 DPS loss).</li>
+                    <li>Lesser Elementals are not included.</li>
+                    <li>Elite Elemental assumes Fire variant and only applies burning (it applies burning from Flame
+                        Barrage automatically as well, without any skill usage). No elemental's strike damage
+                        is included (~520 DPS loss).</li>
                     <li>No healing, barrier, or dodge simulation.</li>
+                    <li>Currently, it's not possible to precast skills before the combat (e.g. Frost Aura and swap to
+                        Earth)</li>
+                    <li>Currently, it's not possible to precast Overload skills, so that they start combat at the
+                        last tick.</li>
                 </ul>
                 <p> If you spot any bugs or have any suggestions, please <a
                         href="https://github.com/SnappyJoeGW2/Elementalist-Simulator/issues">report them</a> or contact
@@ -380,7 +385,7 @@
         </section>
     </div>
 
-    <script type="module" src="js/app.js?v=52"></script>
+    <script type="module" src="js/app.js?v=53"></script>
 </body>
 
 </html>
