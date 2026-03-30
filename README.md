@@ -95,4 +95,17 @@ python -m http.server
 
 ---
 
+## Math and technical details
+
+- **Modifier Contributions** are calculated by running the simulation once, then re-running it with a specific modifier disabled (one run per modifier).
+- **Cast times** were manually gathered from `.evtc` logs and are treated as fixed values (even when in-game behavior sometimes vary depending on skill chaining or aftercasts).
+- For **DPS calculations**, "start time" is the first hit event time, not the cast start time. "End time" is the end of the last cast event time (not hit time!) or the target death time, whichever is later.
+- Without Quickness, cast times are multiplied by 4/3 (hit times are also affected).
+- **Instant-cast skills** can be fired during another skill's cast window (Shift+click). This is handled by marking the instant-cast skill with an offset (in ms) from the start of the **previous** skill's cast window.
+- The tool supports **interrupting Scepter Air/Earth auto-attack**. To do this, use Ctrl+click on the skill you want to use, but is currently on cooldown (e.g. Ride the Lightning). The tool will cast Arc Lightning / Stone Shards (Air / Earth) to fill the waiting time, but interrupt it once Ride the Lightning is ready to cast.
+- **Skill details** panel below the rotation shows total damage dealt, including condition ticks from this skill (unlike dps logs, which only show strike damage and aggregate each condition type).
+- **Gear optimizer** searches whole combinatory space of gear prefixes, runes, sigils, relics, food, utility, and infusions. It uses current rotation to evaluate each build, making it **much heavier** than other optimizers. It is advised to use optimizer with 1 prefix selected, but multiple Sigils/Relics (accurate procs), or vice versa. 
+
+---
+
 If you spot any bugs or have any suggestions, please report them (https://github.com/SnappyJoeGW2/Elementalist-Simulator/issues) or contact me on Discord at https://discord.com/users/327133184665845770 (SnappyJoe#8710).
