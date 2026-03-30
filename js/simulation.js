@@ -1130,66 +1130,98 @@ export class SimulationEngine {
                 }
 
 
-                const siStacks = this._effectStacksAt(S, 'Shattering Ice', ev.time);
-                const siICD = S.traitICD['ShatteringIce'] || 0;
-                const icdReady = ev.time >= siICD;
 
-                console.log('SI check', {
-                    time: ev.time,
-                    stacks: siStacks,
-                    icd: siICD,
-                    icdReady,
-                });
-
-                const canProc =
-                    siStacks > 0 &&
-                    !ev.isSigilProc &&
-                    !ev.isRelicProc &&
-                    !ev.isTraitProc &&
-                    !ev.isField &&
-                    ev.dmg > 0 &&
-                    ev.ws > 0 &&
-                    icdReady;
-
-                console.log('SI result', {
-                    time: ev.time,
-                    canProc
-                });
-
-                // this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
-                // && !ev.isTraitProc && !ev.isField && ev.dmg > 0 && ev.ws > 0
-                // && ev.time >= (S.traitICD['ShatteringIce'] || 0)
 
                 // Shattering Ice buff: proc an additional strike with 1s ICD
-                if (canProc) {
-                    S.traitICD['ShatteringIce'] = ev.time + 1000;
-                    insertSorted(S.eq, {
-                        time: ev.time, type: 'hit',
-                        skill: 'Shattering Ice Proc', hitIdx: 1, sub: 1, totalSubs: 1,
-                        dmg: 0.6, ws: 690.5,
-                        isField: false, cc: false,
-                        conds: { Chilled: { stacks: 1, duration: 1 } },
-                        noCrit: false, att: ev.att, isTraitProc: true,
-                    });
+                // if (this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
+                //     && !ev.isTraitProc && !ev.isField && ev.dmg > 0 && ev.ws > 0
+                //     && ev.time >= (S.traitICD['ShatteringIce'] || 0)) {
+                //     S.traitICD['ShatteringIce'] = ev.time + 1000;
+                //     insertSorted(S.eq, {
+                //         time: ev.time, type: 'hit',
+                //         skill: 'Shattering Ice Proc', hitIdx: 1, sub: 1, totalSubs: 1,
+                //         dmg: 0.6, ws: 690.5,
+                //         isField: false, cc: false,
+                //         conds: { Chilled: { stacks: 1, duration: 1 } },
+                //         noCrit: false, att: ev.att, isTraitProc: true,
+                //     });
 
-                    S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Shattering Ice Proc' });
-                }
+                //     S.log.push({ t: ev.time, type: 'skill_proc', skill: 'Shattering Ice Proc' });
+                // }
 
-                if (!canProc) {
-                    console.log('SI FAIL', {
+                // Shattering Ice buff: proc an additional strike with 1s ICD
+                if (ev.type === 'hit') {
+
+                    const siStacks = this._effectStacksAt(S, 'Shattering Ice', ev.time);
+                    const siICD = S.traitICD['ShatteringIce'] || 0;
+                    const icdReady = ev.time >= siICD;
+
+                    const canProc =
+                        siStacks > 0 &&
+                        !ev.isTraitProc &&
+                        !ev.isField &&
+                        ev.dmg > 0 &&
+                        ev.ws > 0 &&
+                        icdReady;
+
+                    // 🔍 Log every hit + evaluation
+                    console.log('HIT', {
                         time: ev.time,
-                        reason: {
-                            noStacks: siStacks <= 0,
-                            sigil: ev.isSigilProc,
-                            relic: ev.isRelicProc,
-                            trait: ev.isTraitProc,
-                            field: ev.isField,
-                            noDmg: ev.dmg <= 0,
-                            noWs: ev.ws <= 0,
-                            icdBlocked: !icdReady
-                        }
+                        skill: ev.skill,
+                        dmg: ev.dmg,
+                        ws: ev.ws,
+                        isTraitProc: ev.isTraitProc,
+                        isField: ev.isField,
+                        siStacks,
+                        siICD,
+                        icdReady,
+                        canProc
                     });
+
+                    if (canProc) {
+                        console.log('✅ SI PROC TRIGGERED at', ev.time);
+
+                        S.traitICD['ShatteringIce'] = ev.time + 1000;
+
+                        insertSorted(S.eq, {
+                            time: ev.time,
+                            type: 'hit',
+                            skill: 'Shattering Ice Proc',
+                            hitIdx: 1,
+                            sub: 1,
+                            totalSubs: 1,
+                            dmg: 0.6,
+                            ws: 690.5,
+                            isField: false,
+                            cc: false,
+                            conds: { Chilled: { stacks: 1, duration: 1 } },
+                            noCrit: false,
+                            att: ev.att,
+                            isTraitProc: true,
+                        });
+
+                        S.log.push({
+                            t: ev.time,
+                            type: 'skill_proc',
+                            skill: 'Shattering Ice Proc'
+                        });
+
+                    } else {
+                        // 🔴 Log WHY it failed
+                        console.log('❌ SI FAIL', {
+                            time: ev.time,
+                            reason: {
+                                noStacks: siStacks <= 0,
+                                traitProcBlocked: ev.isTraitProc === true,
+                                fieldBlocked: ev.isField === true,
+                                noDmg: ev.dmg <= 0,
+                                noWs: ev.ws <= 0,
+                                icdBlocked: !icdReady
+                            }
+                        });
+                    }
                 }
+
 
                 if (S.sigilDoomPending && !ev.isSigilProc && !ev.isRelicProc && !ev.isTraitProc && !ev.isField && ev.dmg > 0) {
                     const dp = SIGIL_PROCS.Doom;
