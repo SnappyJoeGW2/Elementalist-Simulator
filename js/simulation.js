@@ -850,6 +850,25 @@ export class SimulationEngine {
                 S.lastHitTime = ev.time;
             }
 
+            if (ev.type === 'applyEffect' && ev.effect === 'Shattering Ice') {
+
+                this._pushCondStack(S, {
+                    t: ev.time,
+                    cond: 'Shattering Ice',
+                    expiresAt: ev.time + ev.duration
+                });
+
+                // Start ICD at effect application time
+                S.traitICD['ShatteringIce'] = ev.time;
+
+                S.log.push({
+                    t: ev.time,
+                    type: 'effect_apply',
+                    effect: 'Shattering Ice',
+                    duration: ev.duration
+                });
+            }
+
             if (ev.type === 'relic_activate') {
                 const rp = RELIC_PROCS[ev.relic];
                 if (rp && rp.effectDuration > 0) {
@@ -1130,9 +1149,7 @@ export class SimulationEngine {
                 }
 
 
-
-
-                // Shattering Ice buff: proc an additional strike with 1s ICD
+                //Shattering Ice buff: proc an additional strike with 1s ICD
                 // if (this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
                 //     && !ev.isTraitProc && !ev.isField && ev.dmg > 0 && ev.ws > 0
                 //     && ev.time >= (S.traitICD['ShatteringIce'] || 0)) {
@@ -1150,76 +1167,37 @@ export class SimulationEngine {
                 // }
 
                 // Shattering Ice buff: proc an additional strike with 1s ICD
-                if (ev.type === 'hit') {
+                if (this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
+                    && !ev.isTraitProc
+                    && !ev.isField
+                    && ev.dmg > 0
+                    && ev.ws > 0
+                    && ev.time >= (S.traitICD['ShatteringIce'] || 0)) {
 
-                    const siStacks = this._effectStacksAt(S, 'Shattering Ice', ev.time);
-                    const siICD = S.traitICD['ShatteringIce'] || 0;
-                    const icdReady = ev.time >= siICD;
+                    S.traitICD['ShatteringIce'] = ev.time + 1000;
 
-                    const canProc =
-                        siStacks > 0 &&
-                        !ev.isTraitProc &&
-                        !ev.isField &&
-                        ev.dmg > 0 &&
-                        ev.ws > 0 &&
-                        icdReady;
-
-                    // 🔍 Log every hit + evaluation
-                    console.log('HIT', {
-                        time: ev.time,
-                        skill: ev.skill,
-                        dmg: ev.dmg,
-                        ws: ev.ws,
-                        isTraitProc: ev.isTraitProc,
-                        isField: ev.isField,
-                        siStacks,
-                        siICD,
-                        icdReady,
-                        canProc
+                    insertSorted(S.eq, {
+                        time: ev.time, // you can later try ev.time + 1 if ordering issues
+                        type: 'hit',
+                        skill: 'Shattering Ice Proc',
+                        hitIdx: 1,
+                        sub: 1,
+                        totalSubs: 1,
+                        dmg: 0.6,
+                        ws: 690.5,
+                        isField: false,
+                        cc: false,
+                        conds: { Chilled: { stacks: 1, duration: 1 } },
+                        noCrit: false,
+                        att: ev.att,
+                        isTraitProc: true,
                     });
 
-                    if (canProc) {
-                        console.log('✅ SI PROC TRIGGERED at', ev.time);
-
-                        S.traitICD['ShatteringIce'] = ev.time + 1000;
-
-                        insertSorted(S.eq, {
-                            time: ev.time,
-                            type: 'hit',
-                            skill: 'Shattering Ice Proc',
-                            hitIdx: 1,
-                            sub: 1,
-                            totalSubs: 1,
-                            dmg: 0.6,
-                            ws: 690.5,
-                            isField: false,
-                            cc: false,
-                            conds: { Chilled: { stacks: 1, duration: 1 } },
-                            noCrit: false,
-                            att: ev.att,
-                            isTraitProc: true,
-                        });
-
-                        S.log.push({
-                            t: ev.time,
-                            type: 'skill_proc',
-                            skill: 'Shattering Ice Proc'
-                        });
-
-                    } else {
-                        // 🔴 Log WHY it failed
-                        console.log('❌ SI FAIL', {
-                            time: ev.time,
-                            reason: {
-                                noStacks: siStacks <= 0,
-                                traitProcBlocked: ev.isTraitProc === true,
-                                fieldBlocked: ev.isField === true,
-                                noDmg: ev.dmg <= 0,
-                                noWs: ev.ws <= 0,
-                                icdBlocked: !icdReady
-                            }
-                        });
-                    }
+                    S.log.push({
+                        t: ev.time,
+                        type: 'skill_proc',
+                        skill: 'Shattering Ice Proc'
+                    });
                 }
 
 
@@ -2208,12 +2186,30 @@ export class SimulationEngine {
             S.log.push({ t: end, type: 'skill_proc', skill: 'Relentless Fire', detail: `${durMs / 1000}s` });
         }
 
+        // if (sk.name === 'Shattering Ice') {
+        //     const durMs = (S.sphereExpiry.Water > end) ? 8000 : 5000;
+        //     this._pushCondStack(S, { t: end, cond: 'Shattering Ice', expiresAt: end + durMs });
+        //     // ICD starts at cast-end so the on-cast hit (< end) doesn't trigger the proc
+        //     S.traitICD['ShatteringIce'] = end;
+        //     S.log.push({ t: end, type: 'skill_proc', skill: 'Shattering Ice', detail: `${durMs / 1000}s` });
+        // }
+
         if (sk.name === 'Shattering Ice') {
             const durMs = (S.sphereExpiry.Water > end) ? 8000 : 5000;
-            this._pushCondStack(S, { t: end, cond: 'Shattering Ice', expiresAt: end + durMs });
-            // ICD starts at cast-end so the on-cast hit (< end) doesn't trigger the proc
-            S.traitICD['ShatteringIce'] = end;
-            S.log.push({ t: end, type: 'skill_proc', skill: 'Shattering Ice', detail: `${durMs / 1000}s` });
+
+            insertSorted(S.eq, {
+                time: end,
+                type: 'applyEffect',
+                effect: 'Shattering Ice',
+                duration: durMs
+            });
+
+            S.log.push({
+                t: end,
+                type: 'skill_proc',
+                skill: 'Shattering Ice',
+                detail: `${durMs / 1000}s`
+            });
         }
 
         if (sk.name === 'Elemental Celerity') {
