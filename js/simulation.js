@@ -907,24 +907,12 @@ export class SimulationEngine {
 
             if (ev.type === 'hit') {
 
-                console.log('ICD DEBUG', {
-                    time: ev.time,
-                    icd: S.traitICD['ShatteringIce'],
-                    ready: ev.time >= (S.traitICD['ShatteringIce'] || 0)
-                });
-
-                console.log('STACKS',
-                    this._effectStacksAt(S, 'Shattering Ice', ev.time)
-                );
-
                 if (this._effectStacksAt(S, 'Shattering Ice', ev.time) > 0
                     && !ev.isTraitProc
                     && !ev.isField
                     && ev.dmg > 0
                     && ev.ws > 0
                     && ev.time >= (S.traitICD['ShatteringIce'] || 0)) {
-
-                    console.log('✅ SI PROC TRIGGERED at', ev.time);
 
                     S.traitICD['ShatteringIce'] = ev.time + 1000;
 
