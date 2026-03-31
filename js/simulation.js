@@ -158,7 +158,7 @@ const CONJURE_MAP = {
 const CONJURE_PICKUP_DURATION = 30000;
 const FIRE_FIELD_SKILLS = new Set([
     'Lava Font', 'Pyroclastic Blast', 'Burning Retreat', 'Burning Speed',
-    'Flamewall', 'Wildfire', 'Flame Uprising',
+    'Flamewall', 'Wildfire', 'Flame Uprising', 'Ring of Fire'
 ]);
 const EVOKER_FAMILIAR_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
 const EVOKER_NO_CHARGE_SKILLS = new Set([
