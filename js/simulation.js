@@ -2788,8 +2788,10 @@ export class SimulationEngine {
             const burnDur = IGNITE_DURS[Math.min(S.igniteStep, 3)];
             S.igniteStep = Math.min(S.igniteStep + 1, 3);
             S.igniteLastUse = start;
+            const igniteHit = sk.hits?.[0];
+            const off = igniteHit?.startOffsetMs || 880;
             insertSorted(S.eq, {
-                time: start, type: 'hit',
+                time: start + off, type: 'hit',
                 skill: 'Ignite', hitIdx: 1, sub: 1, totalSubs: 1,
                 dmg: 0.63, ws: this._ws(sk),
                 isField: false, cc: false,
