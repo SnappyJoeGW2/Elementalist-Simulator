@@ -8,4 +8,4 @@ weaver dual skills in skill summary (above rotation)
 parsing .evtc logs to extract rotation
 default 100 ms offset
 proper handling of interrupted AA (ctrl+click), working with attunement swap
-add scroll bar to rotation builder
+bloodstone relic not triggering

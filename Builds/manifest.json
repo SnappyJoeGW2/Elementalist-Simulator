@@ -38,5 +38,10 @@
     "label": "Inverno Evoker SE",
     "build": "Builds/b-inferno-evoker-se.json",
     "rotation": "Rotations/r-inferno-evoker-se.json"
+  },
+  {
+    "label": "Power Evoker Hare",
+    "build": "Builds/b-power-evoker-hare.json",
+    "rotation": "Rotations/r-power-evoker-hare.json"
   }
 ]

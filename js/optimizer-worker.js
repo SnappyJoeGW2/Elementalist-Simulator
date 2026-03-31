@@ -3,7 +3,7 @@
 // Slots with identical stat weights are grouped; we enumerate unique
 // distributions of prefixes per group, then expand to per-slot assignments.
 
-import { SimulationEngine } from './simulation.js?v=47';
+import { SimulationEngine } from './simulation.js?v=48';
 import { calcAttributes } from './calc-attributes.js';
 import { GEAR_STATS } from './gear-data.js';
 
