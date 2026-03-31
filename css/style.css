@@ -1180,11 +1180,26 @@ header .accent {
     margin-bottom: 12px;
 }
 
-.rotation-panel {
+/* .rotation-panel {
     background: var(--bg-panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 12px;
+} */
+
+.rotation-panel {
+    height: clamp(520px, 80vh, 900px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* only the timeline scrolls */
+}
+
+.rotation-panel>h3,
+.rotation-palette,
+.palette-hint,
+.rotation-mid {
+    flex: 0 0 auto;
 }
 
 .rotation-palette {
@@ -1461,7 +1476,7 @@ header .accent {
     background: rgba(102, 170, 255, 0.15);
 }
 
-.rotation-timeline {
+/* .rotation-timeline {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -1470,6 +1485,16 @@ header .accent {
     background: var(--bg-dark);
     border-radius: 4px;
     border: 1px dashed var(--border);
+} */
+
+.rotation-timeline {
+    flex: 1 1 auto;
+    min-height: 0;
+    /* important for flexbox scrolling */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
 }
 
 .rot-empty {
