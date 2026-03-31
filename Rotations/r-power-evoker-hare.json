@@ -38,11 +38,12 @@
       "offset": 200
     },
     "Earthquake",
+    "Rock Barrier",
+    "Dust Devil",
     {
       "name": "Hurl",
       "offset": 0
     },
-    "Dust Devil",
     "Churning Earth",
     {
       "name": "Air Attunement",
@@ -80,8 +81,8 @@
     "Fire Attunement",
     "Zap",
     "Dragon's Tooth",
-    "Ring of Fire",
     "Lightning Blitz",
+    "Ring of Fire",
     "Phoenix",
     "Flamestrike",
     "Flamestrike",

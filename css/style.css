@@ -1188,11 +1188,10 @@ header .accent {
 } */
 
 .rotation-panel {
-    height: clamp(520px, 80vh, 900px);
+    height: clamp(680px, 88vh, 1100px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    /* only the timeline scrolls */
 }
 
 .rotation-panel>h3,
@@ -1670,6 +1669,17 @@ header .accent {
     color: var(--text-dim);
     align-self: flex-start;
     padding-top: 2px;
+}
+
+.rot-procs-row {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: var(--bg-dark);
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -1px 0 var(--border);
 }
 
 .subtext {
