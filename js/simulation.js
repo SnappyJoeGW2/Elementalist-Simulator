@@ -1630,12 +1630,12 @@ export class SimulationEngine {
         }
 
         if (sk.type === 'Jade Sphere') {
-            this._doJadeSphere(S, sk);
+            this._doJadeSphere(S, sk, concurrents);
             return;
         }
 
         if (sk.type === 'Familiar') {
-            this._doFamiliar(S, sk);
+            this._doFamiliar(S, sk, concurrents);
             return;
         }
 
@@ -2332,6 +2332,7 @@ export class SimulationEngine {
     }
 
     _doSwap(S, sk, isConcurrent = false, concurrents = []) {
+        console.log('_doSwap called', sk.name, 'at', S.t, 'isConcurrent:', isConcurrent);
         const target = sk.name.replace(' Attunement', '');
 
         if (S.eliteSpec === 'Weaver') {
@@ -2670,7 +2671,7 @@ export class SimulationEngine {
         }
     }
 
-    _doJadeSphere(S, sk) {
+    _doJadeSphere(S, sk, concurrents = []) {
         if (S.eliteSpec !== 'Catalyst') {
             S.log.push({ t: S.t, type: 'err', msg: `Jade Sphere requires Catalyst specialization` });
             return;
@@ -2719,9 +2720,21 @@ export class SimulationEngine {
         if (S._hasPyroPuissance && S.att === 'Fire') {
             this._trackEffect(S, 'Might', 1, 15, S.t);
         }
+
+        if (concurrents.length > 0) {
+            const anchorRi = S._ri;
+            const sphereTime = S.t;
+            for (const c of concurrents) {
+                S.t = sphereTime + (c.offset || 0);
+                S._ri = c._ri;
+                this._step(S, c.name, true);
+            }
+            S._ri = anchorRi;
+            S.t = sphereTime;
+        }
     }
 
-    _doFamiliar(S, sk) {
+    _doFamiliar(S, sk, concurrents = []) {
         if (S.eliteSpec !== 'Evoker') {
             S.log.push({ t: S.t, type: 'err', msg: `Familiar skills require Evoker specialization` });
             return;
@@ -2844,6 +2857,17 @@ export class SimulationEngine {
             if (!isBasic) {
                 this._triggerAttunementEnterEffects(S, S.evokerElement, end);
             }
+        }
+
+        if (concurrents.length > 0) {
+            const anchorRi = S._ri;
+            for (const c of concurrents) {
+                S.t = end + (c.offset || 0);
+                S._ri = c._ri;
+                this._step(S, c.name, true);
+            }
+            S._ri = anchorRi;
+            S.t = end;
         }
     }
 
