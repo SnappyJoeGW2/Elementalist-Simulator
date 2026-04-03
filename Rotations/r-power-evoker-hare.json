@@ -116,11 +116,11 @@
     },
     {
       "name": "Zap",
-      "offset": 100
+      "offset": 150
     },
     {
       "name": "Blinding Flash",
-      "offset": 150
+      "offset": 200
     },
     "Ride the Lightning",
     {
@@ -194,7 +194,7 @@
     },
     {
       "name": "Zap",
-      "offset": 100
+      "offset": 150
     },
     "Ride the Lightning",
     "Lightning Blitz",
@@ -275,7 +275,7 @@
     },
     {
       "name": "Zap",
-      "offset": 100
+      "offset": 150
     },
     "Blinding Flash",
     "Ride the Lightning",
@@ -361,13 +361,13 @@
     },
     {
       "name": "Zap",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
+      "offset": 150
     },
     "Glyph of Storms (Air)",
+    {
+      "name": "Blinding Flash",
+      "offset": 200
+    },
     "Ride the Lightning",
     {
       "name": "Earth Attunement",
