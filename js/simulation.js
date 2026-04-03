@@ -579,6 +579,60 @@ export class SimulationEngine {
         return avg;
     }
 
+    _buildPerSkillSummary(S) {
+        const perSkill = Object.fromEntries(
+            Object.entries(S.perSkill || {}).map(([name, stats]) => [name, { ...stats }])
+        );
+        const skillNames = new Set(Object.keys(perSkill));
+        if (skillNames.size === 0) return perSkill;
+
+        const excludedStepTypes = new Set(['swap', 'wait', 'drop', 'pickup', 'combat_start']);
+        const stepCounts = {};
+        const stepCastMs = {};
+        for (const step of (S.steps || [])) {
+            if (!step?.skill || !skillNames.has(step.skill) || excludedStepTypes.has(step.type)) continue;
+            stepCounts[step.skill] = (stepCounts[step.skill] || 0) + 1;
+            stepCastMs[step.skill] = (stepCastMs[step.skill] || 0) + Math.max(0, (step.end || 0) - (step.start || 0));
+        }
+
+        const procLogCounts = {};
+        const procKeys = new Set();
+        const procLogTypes = new Set(['trait_proc', 'relic_proc', 'sigil_proc', 'jade_sphere', 'familiar_select', 'familiar_basic', 'familiar_empowered']);
+        const fallbackEventCounts = {};
+        const fallbackKeys = new Set();
+        const fallbackEventTypes = new Set(['hit', 'apply', 'cond_apply']);
+
+        for (const ev of (S.log || [])) {
+            if (!ev?.skill || !skillNames.has(ev.skill)) continue;
+
+            if (procLogTypes.has(ev.type)) {
+                const key = `${ev.type}|${ev.skill}|${ev.t}`;
+                if (!procKeys.has(key)) {
+                    procKeys.add(key);
+                    procLogCounts[ev.skill] = (procLogCounts[ev.skill] || 0) + 1;
+                }
+            }
+
+            if (fallbackEventTypes.has(ev.type)) {
+                const key = `${ev.skill}|${ev.t}`;
+                if (!fallbackKeys.has(key)) {
+                    fallbackKeys.add(key);
+                    fallbackEventCounts[ev.skill] = (fallbackEventCounts[ev.skill] || 0) + 1;
+                }
+            }
+        }
+
+        for (const [name, entry] of Object.entries(perSkill)) {
+            const backfilledCasts = stepCounts[name] || procLogCounts[name] || fallbackEventCounts[name] || 0;
+            if (backfilledCasts > entry.casts) entry.casts = backfilledCasts;
+
+            const backfilledCastMs = stepCastMs[name] || 0;
+            if (backfilledCastMs > entry.castTimeMs) entry.castTimeMs = backfilledCastMs;
+        }
+
+        return perSkill;
+    }
+
     _buildEndStateSnapshot(S, rotEnd) {
         const catalystState = getCatalystState(S);
         const evokerState = getEvokerState(S);
@@ -639,7 +693,7 @@ export class SimulationEngine {
             dps: dpsWindowMs > 0 ? effectiveDmg / (dpsWindowMs / 1000) : 0,
             deathTime,
             targetHP: targetHP > 0 ? targetHP : null,
-            perSkill: S.perSkill,
+            perSkill: this._buildPerSkillSummary(S),
             condDamage: S.condDamage,
             condStackSeconds: S.condStackSeconds,
             condAvgStacks: this._computeCondAvgStacks(S, dpsWindowMs),
