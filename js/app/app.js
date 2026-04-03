@@ -1760,6 +1760,28 @@ class App {
         return expiry + this._esAlaCd(es, Math.round(skill.recharge * 1000), expiry);
     }
 
+    _getResultsCombatReferenceTime(results = this.sim?.results) {
+        if (!results) return 0;
+        const firstHitTime = results.log?.find(ev =>
+            (ev.type === 'hit' && ev.strike > 0) || ev.type === 'cond_tick'
+        )?.t ?? null;
+        const explicitCombatStart = Number.isFinite(results.endState?.combatStartTime)
+            ? results.endState.combatStartTime
+            : (results.log?.find(ev => ev.type === 'combat_start')?.t ?? null);
+        return firstHitTime ?? (results.endState?.hasExplicitCombatStart ? (explicitCombatStart ?? 0) : 0);
+    }
+
+    _formatRelativeSeconds(seconds, digits = 2) {
+        const precision = 10 ** digits;
+        const normalized = Math.abs(seconds) < (0.5 / precision) ? 0 : seconds;
+        return `${normalized.toFixed(digits)}s`;
+    }
+
+    _formatResultsTimeMs(timeMs, digits = 2, results = this.sim?.results) {
+        const refTime = this._getResultsCombatReferenceTime(results);
+        return this._formatRelativeSeconds((timeMs - refTime) / 1000, digits);
+    }
+
     _getDisplayedCooldownMs(es, readyAt, meta = null) {
         if (!es) return null;
         const t = es.time;
@@ -1928,7 +1950,7 @@ class App {
         h += `<button class="btn-csv-export" onclick="window._exportLogCSV()">Download CSV Log</button>`;
         h += `<div class="res-log">`;
         for (const ev of r.log) {
-            const ts = `${(ev.t / 1000).toFixed(3)}s`;
+            const ts = this._formatResultsTimeMs(ev.t, 3, r);
             let desc = '', cls = '';
             const d = ev.diag || {};
             switch (ev.type) {
@@ -1957,7 +1979,7 @@ class App {
                 }
                 case 'field': desc = `FIELD ${ev.field} (${ev.dur}ms) [${ev.skill}]`; break;
                 case 'aura': desc = `AURA  ${ev.aura} (${ev.dur}ms) [${ev.skill}]`; break;
-                case 'conjure': desc = `CONJURE ${ev.weapon} equipped (pickup expires ${(ev.pickupExpires / 1000).toFixed(1)}s)`; break;
+                case 'conjure': desc = `CONJURE ${ev.weapon} equipped (pickup expires ${this._formatResultsTimeMs(ev.pickupExpires, 1, r)})`; break;
                 case 'jade_sphere': desc = `JADE SPHERE ${ev.att} (energy: ${ev.energy}, dur: ${ev.durMs}ms) [${ev.skill}]`; break;
                 case 'familiar_select': desc = `FAMILIAR ${ev.element} selected [${ev.skill}]`; break;
                 case 'familiar_basic': desc = `FAMILIAR ${ev.skill} used → charges:${ev.charges}/${ev.maxCharges} empowered:${ev.empowered}/3`; break;
@@ -2191,7 +2213,7 @@ class App {
                 }
 
                 const t = Math.max(0, Math.min(state.maxTime, ((x - minX) / layout.pw) * state.maxTime));
-                const timeLabel = `${(t / 1000).toFixed(2)}s`;
+                const timeLabel = this._formatRelativeSeconds((t - (state.displayTimeOrigin || 0)) / 1000, 2);
 
                 if (kind === 'dps') {
                     const dps = Math.round(this._getLineValueAt(state.dpsLine, t));
@@ -2241,12 +2263,7 @@ class App {
 
     _drawChart() {
         const r = this.sim.results;
-        const resultCombatStart = Number.isFinite(r.combatStartTime) ? r.combatStartTime : null;
-        const logCombatStart = r.log.find(e => e.type === 'combat_start')?.t ?? null;
-        const firstHitTime = r.log.find(e =>
-            (e.type === 'hit' && e.strike > 0) || e.type === 'cond_tick'
-        )?.t ?? null;
-        const dpsStart = firstHitTime ?? resultCombatStart ?? logCombatStart ?? 0;
+        const dpsStart = this._getResultsCombatReferenceTime(r);
 
         const dpsCanvas = document.getElementById('rotation-chart');
         const effectsCanvas = document.getElementById('rotation-effects-chart');
@@ -2384,7 +2401,7 @@ class App {
             dpsCtx.beginPath(); dpsCtx.moveTo(x, dpsPad.top); dpsCtx.lineTo(x, dpsPad.top + dpsPh);
             dpsCtx.strokeStyle = 'rgba(42,42,58,0.35)'; dpsCtx.stroke();
             dpsCtx.fillStyle = '#888899'; dpsCtx.textAlign = 'center'; dpsCtx.font = '10px Segoe UI';
-            dpsCtx.fillText(`${sec}s`, x, dpsPad.top + dpsPh + 16);
+            dpsCtx.fillText(this._formatRelativeSeconds((t - dpsStart) / 1000, 0), x, dpsPad.top + dpsPh + 16);
         }
         if (toggles['dps'] !== false) {
             dpsCtx.strokeStyle = '#44bb44'; dpsCtx.lineWidth = 2.5; dpsCtx.beginPath();
@@ -2437,7 +2454,7 @@ class App {
             effectsCtx.fillStyle = '#888899';
             effectsCtx.textAlign = 'center';
             effectsCtx.font = '10px Segoe UI';
-            effectsCtx.fillText(`${sec}s`, x, effectsCssH - 8);
+            effectsCtx.fillText(this._formatRelativeSeconds((t - dpsStart) / 1000, 0), x, effectsCssH - 8);
         }
 
         for (const ct of allEffects) {
@@ -2502,6 +2519,7 @@ class App {
 
         this._chartState = {
             maxTime,
+            displayTimeOrigin: dpsStart,
             dpsLine,
             effectLines,
             activeDurEffects,

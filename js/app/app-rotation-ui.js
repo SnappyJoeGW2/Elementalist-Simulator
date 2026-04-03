@@ -629,10 +629,10 @@ export function renderTimeline(app, {
             const c = app._skillColor(skill, name);
             const pf = step?.partialFill;
             const ts = pf
-                ? `${(pf.startMs / 1000).toFixed(2)}s`
-                : step ? `${(step.start / 1000).toFixed(2)}s` : '';
+                ? app._formatResultsTimeMs(pf.startMs, 2)
+                : step ? app._formatResultsTimeMs(step.start, 2) : '';
             const castInfo = step
-                ? `\nCast: ${(step.start / 1000).toFixed(2)}s → ${(step.end / 1000).toFixed(2)}s`
+                ? `\nCast: ${app._formatResultsTimeMs(step.start, 2)} → ${app._formatResultsTimeMs(step.end, 2)}`
                 : '';
             const isConcurrent = offset !== undefined;
             const offsetBadge = isConcurrent
@@ -676,7 +676,7 @@ export function renderTimeline(app, {
         .sort((a, b) => a.start - b.start);
     if (procSteps.length > 0) {
         const procsHtml = procSteps.map(s => {
-            const ts = `${(s.start / 1000).toFixed(2)}s`;
+            const ts = app._formatResultsTimeMs(s.start, 2);
             const pc = PROC_COLORS[s.type] || 'var(--border-light)';
             const typeLabel = s.type === 'relic_proc' ? 'Relic' : s.type === 'sigil_proc' ? 'Sigil' : 'Trait';
             return `<div class="proc-icon" title="${esc(s.skill)}\n${typeLabel} proc @ ${ts}" style="--proc-color:${pc}">
