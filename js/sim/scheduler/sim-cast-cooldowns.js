@@ -149,7 +149,7 @@ export function finalizeStandardSkillBookkeeping(ctx, sk, name, {
             ctx.setSkillCooldown(rootKey, end + ctx.alacrityAdjustedCooldown(baseCdMs, end), {
                 startedAt: end,
                 displayDurationMs: baseCdMs,
-                alacrityUntil: S.alacrityUntil || 0,
+                alacrityUntil: ctx.S.alacrityUntil || 0,
             });
         }
     }
