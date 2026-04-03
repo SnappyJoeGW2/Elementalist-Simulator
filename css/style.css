@@ -1291,6 +1291,15 @@ header .accent {
     box-shadow: none;
 }
 
+.pal-skill[draggable="true"] {
+    cursor: grab;
+}
+
+.pal-skill.dragging {
+    opacity: 0.45;
+    transform: none;
+}
+
 .pistol-bullet {
     position: relative;
     width: 32px;
@@ -1509,6 +1518,10 @@ header .accent {
     overscroll-behavior: contain;
 }
 
+.rotation-timeline.drag-over-empty {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .rot-empty {
     color: var(--text-dim);
     font-size: 12px;
@@ -1547,6 +1560,11 @@ header .accent {
     align-items: flex-start;
 }
 
+.rot-row-skills.drag-over {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 70%, transparent);
+    border-radius: 6px;
+}
+
 .rot-skill {
     width: 40px;
     border-radius: 5px;
@@ -1575,6 +1593,14 @@ header .accent {
 
 .rot-skill.drag-over {
     box-shadow: 0 0 0 2px var(--accent);
+}
+
+.rot-skill.drag-insert-before {
+    box-shadow: -3px 0 0 0 var(--accent);
+}
+
+.rot-skill.drag-insert-after {
+    box-shadow: 3px 0 0 0 var(--accent);
 }
 
 .rot-x {

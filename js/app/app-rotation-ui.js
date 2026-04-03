@@ -39,6 +39,57 @@ function promptWaitMs(currentValue = 1000) {
     return { value: parsed };
 }
 
+function clearTimelineDropIndicators(root) {
+    if (!root) return;
+    root.querySelectorAll('.drag-over, .drag-over-empty, .drag-insert-before, .drag-insert-after')
+        .forEach(el => el.classList.remove('drag-over', 'drag-over-empty', 'drag-insert-before', 'drag-insert-after'));
+}
+
+function getSkillDropInsertionIndex(skillEl, clientX) {
+    const idx = parseInt(skillEl.dataset.idx, 10);
+    if (!Number.isFinite(idx)) return null;
+    const rect = skillEl.getBoundingClientRect();
+    return clientX < rect.left + rect.width / 2 ? idx : idx + 1;
+}
+
+function updateSkillDropIndicator(skillEl, clientX) {
+    skillEl.classList.remove('drag-insert-before', 'drag-insert-after');
+    const rect = skillEl.getBoundingClientRect();
+    skillEl.classList.add(clientX < rect.left + rect.width / 2 ? 'drag-insert-before' : 'drag-insert-after');
+}
+
+function resolvePaletteDropItem(app, skillName) {
+    if (!skillName) return null;
+    if (skillName === '__combat_start' && !app._isVirtualAvailable(skillName)) return null;
+    if (skillName === '__wait') {
+        const wait = promptWaitMs();
+        if (wait.cancelled || wait.invalid) return null;
+        return { skillName, options: { waitMs: wait.value } };
+    }
+    return { skillName, options: {} };
+}
+
+function applyTimelineDrop(app, insertAt) {
+    const drag = app.dragState;
+    if (!drag) return false;
+
+    if (drag.source === 'timeline') {
+        app._moveRotationItem(drag.idx, insertAt);
+        app.dragState = null;
+        return true;
+    }
+
+    if (drag.source === 'palette') {
+        const payload = resolvePaletteDropItem(app, drag.skillName);
+        app.dragState = null;
+        if (!payload) return false;
+        app._insertIntoRotation(insertAt, payload.skillName, payload.options);
+        return true;
+    }
+
+    return false;
+}
+
 export function renderRotationBuilder(app) {
     app._renderStartAttSelector();
     app._renderPalette();
@@ -358,8 +409,10 @@ export function renderPalette(app, {
 
     el.innerHTML = h;
     el.querySelectorAll('.pal-skill').forEach(p => {
+        const skillName = p.dataset.skill;
+        const draggable = !!skillName && !p.classList.contains('pal-disabled');
+        p.setAttribute('draggable', draggable ? 'true' : 'false');
         p.addEventListener('click', (e) => {
-            const skillName = p.dataset.skill;
             if (!skillName) return;
             if (skillName === '__combat_start' && !app._isVirtualAvailable(skillName)) return;
             if (skillName === '__wait') {
@@ -379,6 +432,21 @@ export function renderPalette(app, {
             } else {
                 app._addToRotation(skillName);
             }
+        });
+        p.addEventListener('dragstart', (e) => {
+            if (!draggable || !skillName) {
+                e.preventDefault();
+                return;
+            }
+            app.dragState = { source: 'palette', skillName };
+            p.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', skillName);
+        });
+        p.addEventListener('dragend', () => {
+            p.classList.remove('dragging');
+            app.dragState = null;
+            clearTimelineDropIndicators(document.getElementById('rotation-timeline'));
         });
     });
 
@@ -473,8 +541,25 @@ export function renderTimeline(app, {
     TH_WEAPONS,
 }) {
     const el = document.getElementById('rotation-timeline');
+    el.ondragover = null;
+    el.ondragleave = null;
+    el.ondrop = null;
     if (!app.sim || app.sim.rotation.length === 0) {
         el.innerHTML = '<div class="rot-empty">Click skills above to build rotation</div>';
+        el.ondragover = (e) => {
+            if (!app.dragState) return;
+            e.preventDefault();
+            el.classList.add('drag-over-empty');
+        };
+        el.ondragleave = (e) => {
+            if (e.target === el) el.classList.remove('drag-over-empty');
+        };
+        el.ondrop = (e) => {
+            if (!app.dragState) return;
+            e.preventDefault();
+            el.classList.remove('drag-over-empty');
+            applyTimelineDrop(app, 0);
+        };
         return;
     }
 
@@ -578,9 +663,10 @@ export function renderTimeline(app, {
                     ${offsetBadge}${interruptBadge}${waitBadge}${gapFillBadge}
                 </div>`;
         }).join('');
+        const rowInsertIdx = row.skills.length > 0 ? (row.skills[row.skills.length - 1].idx + 1) : 0;
         return `<div class="rot-row" style="--row-color:${color}">
             <div class="rot-row-label">${label}</div>
-            <div class="rot-row-skills">${skillsHtml}</div>
+            <div class="rot-row-skills" data-insert-idx="${rowInsertIdx}">${skillsHtml}</div>
         </div>`;
     }).join('');
 
@@ -605,6 +691,7 @@ export function renderTimeline(app, {
     }
 
     el.innerHTML = tlHtml;
+    clearTimelineDropIndicators(el);
 
     el.querySelectorAll('.rot-offset-badge').forEach(badge => {
         badge.addEventListener('click', (e) => {
@@ -671,7 +758,7 @@ export function renderTimeline(app, {
     });
 
     el.querySelectorAll('.rot-skill').forEach(s => {
-        const idx = parseInt(s.dataset.idx);
+        const idx = parseInt(s.dataset.idx, 10);
         const removeBtn = s.querySelector('.rot-x');
         if (removeBtn) {
             removeBtn.setAttribute('draggable', 'false');
@@ -686,30 +773,70 @@ export function renderTimeline(app, {
             removeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                app._removeFromRotation(idx);
+                if (e.shiftKey) app._truncateRotationAfter(idx);
+                else app._removeFromRotation(idx);
             });
         }
         s.addEventListener('dragstart', (e) => {
-            app.dragIdx = idx;
+            app.dragState = { source: 'timeline', idx };
             s.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(idx));
         });
         s.addEventListener('dragend', () => {
             s.classList.remove('dragging');
-            app.dragIdx = null;
+            app.dragState = null;
+            clearTimelineDropIndicators(el);
         });
         s.addEventListener('dragover', (e) => {
+            if (!app.dragState) return;
             e.preventDefault();
-            s.classList.add('drag-over');
+            clearTimelineDropIndicators(el);
+            updateSkillDropIndicator(s, e.clientX);
         });
-        s.addEventListener('dragleave', () => s.classList.remove('drag-over'));
+        s.addEventListener('dragleave', () => s.classList.remove('drag-insert-before', 'drag-insert-after'));
         s.addEventListener('drop', (e) => {
+            if (!app.dragState) return;
             e.preventDefault();
-            s.classList.remove('drag-over');
-            if (app.dragIdx !== null && app.dragIdx !== idx) {
-                app.sim.moveSkill(app.dragIdx, idx);
-                app._autoRun();
-            }
+            e.stopPropagation();
+            const insertAt = getSkillDropInsertionIndex(s, e.clientX);
+            clearTimelineDropIndicators(el);
+            if (insertAt !== null) applyTimelineDrop(app, insertAt);
         });
     });
+
+    el.querySelectorAll('.rot-row-skills').forEach(rowSkills => {
+        rowSkills.addEventListener('dragover', (e) => {
+            if (!app.dragState || e.target.closest('.rot-skill')) return;
+            e.preventDefault();
+            clearTimelineDropIndicators(el);
+            rowSkills.classList.add('drag-over');
+        });
+        rowSkills.addEventListener('dragleave', (e) => {
+            if (e.target === rowSkills) rowSkills.classList.remove('drag-over');
+        });
+        rowSkills.addEventListener('drop', (e) => {
+            if (!app.dragState || e.target.closest('.rot-skill')) return;
+            e.preventDefault();
+            const insertAt = parseInt(rowSkills.dataset.insertIdx, 10);
+            clearTimelineDropIndicators(el);
+            if (Number.isFinite(insertAt)) applyTimelineDrop(app, insertAt);
+        });
+    });
+
+    el.ondragover = (e) => {
+        if (!app.dragState || e.target.closest('.rot-row-skills')) return;
+        e.preventDefault();
+        clearTimelineDropIndicators(el);
+        el.classList.add('drag-over-empty');
+    };
+    el.ondragleave = (e) => {
+        if (e.target === el) el.classList.remove('drag-over-empty');
+    };
+    el.ondrop = (e) => {
+        if (!app.dragState || e.target.closest('.rot-row-skills')) return;
+        e.preventDefault();
+        clearTimelineDropIndicators(el);
+        applyTimelineDrop(app, app.sim.rotation.length);
+    };
 }

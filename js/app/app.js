@@ -34,9 +34,12 @@ import {
     onBuildChange,
     persistBuild,
     refreshAfterBuildStateChange,
+    insertIntoRotation,
+    moveRotationItem,
     removeFromRotation,
     restoreBuild,
     serializeRotation,
+    truncateRotationAfter,
 } from './app-runtime.js';
 import {
     applyOptimizerResult,
@@ -246,7 +249,7 @@ class App {
         this.permaBoons = createDefaultPermaBoons();
         this.openDropdown = null;
         this.sim = null;
-        this.dragIdx = null;
+        this.dragState = null;
         this.conditions = {
             might: 0, fury: false,
             primaryAtt: 'None', secondaryAtt: 'None',
@@ -2540,8 +2543,20 @@ class App {
         addToRotation(this, skillName, options);
     }
 
+    _insertIntoRotation(idx, skillName, options = {}) {
+        insertIntoRotation(this, idx, skillName, options);
+    }
+
+    _moveRotationItem(fromIdx, toIdx) {
+        moveRotationItem(this, fromIdx, toIdx);
+    }
+
     _removeFromRotation(idx) {
         removeFromRotation(this, idx);
+    }
+
+    _truncateRotationAfter(idx) {
+        truncateRotationAfter(this, idx);
     }
 
     _clearRotation() {

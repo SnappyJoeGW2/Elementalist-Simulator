@@ -156,9 +156,41 @@ export function addToRotation(app, skillName, options = {}) {
     autoRun(app);
 }
 
+export function insertIntoRotation(app, idx, skillName, options = {}) {
+    if (!app.sim) return;
+    const insertAt = Math.max(0, Math.min(idx, app.sim.rotation.length));
+    app.sim.rotation.splice(insertAt, 0, buildRotationItem(skillName, options));
+    autoRun(app);
+}
+
+export function moveRotationItem(app, fromIdx, toIdx) {
+    if (!app.sim) return;
+    const rotation = app.sim.rotation;
+    if (fromIdx < 0 || fromIdx >= rotation.length) return;
+
+    const boundedTarget = Math.max(0, Math.min(toIdx, rotation.length));
+    let insertAt = boundedTarget;
+    if (fromIdx < insertAt) insertAt -= 1;
+    if (insertAt === fromIdx) return;
+
+    const [item] = rotation.splice(fromIdx, 1);
+    rotation.splice(insertAt, 0, item);
+    autoRun(app);
+}
+
 export function removeFromRotation(app, idx) {
     if (!app.sim) return;
     app.sim.removeSkill(idx);
+    autoRun(app);
+}
+
+export function truncateRotationAfter(app, idx) {
+    if (!app.sim) return;
+    const rotation = app.sim.rotation;
+    if (idx < -1 || idx >= rotation.length) return;
+    const nextLength = idx + 1;
+    if (rotation.length <= nextLength) return;
+    rotation.splice(nextLength);
     autoRun(app);
 }
 
