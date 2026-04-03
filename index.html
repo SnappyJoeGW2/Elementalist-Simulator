@@ -55,11 +55,7 @@
                     <li>Elite Elemental assumes Fire variant and only applies burning (it applies burning from Flame
                         Barrage automatically as well, without any skill usage). No elemental's strike damage
                         is included (~520 DPS loss).</li>
-                    <li>No healing, barrier, or dodge simulation.</li>
-                    <li>Currently, it's not possible to precast skills before the combat (e.g. Frost Aura and swap to
-                        Earth)</li>
-                    <li>Currently, it's not possible to precast Overload skills, so that they start combat at the
-                        last tick.</li>
+                    <li>No healing or barrier simulation.</li>
                 </ul>
                 <p> If you spot any bugs or have any suggestions, please <a
                         href="https://github.com/SnappyJoeGW2/Elementalist-Simulator/issues">report them</a> or contact
@@ -96,11 +92,15 @@
                         <strong>previous</strong> skill's cast window.
                     </li>
                     <li>
-                        The tool supports <strong>interrupting Scepter Air/Earth auto-attack</strong>. To do this, use
+                        The tool supports <strong>interrupting skills</strong>. To do this, use
                         Ctrl+click on the
-                        skill you want to use, but is currently on cooldown (e.g. Ride the Lightning). The tool will
-                        cast Arc Lightning / Stone Shards (Air / Earth) to fill the waiting time, but interrupt it once
-                        Ride the Lightning is ready to cast.
+                        skill you want to interrupt (e.g. Scepter Air 2, Arc Lightning) and input interrupt time. The
+                        skill will produce all hits up until the interrupt time.
+                    </li>
+                    <li>
+                        The tool supports <strong>precasting skills</strong>. Do to it, simply add "Combat Start"
+                        skill/icon to the rotation and mark it everything before it, as precast (you can, for example,
+                        precast Hurl, auras to trigger traits, Overloads, stack boons on yourself etc.).
                     </li>
                     <li>
                         <Strong>Skill details</Strong> panel below the rotation shows total damage dealt, including
@@ -181,8 +181,8 @@
                 <h3>Rotation Builder</h3>
                 <div id="rotation-palette" class="rotation-palette"></div>
                 <p class="palette-hint">Click to add to rotation &nbsp;·&nbsp; <b>Shift+click</b> an instant-cast skill
-                    to fire it mid-animation of the previous skill &nbsp;·&nbsp; <b>Ctrl+click</b> a skill on cooldown
-                    to fill the wait with Arc Lightning / Stone Shards (Air / Earth Scepter only)</p>
+                    to fire it mid-animation of the previous skill &nbsp;·&nbsp; <b>Ctrl+click</b> a skill to interrupt
+                    it mid-cast</p>
                 <div class="rotation-mid">
                     <div class="rotation-tl-label">Rotation</div>
                     <div id="start-att-selector" class="start-att-selector"></div>
@@ -385,7 +385,7 @@
         </section>
     </div>
 
-    <script type="module" src="js/app.js?v=60"></script>
+    <script type="module" src="js/app/app.js?v=57"></script>
 </body>
 
 </html>

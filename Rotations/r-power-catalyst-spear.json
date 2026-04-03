@@ -1,22 +1,22 @@
 {
   "rotation": [
     "Etching: Derecho",
-    {
-      "name": "Deploy Jade Sphere (Air)",
-      "offset": 0
-    },
     "Glyph of Storms (Air)",
     "Energize",
+    {
+      "name": "Deploy Jade Sphere (Air)",
+      "offset": 50
+    },
     "Twister",
     "Fulgor",
     "Derecho",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     {
       "name": "Deploy Jade Sphere (Fire)",
-      "offset": 0
+      "offset": 150
     },
     "Etching: Volcano",
     "Relentless Fire",
@@ -32,7 +32,7 @@
     "Volcano",
     {
       "name": "Earth Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Etching: Haboob",
     "Fissure",
@@ -41,7 +41,7 @@
     "Haboob",
     {
       "name": "Water Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Etching: Jökulhlaup",
     "Deploy Jade Sphere (Water)",
@@ -51,7 +51,7 @@
     "Jökulhlaup",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Fulgor",
     "Lightning Javelin",
@@ -67,11 +67,11 @@
     "Derecho",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     {
       "name": "Deploy Jade Sphere (Fire)",
-      "offset": 0
+      "offset": 150
     },
     "Blazing Barrage",
     "Flame Spear",
@@ -91,7 +91,7 @@
     "Earthen Spear",
     {
       "name": "Water Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Ice Beam",
     "Deploy Jade Sphere (Water)",
@@ -99,7 +99,7 @@
     "Undertow",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Fulgor",
     "Lightning Javelin",
@@ -114,16 +114,16 @@
     "Lightning Javelin",
     {
       "name": "Deploy Jade Sphere (Air)",
-      "offset": 0
+      "offset": 100
     },
     "Derecho",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     {
       "name": "Deploy Jade Sphere (Fire)",
-      "offset": 0
+      "offset": 150
     },
     "Blazing Barrage",
     "Flame Spear",
@@ -146,7 +146,7 @@
     "Haboob",
     {
       "name": "Water Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Deploy Jade Sphere (Water)",
     "Etching: Jökulhlaup",
@@ -156,7 +156,7 @@
     "Jökulhlaup",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Fulgor",
     "Lightning Javelin",
@@ -173,7 +173,7 @@
     "Derecho",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Deploy Jade Sphere (Fire)",
     "Blazing Barrage",
@@ -191,7 +191,7 @@
     "Fissure",
     {
       "name": "Water Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Ice Beam",
     "Deploy Jade Sphere (Water)",
@@ -214,7 +214,7 @@
     "Derecho",
     {
       "name": "Deploy Jade Sphere (Air)",
-      "offset": 0
+      "offset": 100
     },
     "Fire Attunement",
     "Deploy Jade Sphere (Fire)",
@@ -244,7 +244,7 @@
     "Jökulhlaup",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Fulgor",
     "Etching: Derecho",
@@ -258,7 +258,7 @@
     "Derecho",
     {
       "name": "Deploy Jade Sphere (Air)",
-      "offset": 0
+      "offset": 100
     },
     "Fire Attunement",
     "Deploy Jade Sphere (Fire)",
@@ -286,7 +286,7 @@
     "Undertow",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Fulgor",
     "Lightning Javelin",
@@ -302,7 +302,7 @@
     "Derecho",
     {
       "name": "Deploy Jade Sphere (Air)",
-      "offset": 0
+      "offset": 100
     },
     "Fire Attunement",
     "Deploy Jade Sphere (Fire)",

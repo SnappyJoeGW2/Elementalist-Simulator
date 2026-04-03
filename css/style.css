@@ -1243,10 +1243,23 @@ header .accent {
     flex-wrap: wrap;
 }
 
+.endurance-readout {
+    min-width: 46px;
+    padding: 0 6px;
+    color: #d8e7ef;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    line-height: 32px;
+    border-radius: 4px;
+    background: rgba(127, 182, 216, 0.12);
+    border: 1px solid rgba(127, 182, 216, 0.3);
+    text-align: center;
+}
+
 .pal-skill {
     position: relative;
-    width: 32px;
-    height: 32px;
+    width: 42px;
+    height: 42px;
     border-radius: 4px;
     border: 2px solid var(--att-border, var(--border-light));
     overflow: hidden;
@@ -1965,6 +1978,26 @@ header .accent {
     border-radius: 2px;
 }
 
+.chart-panels {
+    display: grid;
+    gap: 12px;
+}
+
+.chart-panel {
+    background: rgba(8, 10, 18, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.chart-panel-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+}
+
 .chart-canvas-wrap {
     position: relative;
 }
@@ -1973,6 +2006,30 @@ header .accent {
     width: 100%;
     border-radius: 4px;
     display: block;
+}
+
+#rotation-effects-chart {
+    width: 100%;
+    border-radius: 4px;
+    display: block;
+}
+
+.chart-tooltip {
+    position: absolute;
+    z-index: 5;
+    display: none;
+    min-width: 90px;
+    max-width: 220px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(10, 12, 20, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    color: var(--text);
+    font-size: 11px;
+    line-height: 1.35;
+    pointer-events: none;
+    white-space: nowrap;
 }
 
 /* ─── Catalyst Energy Bar ─── */

@@ -1,6 +1,6 @@
 # GW2 Elementalist Rotation Simulator & Build Optimizer
 
-A client-side web tool that **accurately simulates Elementalist DPS** and optimizes gear for any rotation you build. Everything runs in the browser — no server, no login required.
+A client-side web tool that **accurately simulates Elementalist DPS** and optimizes gear for any rotation you build. Everything runs in the browser — no backend or login required.
 
 ---
 
@@ -42,6 +42,13 @@ Build your skill sequence manually using the on-screen skill palette. The rotati
 - Boon uptime
 - Combat log to see each event
 
+The builder also supports:
+
+- **Concurrent instant-cast skills** via `Shift+click`, stored with a cast-start offset from the previous skill
+- **Interrupted casts** via `Ctrl+click`, stored with an interrupt time in milliseconds
+- An explicit **Combat Start** marker for precombat setup / opener timing
+- **Dodge** as a rotation action, including endurance spend / regeneration and Vigor scaling
+
 ### Save & Load
 
 Export your entire build — gear, traitline selections, skill rotation — as a JSON file. Import it back on any browser or share it with others.
@@ -74,7 +81,7 @@ Because the optimizer runs your actual rotation through the full simulator for e
 
 ## Running locally
 
-Just open `index.html` in a browser that supports ES modules (any modern browser). No build step or package install required. If you serve it over `file://` and the browser blocks module imports, run a simple local server instead:
+No build step or package install is required, but the app should be served from a simple local web server because the CSV data is fetched at runtime:
 
 ```bash
 npx serve .
@@ -88,10 +95,9 @@ python -m http.server
 
 - **Skill list is intentionally incomplete** — only skills relevant to DPS are included. Utility skills, healing skills, and elite skills that have no meaningful damage contribution are omitted.
 - **No elemental/pet simulation** — Lesser Elementals (Fire Elemental, Earth Elemental, etc.) are not simulated. Elite Glyph of Elementals always casts Fire variant and only (automatically) applies burning. Strike damage is not included (~520 DPS loss).
-- **No healing or dodge simulation** — outgoing healing, barrier, and evade frames are not modelled. Healing Power is tracked in attributes but has no effect on the simulation output.
+- **No healing / defensive simulation** — outgoing healing, barrier, and evade / survival gameplay are not modelled. Healing Power is tracked in attributes but has no effect on the simulation output.
 - Healer and support builds are not the focus of this tool.
-- Currently, it's not possible to precast skills before the combat (e.g. Frost Aura and swap to Earth)
-- Currently, it's not possible to precast Overload skills, so that they start combat at the last tick.
+- Precombat support is based on an explicit **Combat Start** marker. This already handles many opener cases, but the list of combat-only proc exclusions is still curated and may need additional edge-case updates over time.
 
 ---
 
@@ -99,10 +105,10 @@ python -m http.server
 
 - **Modifier Contributions** are calculated by running the simulation once, then re-running it with a specific modifier disabled (one run per modifier).
 - **Cast times** were manually gathered from `.evtc` logs and are treated as fixed values (even when in-game behavior sometimes vary depending on skill chaining or aftercasts).
-- For **DPS calculations**, "start time" is the first hit event time, not the cast start time. "End time" is the end of the last cast event time (not hit time!) or the target death time, whichever is later.
+- For **DPS calculations**, "start time" is the explicit `Combat Start` marker if one exists; otherwise it is the first damaging event time. "End time" is the end of the last cast event time (not hit time!) or the target death time, whichever is later.
 - Without Quickness, cast times are multiplied by 4/3 (hit times are also affected).
-- **Instant-cast skills** can be fired during another skill's cast window (Shift+click). This is handled by marking the instant-cast skill with an offset (in ms) from the start of the **previous** skill's cast window.
-- The tool supports **interrupting Scepter Air/Earth auto-attack**. To do this, use Ctrl+click on the skill you want to use, but is currently on cooldown (e.g. Ride the Lightning). The tool will cast Arc Lightning / Stone Shards (Air / Earth) to fill the waiting time, but interrupt it once Ride the Lightning is ready to cast.
+- **Instant-cast skills** can be fired during another skill's cast window (`Shift+click`). This is handled by marking the instant-cast skill with an offset (in ms) from the start of the **previous** skill's cast window. Concurrent offsets have a minimum of `1ms`, so two rotation entries never begin at the exact same timestamp.
+- **Interrupted casts** can be added with `Ctrl+click`. This stores an interrupt time from cast start, shortens the cast to that time, and only schedules hits that would normally occur before the interrupt.
 - **Skill details** panel below the rotation shows total damage dealt, including condition ticks from this skill (unlike dps logs, which only show strike damage and aggregate each condition type).
 - **Gear optimizer** searches whole combinatory space of gear prefixes, runes, sigils, relics, food, utility, and infusions. It uses current rotation to evaluate each build, making it **much heavier** than other optimizers. It is advised to use optimizer with 1 prefix selected, but multiple Sigils/Relics (accurate procs), or vice versa. 
 

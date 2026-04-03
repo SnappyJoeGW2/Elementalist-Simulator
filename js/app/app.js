@@ -1,16 +1,65 @@
-import { loadAllData } from './csv-loader.js';
-import { calcAttributes } from './calc-attributes.js';
+import { loadAllData } from '../data/csv-loader.js';
 import {
     PREFIXES, GEAR_SLOTS, RUNE_NAMES, FOOD_NAMES, FOOD_DATA,
     UTILITY_NAMES, UTILITY_DATA, UTILITY_CONVERSION_RATES, INFUSION_STATS,
     WEAPON_DATA, SIGIL_DATA, SIGIL_NAMES, RELIC_DATA, RELIC_NAMES,
     getActiveGearSlots,
-} from './gear-data.js';
-import { TRAITS, SPECIALIZATIONS } from './traits-data.js';
+} from '../data/gear-data.js';
+import { TRAITS, SPECIALIZATIONS } from '../data/traits-data.js';
 import { GW2API, PLACEHOLDER_ICON } from './gw2-api.js';
-import { calculateSkillDamage } from './damage.js';
-import { SimulationEngine } from './simulation.js?v=50';
-import { GearOptimizer } from './optimizer.js';
+import { calculateSkillDamage } from '../core/damage.js';
+import {
+    createDefaultPermaBoons,
+    createEmptySelectedSkills,
+} from './app-state.js';
+import {
+    calcBuildAttributes,
+    createSimulationEngine,
+} from '../sim/run/sim-runner.js';
+import {
+    downloadJson,
+    fetchJsonAsset,
+    getRotationItems,
+    loadPresetBundle,
+    readJsonFile,
+} from './app-io.js';
+import {
+    addToRotation,
+    applyLoadedBuildState,
+    applySnapshot,
+    autoRun,
+    buildSnapshot,
+    clearRotation,
+    deserializeRotation,
+    onBuildChange,
+    persistBuild,
+    refreshAfterBuildStateChange,
+    removeFromRotation,
+    restoreBuild,
+    serializeRotation,
+} from './app-runtime.js';
+import {
+    applyOptimizerResult,
+    bindOptimizerEvents,
+    enforcePrefixMax,
+    exportOptimizerResults,
+    getActiveSlots,
+    getChecked as getOptimizerChecked,
+    infusionComboCount,
+    initOptimizer,
+    populateOptimizerCheckboxes,
+    populateSlotConstraints,
+    readSlotConstraints,
+    renderOptimizerResults,
+    runOptimizer,
+    updateOptimizerVisibility,
+} from './app-optimizer.js';
+import {
+    renderRotationBuilder as renderRotationBuilderUI,
+    renderPalette,
+    renderStartAttSelector,
+    renderTimeline,
+} from './app-rotation-ui.js';
 
 // ─── Consumable description helpers ──────────────────────────────────────────
 const STAT_ABBR = {
@@ -69,6 +118,12 @@ const DEFAULT_BUILD = {
 };
 
 const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
+const AURA_TRANSMUTE_SKILLS_UI = Object.freeze({
+    'Transmute Frost': 'Frost Aura',
+    'Transmute Lightning': 'Shocking Aura',
+    'Transmute Earth': 'Magnetic Aura',
+    'Transmute Fire': 'Fire Aura',
+});
 const ATTUNEMENT_COLORS = {
     Fire: '#e05530', Water: '#4488cc', Air: '#c06ad0', Earth: '#aa7744',
 };
@@ -82,6 +137,9 @@ const CONJURE_MAP = {
 };
 const CONJURE_WEAPONS = new Set(['Frost Bow', 'Lightning Hammer', 'Fiery Greatsword']);
 const DROP_BUNDLE_ICON = 'https://wiki.guildwars2.com/images/c/ce/Weapon_Swap_Button.png';
+const DODGE_ICON = 'https://wiki.guildwars2.com/images/b/b2/Dodge.png';
+const COMBAT_START_ICON = 'https://wiki.guildwars2.com/images/e/e9/Call_Target.png';
+const WAIT_ICON = 'https://wiki.guildwars2.com/images/8/83/%22sipcoffee%22_Emote_Tome.png';
 const CATALYST_ENERGY_MAX = 30;
 const SLOT_LABELS = ['heal', 'util1', 'util2', 'util3', 'elite'];
 const SLOT_TYPES = { heal: 'Healing', util1: 'Utility', util2: 'Utility', util3: 'Utility', elite: 'Elite' };
@@ -184,28 +242,8 @@ class App {
         this.activeAttunement = 'Fire';
         this.secondaryAttunement = 'Fire';
         this.evokerElement = null;
-        this.selectedSkills = { heal: null, util1: null, util2: null, util3: null, elite: null };
-        this.permaBoons = {
-            Might: 25,
-            Fury: true,
-            Protection: true,
-            Resolution: true,
-            Alacrity: true,
-            Quickness: true,
-            Regeneration: true,
-            Vigor: true,
-            Swiftness: true,
-            Bleeding: true,
-            Burning: true,
-            Torment: true,
-            Confusion: true,
-            Poisoned: true,
-            Chilled: true,
-            Cripple: true,
-            Slow: true,
-            Weakness: true,
-            Vulnerability: 25,
-        };
+        this.selectedSkills = createEmptySelectedSkills();
+        this.permaBoons = createDefaultPermaBoons();
         this.openDropdown = null;
         this.sim = null;
         this.dragIdx = null;
@@ -238,20 +276,8 @@ class App {
         // Initialize build state — restore from localStorage or fall back to default
         this.build = JSON.parse(JSON.stringify(DEFAULT_BUILD));
         this._restoreBuild(); // populates this.build, selectedSkills, etc. from localStorage if available
-        this.data.attributes = calcAttributes(
-            this.build,
-            Object.values(this.selectedSkills).filter(Boolean),
-        );
-
-        this.sim = new SimulationEngine({
-            skills: this.data.skills,
-            skillHits: this.data.skillHits,
-            weapons: WEAPON_DATA,
-            attributes: this.data.attributes,
-            sigils: SIGIL_DATA,
-            relics: RELIC_DATA,
-            activeTraits: this.data.attributes.activeTraits,
-        });
+        this.data.attributes = calcBuildAttributes(this.build, this.selectedSkills);
+        this.sim = createSimulationEngine(this.data, this.data.attributes);
 
         // Rotation couldn't be restored in _restoreBuild because this.sim didn't
         // exist yet.  Re-apply the saved rotation now that the engine is ready.
@@ -323,31 +349,7 @@ class App {
     // }
 
     _onBuildChange() {
-        this.data.attributes = calcAttributes(
-            this.build,
-            Object.values(this.selectedSkills).filter(Boolean),
-        );
-        const rotation = this.sim ? this.sim.rotation : [];
-        this.sim = new SimulationEngine({
-            skills: this.data.skills,
-            skillHits: this.data.skillHits,
-            weapons: WEAPON_DATA,
-            attributes: this.data.attributes,
-            sigils: SIGIL_DATA,
-            relics: RELIC_DATA,
-            activeTraits: this.data.attributes.activeTraits,
-        });
-        this.sim.rotation = rotation;
-        this.renderTraits();
-        this.renderAttributes();
-        this.renderConditions();
-        this.renderAttunementBar();
-        this.renderWeaponBar();
-        this.renderSkillBar();
-        this.renderSkillInfoTable();
-        if (this.sim.rotation.length > 0) this._autoRun();
-        else this._renderPalette();
-        this._persistBuild();
+        onBuildChange(this);
     }
 
     setStatus(msg) {
@@ -1221,11 +1223,11 @@ class App {
     // ─── Skill Info Table ───
     renderSkillInfoTable() {
         const container = document.getElementById('skill-info-table');
-        const attrs = this.data.attributes.attributes;
         const { weapons: weps } = this.data.attributes;
         const mh = weps[0] || '';
         const oh = weps[1] || '';
         const is2h = TH_WEAPONS.has(mh);
+        const eliteSpec = this._getEliteSpec();
 
         const hdr = `<div class="info-header">
             <span></span><span>Name</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span>
@@ -1240,18 +1242,41 @@ class App {
             for (let slot = 1; slot <= 5; slot++) {
                 const weapon = is2h ? mh : (slot <= 3 ? mh : oh);
                 const skills = this._getSkillsForSlot(weapon, att, String(slot));
-                const chain = this._getChainOrder(skills);
+                const chain = this._getChainOrderWithEtching(skills);
                 for (const sk of chain) {
                     html += this._renderInfoRow(sk, weapon);
                 }
             }
 
-            const eliteSpec = this._getEliteSpec();
             if (eliteSpec === 'Tempest') {
                 const overload = this.data.skills.find(s =>
                     s.weapon === 'Profession mechanic' && s.attunement === att && s.type === 'Attunement' && s.name.startsWith('Overload'));
                 if (overload) html += this._renderInfoRow(overload, 'Profession mechanic');
             }
+            html += '</div>';
+        }
+
+        const weaverDualSkills = this._getInfoWeaverDualSkills(mh, oh, is2h);
+        if (weaverDualSkills.length > 0) {
+            html += '<div class="info-att-header" style="color:#d7c06a">Weaver Dual Skills</div>';
+            html += '<div class="info-rows">';
+            for (const sk of weaverDualSkills) html += this._renderInfoRow(sk, sk.weapon);
+            html += '</div>';
+        }
+
+        const specialSkills = this._getInfoSpecialSkills(mh, oh);
+        if (specialSkills.length > 0) {
+            html += '<div class="info-att-header" style="color:var(--accent)">Special Skills</div>';
+            html += '<div class="info-rows">';
+            for (const sk of specialSkills) html += this._renderInfoRow(sk, this._getWeaponForSkill(sk));
+            html += '</div>';
+        }
+
+        const professionMechanics = this._getInfoProfessionMechanicSkills(eliteSpec);
+        if (professionMechanics.length > 0) {
+            html += '<div class="info-att-header" style="color:#66c7d8">Profession Mechanics</div>';
+            html += '<div class="info-rows">';
+            for (const sk of professionMechanics) html += this._renderInfoRow(sk, 'Profession mechanic');
             html += '</div>';
         }
 
@@ -1297,6 +1322,49 @@ class App {
             <span class="info-val total">${Math.round(dmg.totalDamage)}</span>
             <span class="info-val dps">${dmg.castTime > 0 ? Math.round(dmg.dps) : '—'}</span>
         </div>`;
+    }
+
+    _uniqueSkillsByName(skills) {
+        const seen = new Set();
+        return skills.filter(skill => {
+            if (!skill || seen.has(skill.name)) return false;
+            seen.add(skill.name);
+            return true;
+        });
+    }
+
+    _getInfoWeaverDualSkills(mh, oh, is2h) {
+        if (this._getEliteSpec() !== 'Weaver') return [];
+        const weapons = is2h ? [mh] : [mh].filter(Boolean);
+        return this._uniqueSkillsByName(this.data.skills.filter(skill =>
+            weapons.includes(skill.weapon)
+            && skill.slot === '3'
+            && typeof skill.attunement === 'string'
+            && skill.attunement.includes('+')
+        ));
+    }
+
+    _getInfoSpecialSkills(mh, oh) {
+        const skills = [];
+        if (mh === 'Pistol' || oh === 'Pistol') {
+            const ee = this.data.skills.find(skill => skill.name === 'Elemental Explosion');
+            if (ee) skills.push(ee);
+        }
+        if (mh === 'Hammer' || oh === 'Hammer') {
+            const gf = this.data.skills.find(skill => skill.name === 'Grand Finale' && skill.weapon === 'Hammer');
+            if (gf) skills.push(gf);
+        }
+        return this._uniqueSkillsByName(skills);
+    }
+
+    _getInfoProfessionMechanicSkills(eliteSpec) {
+        if (eliteSpec === 'Catalyst') {
+            return this._uniqueSkillsByName(this.data.skills.filter(skill => skill.type === 'Jade Sphere'));
+        }
+        if (eliteSpec === 'Evoker') {
+            return this._uniqueSkillsByName(this.data.skills.filter(skill => skill.type === 'Familiar'));
+        }
+        return [];
     }
 
     // ─── Helpers ───
@@ -1397,80 +1465,23 @@ class App {
 
     // ─── Rotation Builder ───
     renderRotationBuilder() {
-        this._renderStartAttSelector();
-        this._renderPalette();
-        this._renderTimeline();
+        renderRotationBuilderUI(this);
     }
 
     _renderStartAttSelector() {
-        const el = document.getElementById('start-att-selector');
-        if (!el) return;
-        const elite = this._getEliteSpec();
-        const isWeaver = elite === 'Weaver';
-        let h = '';
-
-        h += `<span class="start-att-label">${isWeaver ? 'Pri:' : 'Start:'}</span>`;
-        for (const att of ATTUNEMENTS) {
-            const icon = this.api.getSkillIcon(`${att} Attunement`);
-            const color = ATTUNEMENT_COLORS[att];
-            const active = att === this.activeAttunement ? ' active' : '';
-            h += `<button class="start-att-btn${active}" data-att="${att}" data-role="primary" style="--att-c:${color}" title="${isWeaver ? 'Primary' : 'Start'}: ${att}">
-                <img src="${icon || PLACEHOLDER_ICON}" /></button>`;
-        }
-
-        if (isWeaver) {
-            h += `<span class="start-att-label" style="margin-left:6px">Sec:</span>`;
-            for (const att of ATTUNEMENTS) {
-                const icon = this.api.getSkillIcon(`${att} Attunement`);
-                const color = ATTUNEMENT_COLORS[att];
-                const active = att === this.secondaryAttunement ? ' active' : '';
-                h += `<button class="start-att-btn${active}" data-att="${att}" data-role="secondary" style="--att-c:${color}" title="Secondary: ${att}">
-                    <img src="${icon || PLACEHOLDER_ICON}" /></button>`;
-            }
-        }
-
-        if (elite === 'Evoker') {
-            const EVOKER_SEL_NAMES = { Fire: 'Ignite', Water: 'Splash', Air: 'Zap', Earth: 'Calcify' };
-            h += `<span class="start-att-label" style="margin-left:6px">F5:</span>`;
-            for (const att of ATTUNEMENTS) {
-                const selName = EVOKER_SEL_NAMES[att];
-                const icon = this.api.getSkillIcon(selName);
-                const color = ATTUNEMENT_COLORS[att];
-                const active = this.evokerElement === att ? ' active' : '';
-                h += `<button class="start-att-btn${active}" data-att="${att}" data-role="evoker" style="--att-c:${color}" title="Familiar: ${selName} (${att})">
-                    <img src="${icon || PLACEHOLDER_ICON}" /></button>`;
-            }
-        }
-
-        el.innerHTML = h;
-        el.querySelectorAll('.start-att-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (btn.dataset.role === 'secondary') {
-                    if (btn.dataset.att === this.secondaryAttunement) return;
-                    this.secondaryAttunement = btn.dataset.att;
-                    this._renderStartAttSelector();
-                    this.renderWeaponBar();
-                    if (this.sim?.rotation.length > 0) this._autoRun();
-                    else this._renderPalette();
-                } else if (btn.dataset.role === 'evoker') {
-                    const att = btn.dataset.att;
-                    if (att === this.evokerElement) return;
-                    this.evokerElement = att;
-                    this._renderStartAttSelector();
-                    if (this.sim?.rotation.length > 0) this._autoRun();
-                    else this._renderPalette();
-                } else {
-                    this.setAttunement(btn.dataset.att);
-                    this._renderStartAttSelector();
-                }
-            });
+        renderStartAttSelector(this, {
+            ATTUNEMENTS,
+            ATTUNEMENT_COLORS,
         });
     }
 
     _skillColor(skill, skillName) {
+        if (skillName === '__combat_start') return '#d66d2f';
+        if (skillName === '__wait') return '#8d7a57';
         if (skillName === '__drop_bundle' || (skillName && skillName.startsWith('__pickup_')))
             return '#ffcc44';
         if (!skill) return 'var(--border-light)';
+        if (skill.type === 'Dodge' || skill.slot === 'Dodge') return '#7fb6d8';
         if (CONJURE_WEAPONS.has(skill.weapon)) return '#ffcc44';
         if (skill.attunement) {
             const a = skill.attunement.split('+')[0];
@@ -1503,6 +1514,11 @@ class App {
     }
 
     _isSkillAvailable(skillName) {
+        if (skillName === '__combat_start') {
+            return !this.sim?.rotation?.some(item =>
+                (typeof item === 'string' ? item : item?.name) === '__combat_start'
+            );
+        }
         const es = this.sim?.results?.endState;
         if (!es) return true;
         const sk = this._skillInContext(skillName);
@@ -1553,8 +1569,15 @@ class App {
             }
             return (es.skillCD[skillName] || 0) <= t;
         }
+        if ((sk.type === 'Dodge' || sk.slot === 'Dodge')) {
+            return (es.endurance ?? 100) >= Math.abs(sk.endurance || 0);
+        }
 
         const cdKey = this._cdKey(sk);
+        if (skillName === 'Rock Barrier') {
+            const pendingReadyAt = this._getPendingRockBarrierReadyAt(es);
+            if (pendingReadyAt !== null && pendingReadyAt > t) return false;
+        }
         if ((es.skillCD[cdKey] || 0) > t) return false;
 
         if (sk.maximumCount > 0 && sk.countRecharge > 0) {
@@ -1603,6 +1626,7 @@ class App {
         }
 
         if (sk.chainSkill) {
+            if (AURA_TRANSMUTE_SKILLS_UI[skillName]) return this._hasAuraTransmuteAccess(skillName, es);
             const chainRoot = this._getChainRootName(sk);
             let expected = es.chainState?.[chainRoot] || chainRoot;
             // Non-slot-1 chains: if the 5s window expired, treat as reset to root
@@ -1689,7 +1713,18 @@ class App {
         return root ? root.name : candidates[0].name;
     }
 
+    _hasAuraTransmuteAccess(skillName, es) {
+        const auraName = AURA_TRANSMUTE_SKILLS_UI[skillName];
+        const allCondStacks = this.sim?.results?.allCondStacks || [];
+        if (!auraName || !es) return false;
+        return allCondStacks.some(stack =>
+            stack.cond === auraName && stack.t <= es.time && stack.expiresAt > es.time
+        );
+    }
+
     _isVirtualAvailable(name) {
+        if (name === '__combat_start') return this._isSkillAvailable(name);
+        if (name === '__wait') return true;
         const es = this.sim?.results?.endState;
         if (!es) return false;
         if (name === '__drop_bundle') return !!es.conjureEquipped;
@@ -1711,6 +1746,15 @@ class App {
         const alaProgress = alaRealMs * 1.25;
         const remaining = baseCdMs - alaProgress;
         return Math.round(alaRealMs + remaining);
+    }
+
+    _getPendingRockBarrierReadyAt(es) {
+        if (!es) return null;
+        const expiry = es.chainExpiry?.['Rock Barrier'];
+        if (expiry === undefined || expiry > es.time) return null;
+        const skill = this.data.skills.find(s => s.name === 'Rock Barrier');
+        if (!skill || (skill.recharge || 0) <= 0) return null;
+        return expiry + this._esAlaCd(es, Math.round(skill.recharge * 1000), expiry);
     }
 
     _getSkillCD(skill) {
@@ -1735,6 +1779,7 @@ class App {
             const cd = Math.max(skillCd, dwellCd);
             return cd > 0 ? cd : null;
         }
+        if (skill.type === 'Dodge' || skill.slot === 'Dodge') return null;
 
         const cdKey = this._cdKey(skill);
 
@@ -1749,6 +1794,13 @@ class App {
         }
 
         // Regular skill
+        if (name === 'Rock Barrier') {
+            const pendingReadyAt = this._getPendingRockBarrierReadyAt(es);
+            if (pendingReadyAt !== null) {
+                const pendingCd = (pendingReadyAt - t) / 1000;
+                if (pendingCd > 0) return pendingCd;
+            }
+        }
         const cd = ((es.skillCD[cdKey] || 0) - t) / 1000;
         return cd > 0 ? cd : null;
     }
@@ -1772,7 +1824,9 @@ class App {
     }
 
     _palIcon(skill, available = true) {
-        const icon = this.api.getSkillIcon(skill.name);
+        const icon = (skill.type === 'Dodge' || skill.slot === 'Dodge')
+            ? DODGE_ICON
+            : this.api.getSkillIcon(skill.name);
         const c = this._skillColor(skill, skill.name);
         const cls = available ? '' : ' pal-disabled';
         const charges = this._getChargeCount(skill);
@@ -1784,490 +1838,32 @@ class App {
     }
 
     _renderPalette() {
-        const el = document.getElementById('rotation-palette');
-        const skills = this.data.skills;
-        const { weapons: weps } = this.data.attributes;
-        const mh = weps[0] || '', oh = weps[1] || '';
-        const is2h = TH_WEAPONS.has(mh);
-        const elite = this._getEliteSpec();
-        const es = this.sim?.results?.endState;
-        const wielding = es?.conjureEquipped || null;
-        let h = '';
-
-        h += '<div class="pal-group"><div class="pal-label">Att</div><div class="pal-row">';
-        for (const att of ATTUNEMENTS) {
-            const sw = skills.find(s => s.name === `${att} Attunement`);
-            if (sw) h += this._palIcon(sw, this._isSkillAvailable(sw.name));
-        }
-        h += '</div></div>';
-
-        if (elite === 'Tempest') {
-            h += '<div class="pal-group"><div class="pal-label">OL</div><div class="pal-row">';
-            for (const att of ATTUNEMENTS) {
-                const ol = skills.find(s => s.name === `Overload ${att}`);
-                if (ol) h += this._palIcon(ol, this._isSkillAvailable(ol.name));
-            }
-            h += '</div></div>';
-        }
-
-        if (elite === 'Catalyst') {
-            const energy = es ? (es.energy ?? 30) : 30;
-            const pct = Math.round((energy / CATALYST_ENERGY_MAX) * 100);
-            const sphereActive = es?.sphereWindows?.some(w => w.start <= es.time && w.end > es.time) ?? false;
-            h += `<div class="pal-group"><div class="pal-label" style="color:#44ddaa">F5</div><div class="pal-row" style="flex-wrap:wrap;gap:4px">`;
-            h += `<div class="energy-bar-wrap">
-                <div class="energy-bar-fill${sphereActive ? ' sphere-active' : ''}" style="width:${pct}%"></div>
-                <span class="energy-bar-text">${energy}/${CATALYST_ENERGY_MAX}</span>
-            </div>`;
-            for (const att of ATTUNEMENTS) {
-                const js = skills.find(s => s.type === 'Jade Sphere' && s.attunement === att);
-                if (js) h += this._palIcon(js, this._isSkillAvailable(js.name));
-            }
-            h += '</div></div>';
-        }
-
-        if (elite === 'Evoker') {
-            const EVOKER_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
-            const curEl = es?.evokerElement || this.evokerElement || null;
-            const charges = es?.evokerCharges ?? 6;
-            const maxCharges = es?.evokerMaxCharges ?? 6;
-            const empowered = es?.evokerEmpowered ?? 0;
-            const elLabel = curEl ? curEl[0] : '?';
-            h += `<div class="pal-group"><div class="pal-label" style="color:${curEl ? ATTUNEMENT_COLORS[curEl] : '#888'}">F5<br><small>${elLabel}</small></div><div class="pal-row" style="flex-wrap:wrap;gap:4px">`;
-            if (curEl) {
-                h += `<div class="evoker-charge-wrap">`;
-                h += `<div class="evoker-charge-outer">`;
-                for (let i = 0; i < maxCharges; i++) h += `<span class="evoker-pip${i < charges ? ' filled' : ''}"></span>`;
-                h += `</div>`;
-                h += `<div class="evoker-charge-inner">`;
-                for (let i = 0; i < 3; i++) h += `<span class="evoker-emp${i < empowered ? ' filled' : ''}"></span>`;
-                h += `</div>`;
-                h += `</div>`;
-                if (empowered >= 3) {
-                    const empSkill = skills.find(s =>
-                        s.type === 'Familiar' && !EVOKER_SELECTORS.has(s.name) && s.attunement === curEl
-                    );
-                    if (empSkill) h += this._palIcon(empSkill, this._isSkillAvailable(empSkill.name));
-                } else {
-                    const basicSkill = skills.find(s =>
-                        s.type === 'Familiar' && EVOKER_SELECTORS.has(s.name) && s.attunement === curEl
-                    );
-                    if (basicSkill) h += this._palIcon(basicSkill, this._isSkillAvailable(basicSkill.name));
-                }
-            } else {
-                h += '<span style="color:#888;font-size:11px;padding:4px">Select familiar (F5) above</span>';
-            }
-            h += '</div></div>';
-        }
-
-        if (es?.aaCarryover) {
-            const carryRoot = es.aaCarryover.root;
-            const carryAtt = es.aaCarryover.att;
-            let cur = es.chainState?.[carryRoot];
-            const remaining = [];
-            const visited = new Set();
-            while (cur && cur !== carryRoot && !visited.has(cur)) {
-                const sk = skills.find(s => s.name === cur);
-                if (!sk) break;
-                remaining.push(sk);
-                visited.add(cur);
-                cur = sk.chainSkill;
-            }
-            if (remaining.length > 0) {
-                const color = ATTUNEMENT_COLORS[carryAtt];
-                h += `<div class="pal-group"><div class="pal-label" style="color:${color}">AA</div><div class="pal-row">`;
-                for (const sk of remaining) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-                h += '</div></div>';
-            }
-        }
-
-        if (wielding) {
-            const cs = skills.filter(s => s.weapon === wielding);
-            if (cs.length) {
-                h += `<div class="pal-group"><div class="pal-label" style="color:#ffcc44">${wielding}</div><div class="pal-row">`;
-                for (const sk of cs) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-                h += '</div></div>';
-            }
-            h += `<div class="pal-group"><div class="pal-label" style="color:#ffcc44">Act</div><div class="pal-row">`;
-            h += `<div class="pal-skill" data-skill="__drop_bundle" title="Drop ${esc(wielding)}" style="--att-border:#ffcc44">
-                <img src="${DROP_BUNDLE_ICON}" /></div>`;
-            h += '</div></div>';
-        } else if (elite === 'Weaver') {
-            const priAtt = es?.att || this.activeAttunement;
-            const secAtt = es?.att2 || this.secondaryAttunement;
-            const allBullets = this._allPistolBulletsHeld();
-            h += `<div class="pal-group"><div class="pal-label" style="color:${ATTUNEMENT_COLORS[priAtt]}">1-2</div><div class="pal-row">`;
-            for (let slot = 1; slot <= 2; slot++) {
-                const weapon = is2h ? mh : (slot <= 3 ? mh : oh);
-                if (slot === 1 && weapon === 'Pistol' && allBullets) {
-                    const eeSk = skills.find(s => s.name === 'Elemental Explosion');
-                    if (eeSk) { h += this._palIcon(eeSk, this._isSkillAvailable(eeSk.name)); continue; }
-                }
-                const chain = this._getChainOrder(this._getSkillsForSlot(weapon, priAtt, String(slot)));
-                for (const sk of chain) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-            }
-            h += '</div></div>';
-
-            const weapon3 = is2h ? mh : mh;
-            if (priAtt !== secAtt) {
-                const dualKey1 = `${priAtt}+${secAtt}`;
-                const dualKey2 = `${secAtt}+${priAtt}`;
-                const dualSkills = skills.filter(s =>
-                    (s.attunement === dualKey1 || s.attunement === dualKey2) &&
-                    s.slot === '3' && s.weapon === weapon3);
-                if (dualSkills.length) {
-                    h += `<div class="pal-group"><div class="pal-label" style="background:linear-gradient(${ATTUNEMENT_COLORS[priAtt]}, ${ATTUNEMENT_COLORS[secAtt]});-webkit-background-clip:text;-webkit-text-fill-color:transparent">3</div><div class="pal-row">`;
-                    for (const sk of dualSkills) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-                    h += '</div></div>';
-                }
-            } else {
-                const fallback3 = this._getChainOrder(this._getSkillsForSlot(weapon3, priAtt, '3'));
-                if (fallback3.length) {
-                    h += `<div class="pal-group"><div class="pal-label" style="color:${ATTUNEMENT_COLORS[priAtt]}">3</div><div class="pal-row">`;
-                    for (const sk of fallback3) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-                    h += '</div></div>';
-                }
-            }
-
-            h += `<div class="pal-group"><div class="pal-label" style="color:${ATTUNEMENT_COLORS[secAtt]}">4-5</div><div class="pal-row">`;
-            for (let slot = 4; slot <= 5; slot++) {
-                const weapon = is2h ? mh : oh;
-                const chain = this._getChainOrder(this._getSkillsForSlot(weapon, secAtt, String(slot)));
-                for (const sk of chain) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-            }
-            h += '</div></div>';
-        } else {
-            const allBullets = this._allPistolBulletsHeld();
-            for (const att of ATTUNEMENTS) {
-                h += `<div class="pal-group"><div class="pal-label" style="color:${ATTUNEMENT_COLORS[att]}">${att[0]}</div><div class="pal-row">`;
-                for (let slot = 1; slot <= 5; slot++) {
-                    const weapon = is2h ? mh : (slot <= 3 ? mh : oh);
-                    if (slot === 1 && weapon === 'Pistol' && allBullets) {
-                        if (att === ATTUNEMENTS[0]) {
-                            // Only add Elemental Explosion once (on the first attunement group)
-                            const eeSk = skills.find(s => s.name === 'Elemental Explosion');
-                            if (eeSk) h += this._palIcon(eeSk, this._isSkillAvailable(eeSk.name));
-                        }
-                        continue;
-                    }
-                    const chain = this._getChainOrder(this._getSkillsForSlot(weapon, att, String(slot)));
-                    for (const sk of chain) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-                }
-                h += '</div></div>';
-            }
-        }
-
-        // ── Spear Etching chain variants ─────────────────────────────────────
-        // Show lesser/full variants when Spear is equipped, regardless of attunement state,
-        // so the user can always add them to the rotation after running a sim.
-        const spearEquipped = mh === 'Spear' || oh === 'Spear';
-        if (spearEquipped) {
-            const etchingSkills = [];
-            for (const chain of Object.values(ETCHING_CHAINS_UI)) {
-                const lesserSk = skills.find(s => s.name === chain.lesser);
-                const fullSk = skills.find(s => s.name === chain.full);
-                if (lesserSk) etchingSkills.push(lesserSk);
-                if (fullSk) etchingSkills.push(fullSk);
-            }
-            if (etchingSkills.length > 0) {
-                h += '<div class="pal-group"><div class="pal-label" style="color:#cc8844">Etch</div><div class="pal-row">';
-                for (const sk of etchingSkills) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-                h += '</div></div>';
-            }
-        }
-
-        // ── Pistol bullet tracker ─────────────────────────────────────────────
-        // Always show when Pistol is equipped. Shows current live bullet state
-        // (end-of-rotation after a run, or preset starting state before first run).
-        // All 4 elements are always shown. Click toggles the preset starting bullet.
-        const pistolEquipped = mh === 'Pistol' || oh === 'Pistol';
-        if (pistolEquipped) {
-            // Display live end-state if available, otherwise fall back to preset
-            const liveBullets = es?.pistolBullets;
-            const presetBullets = this._presetPistolBullets || { Fire: false, Water: false, Air: false, Earth: false };
-            const displayBullets = liveBullets || presetBullets;
-
-            h += '<div class="pal-group"><div class="pal-label" style="color:#ddbb88">Bullet</div><div class="pal-row">';
-            for (const el of ATTUNEMENTS) {
-                const active = displayBullets[el];
-                const presetActive = presetBullets[el];
-                const icon = PISTOL_BULLET_ICONS[el];
-                const label = PISTOL_BULLET_LABELS[el];
-                const color = ATTUNEMENT_COLORS[el];
-                // Dim bullets not available in current attunement context (purely cosmetic hint)
-                const inAtt = !es || es.att === el || es.att2 === el;
-                const titleSuffix = active
-                    ? ` (held — preset start: ${presetActive ? 'on' : 'off'})`
-                    : ` (not held — preset start: ${presetActive ? 'on' : 'off'})`;
-                h += `<div class="pistol-bullet${active ? ' bullet-active' : ''}${!inAtt ? ' bullet-off-att' : ''}"
-                    data-bullet-el="${esc(el)}"
-                    title="${esc(label)}${titleSuffix} — click to toggle start"
-                    style="--att-border:${color};${active ? `box-shadow:0 0 6px ${color};` : ''}${!active ? 'opacity:0.35;' : ''}">
-                    <img src="${icon}" /></div>`;
-            }
-            h += '</div></div>';
-        }
-
-        // ── Hammer orb: Grand Finale ──────────────────────────────────────────
-        // Grand Finale has no attunement in the CSV so it won't appear in the normal palette groups.
-        // Show it in a dedicated group whenever Hammer is equipped.
-        const hammerEquipped = mh === 'Hammer' || oh === 'Hammer';
-        if (hammerEquipped) {
-            const gfSk = skills.find(s => s.name === 'Grand Finale' && s.weapon === 'Hammer');
-            if (gfSk) {
-                h += '<div class="pal-group"><div class="pal-label" style="color:#ff9944">GF</div><div class="pal-row">';
-                h += this._palIcon(gfSk, this._isSkillAvailable(gfSk.name));
-                h += '</div></div>';
-            }
-        }
-
-        const selSkills = [];
-        const currentAtt = es?.att || this.activeAttunement;
-        for (const slotKey of SLOT_LABELS) {
-            const sel = this.selectedSkills[slotKey];
-            if (!sel) continue;
-            const base = sel.displayName || sel.name.replace(/\s*\((?:Fire|Water|Air|Earth)\)$/, '');
-            const hasVars = ATTUNEMENTS.some(a => skills.find(s => s.name === `${base} (${a})`));
-            if (hasVars) {
-                const v = skills.find(s => s.name === `${base} (${currentAtt})`);
-                if (v) selSkills.push(v);
-            } else {
-                selSkills.push(sel);
-            }
-        }
-        if (selSkills.length > 0) {
-            h += '<div class="pal-group"><div class="pal-label">Skill</div><div class="pal-row">';
-            for (const sk of selSkills) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-            h += '</div></div>';
-        }
-
-        if (!wielding) {
-            for (const slotKey of SLOT_LABELS) {
-                const sel = this.selectedSkills[slotKey];
-                if (sel?.type === 'Conjure') {
-                    const cw = CONJURE_MAP[sel.name];
-                    if (cw) {
-                        const cs = skills.filter(s => s.weapon === cw);
-                        if (cs.length) {
-                            h += `<div class="pal-group"><div class="pal-label" style="color:${ATTUNEMENT_COLORS['Fire']}">${cw[0]}</div><div class="pal-row">`;
-                            for (const sk of cs) h += this._palIcon(sk, this._isSkillAvailable(sk.name));
-                            h += '</div></div>';
-                        }
-                    }
-                }
-            }
-        }
-
-        const availablePickups = (es?.conjurePickups || []).filter(p => es.time <= p.expiresAt);
-        if (availablePickups.length > 0 && !wielding) {
-            h += `<div class="pal-group"><div class="pal-label" style="color:#ffcc44">Pick</div><div class="pal-row">`;
-            for (const pickup of availablePickups) {
-                const pw = pickup.weapon;
-                const pickupName = `__pickup_${pw}`;
-                const conjSkillName = Object.entries(CONJURE_MAP).find(([, v]) => v === pw)?.[0];
-                const pickupIcon = conjSkillName ? this.api.getSkillIcon(conjSkillName) : null;
-                const remaining = ((pickup.expiresAt - es.time) / 1000).toFixed(1);
-                h += `<div class="pal-skill" data-skill="${esc(pickupName)}" title="Pick up ${esc(pw)} (${remaining}s left)" style="--att-border:#ffcc44; box-shadow: 0 0 6px #ffcc44">
-                    <img src="${pickupIcon || PLACEHOLDER_ICON}" /></div>`;
-            }
-            h += '</div></div>';
-        }
-
-        el.innerHTML = h;
-        el.querySelectorAll('.pal-skill').forEach(p => {
-            p.addEventListener('click', (e) => {
-                const skillName = p.dataset.skill;
-                if (!skillName) return;
-                const sk = this.data.skills.find(s => s.name === skillName);
-                const isInstant = sk && (sk.castTime || 0) === 0;
-                // Shift+click on an instant skill: add as concurrent (fires during previous cast)
-                if (e.shiftKey && isInstant && this.sim?.rotation.length > 0) {
-                    this._addToRotation(skillName, 0);
-                    // Ctrl+click on a non-instant skill: fill the wait gap before it with an
-                    // attunement-appropriate auto-attack (Arc Lightning / Stone Shards)
-                } else if (e.ctrlKey && !isInstant) {
-                    this._addToRotation(skillName, null, true);
-                } else {
-                    this._addToRotation(skillName);
-                }
-            });
-        });
-
-        // Pistol bullet click-to-toggle handler
-        el.querySelectorAll('.pistol-bullet').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const element = btn.dataset.bulletEl;
-                if (!element) return;
-                // Always update _presetPistolBullets (the authoritative starting state)
-                this._presetPistolBullets = this._presetPistolBullets
-                    || { Fire: false, Water: false, Air: false, Earth: false };
-                this._presetPistolBullets[element] = !this._presetPistolBullets[element];
-                // Re-run simulation with updated starting bullets, then re-render
-                if (this.sim?.rotation.length > 0) {
-                    this._autoRun();
-                } else {
-                    this._renderPalette();
-                }
-            });
+        renderPalette(this, {
+            ATTUNEMENTS,
+            ATTUNEMENT_COLORS,
+            CATALYST_ENERGY_MAX,
+            SLOT_LABELS,
+            TH_WEAPONS,
+            CONJURE_MAP,
+            DROP_BUNDLE_ICON,
+            DODGE_ICON,
+            COMBAT_START_ICON,
+            WAIT_ICON,
+            ETCHING_CHAINS_UI,
+            PISTOL_BULLET_ICONS,
+            PISTOL_BULLET_LABELS,
         });
     }
 
     _renderTimeline() {
-        const el = document.getElementById('rotation-timeline');
-        if (!this.sim || this.sim.rotation.length === 0) {
-            el.innerHTML = '<div class="rot-empty">Click skills above to build rotation</div>';
-            return;
-        }
-
-        const stepMap = {};
-        if (this.sim.results?.steps) {
-            for (const st of this.sim.results.steps) stepMap[st.ri] = st;
-        }
-
-        const elite = this._getEliteSpec();
-        const isWeaver = elite === 'Weaver';
-        const rows = [];
-        let curAtt = this.activeAttunement || 'Fire';
-        let curAtt2 = isWeaver ? (this.secondaryAttunement || curAtt) : null;
-        rows.push({ att: curAtt, att2: curAtt2, skills: [] });
-
-        for (let i = 0; i < this.sim.rotation.length; i++) {
-            const rotItem = this.sim.rotation[i];
-            const name = typeof rotItem === 'string' ? rotItem : rotItem.name;
-            const offset = typeof rotItem === 'object' ? rotItem.offset : undefined;
-            const isGapFill = typeof rotItem === 'object' && rotItem.gapFill === true;
-            const skill = this.data.skills.find(s => s.name === name);
-            const isSwap = skill?.type === 'Attunement' && !skill.name.startsWith('Overload');
-
-            // Any attunement swap (concurrent or sequential) opens a new row
-            if (isSwap) {
-                const target = skill.name.replace(' Attunement', '');
-                if (isWeaver) { curAtt2 = curAtt; }
-                curAtt = target;
-                if (i > 0) {
-                    rows.push({ att: curAtt, att2: curAtt2, skills: [] });
-                } else {
-                    rows[0].att = curAtt;
-                    rows[0].att2 = curAtt2;
-                }
-            }
-            rows[rows.length - 1].skills.push({ name, idx: i, step: stepMap[i], offset, isGapFill });
-        }
-
-        let tlHtml = rows.map(row => {
-            const color = ATTUNEMENT_COLORS[row.att] || 'var(--border-light)';
-            const label = isWeaver && row.att2
-                ? `${row.att[0]}/${row.att2[0]}`
-                : row.att;
-            const skillsHtml = row.skills.map(({ name, idx, step, offset, isGapFill }, si) => {
-                const skill = this.data.skills.find(s => s.name === name);
-                let icon, displayName;
-                if (name === '__drop_bundle') {
-                    icon = DROP_BUNDLE_ICON;
-                    displayName = 'Drop Bundle';
-                } else if (name.startsWith('__pickup_')) {
-                    const pw = name.slice(9);
-                    const conjName = Object.entries(CONJURE_MAP).find(([, v]) => v === pw)?.[0];
-                    icon = conjName ? this.api.getSkillIcon(conjName) : null;
-                    displayName = `Pick up ${pw}`;
-                } else {
-                    icon = this.api.getSkillIcon(name);
-                    displayName = name;
-                }
-                const c = this._skillColor(skill, name);
-                const pf = step?.partialFill;
-                const ts = pf
-                    ? `${(pf.startMs / 1000).toFixed(2)}s`
-                    : step ? `${(step.start / 1000).toFixed(2)}s` : '';
-                const castInfo = step
-                    ? `\nCast: ${(step.start / 1000).toFixed(2)}s → ${(step.end / 1000).toFixed(2)}s`
-                    : '';
-                const isConcurrent = offset !== undefined;
-                const offsetBadge = isConcurrent
-                    ? `<span class="rot-offset-badge" data-idx="${idx}" title="Fires ${offset}ms into previous cast (click to edit)">⊙${offset}ms</span>`
-                    : '';
-                const gapFillBadge = isGapFill
-                    ? `<span class="rot-gapfill-badge" title="${pf ? `${pf.durationMs}ms of ${pf.skill} filled gap` : 'Gap-fill: channels filler until this skill is ready'}">⟳${pf ? pf.durationMs + 'ms' : ''}</span>`
-                    : '';
-                const concurClass = isConcurrent ? ' rot-concurrent' : '';
-                const gapFillClass = isGapFill ? ' rot-gapfill' : '';
-                const concurInfo = isConcurrent ? `\n⊙ Fires ${offset}ms into previous cast` : '';
-                const gapFillInfo = pf ? `\n⟳ ${pf.durationMs}ms of ${pf.skill} filled gap before cast` : isGapFill ? '\n⟳ Gap-fill enabled (no gap at sim time)' : '';
-                return (si > 0 ? '<span class="rot-arrow">→</span>' : '') +
-                    `<div class="rot-skill${concurClass}${gapFillClass}" draggable="true" data-idx="${idx}" title="${esc(displayName)}${castInfo}${concurInfo}${gapFillInfo}" style="--att-border:${c}">
-                        <img src="${icon || PLACEHOLDER_ICON}" />
-                        <span class="rot-x">\u00d7</span>
-                        ${ts ? `<span class="rot-time">${ts}</span>` : ''}
-                        ${offsetBadge}${gapFillBadge}
-                    </div>`;
-            }).join('');
-            return `<div class="rot-row" style="--row-color:${color}">
-                <div class="rot-row-label">${label}</div>
-                <div class="rot-row-skills">${skillsHtml}</div>
-            </div>`;
-        }).join('');
-
-        // Proc row — relic, sigil, and notable trait activations
-        const PROC_COLORS = { relic_proc: '#ddaa33', sigil_proc: '#4488cc', trait_proc: '#77cc77' };
-        const procSteps = (this.sim.results?.steps || [])
-            .filter(s => s.ri === -1 && (s.type === 'relic_proc' || s.type === 'sigil_proc' || s.type === 'trait_proc'))
-            .sort((a, b) => a.start - b.start);
-        if (procSteps.length > 0) {
-            const procsHtml = procSteps.map(s => {
-                const ts = `${(s.start / 1000).toFixed(2)}s`;
-                const pc = PROC_COLORS[s.type] || 'var(--border-light)';
-                const typeLabel = s.type === 'relic_proc' ? 'Relic' : s.type === 'sigil_proc' ? 'Sigil' : 'Trait';
-                return `<div class="proc-icon" title="${esc(s.skill)}\n${typeLabel} proc @ ${ts}" style="--proc-color:${pc}">
-                    <img src="${s.icon || PLACEHOLDER_ICON}" />
-                    <span class="proc-time">${ts}</span>
-                </div>`;
-            }).join('');
-            tlHtml += `<div class="rot-row rot-procs-row">
-                <div class="rot-row-label">Procs</div>
-                <div class="rot-row-skills proc-icons-row">${procsHtml}</div>
-            </div>`;
-        }
-
-        el.innerHTML = tlHtml;
-
-        el.querySelectorAll('.rot-offset-badge').forEach(badge => {
-            badge.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const idx = parseInt(badge.dataset.idx);
-                const item = this.sim.rotation[idx];
-                const current = typeof item === 'object' ? item.offset : 0;
-                const val = prompt(`Offset (ms) from start of preceding cast:`, current);
-                if (val === null) return;
-                const parsed = parseInt(val);
-                if (!isNaN(parsed) && parsed >= 0) {
-                    this.sim.rotation[idx] = { name: item.name, offset: parsed };
-                    this._autoRun();
-                }
-            });
-        });
-
-        el.querySelectorAll('.rot-skill').forEach(s => {
-            const idx = parseInt(s.dataset.idx);
-            s.querySelector('.rot-x').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this._removeFromRotation(idx);
-            });
-            s.addEventListener('dragstart', (e) => {
-                this.dragIdx = idx;
-                s.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            s.addEventListener('dragend', () => { s.classList.remove('dragging'); this.dragIdx = null; });
-            s.addEventListener('dragover', (e) => { e.preventDefault(); s.classList.add('drag-over'); });
-            s.addEventListener('dragleave', () => s.classList.remove('drag-over'));
-            s.addEventListener('drop', (e) => {
-                e.preventDefault();
-                s.classList.remove('drag-over');
-                if (this.dragIdx !== null && this.dragIdx !== idx) {
-                    this.sim.moveSkill(this.dragIdx, idx);
-                    this._autoRun();
-                }
-            });
+        renderTimeline(this, {
+            ATTUNEMENT_COLORS,
+            DROP_BUNDLE_ICON,
+            DODGE_ICON,
+            COMBAT_START_ICON,
+            WAIT_ICON,
+            CONJURE_MAP,
+            TH_WEAPONS,
         });
     }
 
@@ -2300,6 +1896,55 @@ class App {
             <div class="res-stat"><span class="res-label">Strike</span><span class="res-val">${Math.round(r.totalStrike).toLocaleString()}</span></div>
             <div class="res-stat"><span class="res-label">Condition</span><span class="res-val condi">${Math.round(r.totalCondition).toLocaleString()}</span></div>
         </div>`;
+
+        h += `<details class="res-log-wrap"><summary>Event Log (${r.log.length} events)</summary>`;
+        h += `<button class="btn-csv-export" onclick="window._exportLogCSV()">Download CSV Log</button>`;
+        h += `<div class="res-log">`;
+        for (const ev of r.log) {
+            const ts = `${(ev.t / 1000).toFixed(3)}s`;
+            let desc = '', cls = '';
+            const d = ev.diag || {};
+            switch (ev.type) {
+                case 'cast': desc = `CAST ${ev.skill} [${ev.att}] (${ev.dur}ms)`; break;
+                case 'cast_end': desc = `END  ${ev.skill}`; break;
+                case 'swap': desc = `SWAP ${ev.from} → ${ev.to}`; break;
+                case 'hit': {
+                    let detail = `HIT  ${ev.skill} #${ev.hit}.${ev.sub} → ${ev.strike} dmg (coeff ${ev.coeff?.toFixed(3) || 0})`;
+                    if (ev.isField) detail += ' [field]';
+                    if (d.power) detail += ` | pwr:${d.power} ws:${d.ws} cc:${d.critCh?.toFixed(1)}% cd:${d.critDmg?.toFixed(1)}% cMul:${d.critMul?.toFixed(3)} sMul:${d.strikeMul?.toFixed(3)}`;
+                    desc = detail;
+                    break;
+                }
+                case 'apply': desc = `EFFECT ${ev.effect} ×${ev.stacks}${ev.dur > 0 ? ` (${ev.dur}s)` : ''} [${ev.skill}]`; break;
+                case 'cond_apply': {
+                    let detail = `COND+ ${ev.cond} ×${ev.stacks} (${ev.durMs}ms) [${ev.skill}] total:${ev.total}`;
+                    if (d.baseDurMs) detail += ` | base:${d.baseDurMs}ms +${d.bonusPct}%${d.weaversProwess ? ' [WP+20%]' : ''}`;
+                    desc = detail;
+                    break;
+                }
+                case 'cond_tick': {
+                    let detail = `TICK  ${ev.cond} ×${ev.stacks} → ${ev.total} dmg (${ev.perStack}/stack)`;
+                    if (d.condMul) detail += ` | condDmg:${d.condDmg} base:${d.baseTick} mul:${d.condMul?.toFixed(3)} vuln:${d.vulnMul?.toFixed(2)}`;
+                    desc = detail;
+                    break;
+                }
+                case 'field': desc = `FIELD ${ev.field} (${ev.dur}ms) [${ev.skill}]`; break;
+                case 'aura': desc = `AURA  ${ev.aura} (${ev.dur}ms) [${ev.skill}]`; break;
+                case 'conjure': desc = `CONJURE ${ev.weapon} equipped (pickup expires ${(ev.pickupExpires / 1000).toFixed(1)}s)`; break;
+                case 'jade_sphere': desc = `JADE SPHERE ${ev.att} (energy: ${ev.energy}, dur: ${ev.durMs}ms) [${ev.skill}]`; break;
+                case 'familiar_select': desc = `FAMILIAR ${ev.element} selected [${ev.skill}]`; break;
+                case 'drop': desc = `DROP ${ev.weapon}`; break;
+                case 'pickup': desc = `PICKUP ${ev.weapon}`; break;
+                case 'wait': desc = `WAIT ${ev.durMs}ms`; break;
+                case 'sigil_proc': desc = `SIGIL ${ev.sigil} proc [${ev.skill}]`; cls = ' sigil'; break;
+                case 'relic_proc': desc = `RELIC ${ev.relic} proc [${ev.skill}]`; cls = ' relic'; break;
+                case 'trait_proc': desc = `TRAIT ${ev.trait} proc [${ev.skill}]`; cls = ' trait'; break;
+                case 'err': desc = ev.msg; cls = ' err'; break;
+                default: desc = JSON.stringify(ev);
+            }
+            h += `<div class="log-line"><span class="log-time">${ts}</span><span class="log-desc${cls}">${desc}</span></div>`;
+        }
+        h += '</div></details>';
 
         const sorted = Object.entries(r.perSkill)
             .map(([name, d]) => [name, d.strike + d.condition, d])
@@ -2377,54 +2022,6 @@ class App {
 
         h += this._buildChartHtml(r);
 
-        h += `<details class="res-log-wrap"><summary>Event Log (${r.log.length} events)</summary>`;
-        h += `<button class="btn-csv-export" onclick="window._exportLogCSV()">Download CSV Log</button>`;
-        h += `<div class="res-log">`;
-        for (const ev of r.log) {
-            const ts = `${(ev.t / 1000).toFixed(3)}s`;
-            let desc = '', cls = '';
-            const d = ev.diag || {};
-            switch (ev.type) {
-                case 'cast': desc = `CAST ${ev.skill} [${ev.att}] (${ev.dur}ms)`; break;
-                case 'cast_end': desc = `END  ${ev.skill}`; break;
-                case 'swap': desc = `SWAP ${ev.from} → ${ev.to}`; break;
-                case 'hit': {
-                    let detail = `HIT  ${ev.skill} #${ev.hit}.${ev.sub} → ${ev.strike} dmg (coeff ${ev.coeff?.toFixed(3) || 0})`;
-                    if (ev.isField) detail += ' [field]';
-                    if (d.power) detail += ` | pwr:${d.power} ws:${d.ws} cc:${d.critCh?.toFixed(1)}% cd:${d.critDmg?.toFixed(1)}% cMul:${d.critMul?.toFixed(3)} sMul:${d.strikeMul?.toFixed(3)}`;
-                    desc = detail;
-                    break;
-                }
-                case 'apply': desc = `EFFECT ${ev.effect} ×${ev.stacks}${ev.dur > 0 ? ` (${ev.dur}s)` : ''} [${ev.skill}]`; break;
-                case 'cond_apply': {
-                    let detail = `COND+ ${ev.cond} ×${ev.stacks} (${ev.durMs}ms) [${ev.skill}] total:${ev.total}`;
-                    if (d.baseDurMs) detail += ` | base:${d.baseDurMs}ms +${d.bonusPct}%${d.weaversProwess ? ' [WP+20%]' : ''}`;
-                    desc = detail;
-                    break;
-                }
-                case 'cond_tick': {
-                    let detail = `TICK  ${ev.cond} ×${ev.stacks} → ${ev.total} dmg (${ev.perStack}/stack)`;
-                    if (d.condMul) detail += ` | condDmg:${d.condDmg} base:${d.baseTick} mul:${d.condMul?.toFixed(3)} vuln:${d.vulnMul?.toFixed(2)}`;
-                    desc = detail;
-                    break;
-                }
-                case 'field': desc = `FIELD ${ev.field} (${ev.dur}ms) [${ev.skill}]`; break;
-                case 'aura': desc = `AURA  ${ev.aura} (${ev.dur}ms) [${ev.skill}]`; break;
-                case 'conjure': desc = `CONJURE ${ev.weapon} equipped (pickup expires ${(ev.pickupExpires / 1000).toFixed(1)}s)`; break;
-                case 'jade_sphere': desc = `JADE SPHERE ${ev.att} (energy: ${ev.energy}, dur: ${ev.durMs}ms) [${ev.skill}]`; break;
-                case 'familiar_select': desc = `FAMILIAR ${ev.element} selected [${ev.skill}]`; break;
-                case 'drop': desc = `DROP ${ev.weapon}`; break;
-                case 'pickup': desc = `PICKUP ${ev.weapon}`; break;
-                case 'sigil_proc': desc = `SIGIL ${ev.sigil} proc [${ev.skill}]`; cls = ' sigil'; break;
-                case 'relic_proc': desc = `RELIC ${ev.relic} proc [${ev.skill}]`; cls = ' relic'; break;
-                case 'trait_proc': desc = `TRAIT ${ev.trait} proc [${ev.skill}]`; cls = ' trait'; break;
-                case 'err': desc = ev.msg; cls = ' err'; break;
-                default: desc = JSON.stringify(ev);
-            }
-            h += `<div class="log-line"><span class="log-time">${ts}</span><span class="log-desc${cls}">${desc}</span></div>`;
-        }
-        h += '</div></details>';
-
         if (r.contributions && r.contributions.length > 0) {
             h += `<div class="res-contributions">
                 <h4>Modifier Contributions</h4>
@@ -2463,23 +2060,162 @@ class App {
             const col = EFFECT_COLORS[ct] || '#aaa';
             h += `<label><input type="checkbox" data-series="${esc(ct)}" /><span class="swatch" style="background:${col}"></span> ${ct}</label>`;
         }
-        h += '</div><div class="chart-canvas-wrap"><canvas id="rotation-chart"></canvas></div></div>';
+        h += '</div><div class="chart-panels">';
+        h += '<div class="chart-panel">';
+        h += '<div class="chart-panel-title">DPS</div>';
+        h += '<div class="chart-canvas-wrap"><canvas id="rotation-chart"></canvas><div class="chart-tooltip" id="rotation-chart-tooltip"></div></div>';
+        h += '</div>';
+        h += '<div class="chart-panel">';
+        h += '<div class="chart-panel-title">Effects</div>';
+        h += '<div class="chart-canvas-wrap"><canvas id="rotation-effects-chart"></canvas><div class="chart-tooltip" id="rotation-effects-tooltip"></div></div>';
+        h += '</div>';
+        h += '</div></div>';
         return h;
     }
 
     _bindChartToggles() {
         const wrap = document.querySelector('.chart-toggles');
         if (!wrap) return;
-        wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', () => this._drawChart());
-        });
+        if (!wrap.dataset.bound) {
+            wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', () => this._drawChart());
+            });
+            wrap.dataset.bound = '1';
+        }
+        this._bindChartHover();
         this._drawChart();
     }
 
+    _getNiceAxisStep(maxValue, targetTicks = 6) {
+        if (!(maxValue > 0)) return 1;
+        const roughStep = maxValue / Math.max(1, targetTicks - 1);
+        const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+        const normalized = roughStep / magnitude;
+        const stepBase = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+        return stepBase * magnitude;
+    }
+
+    _getTimeTickStep(maxTimeMs) {
+        const maxSec = Math.max(1, Math.ceil(maxTimeMs / 1000));
+        if (maxSec <= 10) return 1;
+        if (maxSec <= 20) return 2;
+        if (maxSec <= 60) return 5;
+        if (maxSec <= 120) return 10;
+        return 20;
+    }
+
+    _getLineValueAt(line, t) {
+        if (!line?.length) return 0;
+        let value = line[0].v;
+        for (const point of line) {
+            if (point.t > t) break;
+            value = point.v;
+        }
+        return value;
+    }
+
+    _showChartTooltip(tooltip, html, x, y) {
+        if (!tooltip) return;
+        tooltip.innerHTML = html;
+        tooltip.style.left = `${x + 12}px`;
+        tooltip.style.top = `${y + 12}px`;
+        tooltip.style.display = 'block';
+    }
+
+    _hideChartTooltip(tooltip) {
+        if (!tooltip) return;
+        tooltip.style.display = 'none';
+    }
+
+    _bindChartHover() {
+        const bind = (canvasId, tooltipId, kind) => {
+            const canvas = document.getElementById(canvasId);
+            const tooltip = document.getElementById(tooltipId);
+            if (!canvas || !tooltip || canvas.dataset.hoverBound) return;
+
+            canvas.addEventListener('mouseleave', () => this._hideChartTooltip(tooltip));
+            canvas.addEventListener('mousemove', ev => {
+                const state = this._chartState;
+                if (!state) return;
+                const layout = kind === 'dps' ? state.dpsLayout : state.effectsLayout;
+                if (!layout) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = ev.clientX - rect.left;
+                const y = ev.clientY - rect.top;
+                const minX = layout.pad.left;
+                const maxX = layout.cssW - layout.pad.right;
+                const minY = layout.pad.top;
+                const maxY = kind === 'dps'
+                    ? layout.pad.top + layout.plotH
+                    : layout.pad.top + layout.totalPlotH;
+
+                if (x < minX || x > maxX || y < minY || y > maxY) {
+                    this._hideChartTooltip(tooltip);
+                    return;
+                }
+
+                const t = Math.max(0, Math.min(state.maxTime, ((x - minX) / layout.pw) * state.maxTime));
+                const timeLabel = `${(t / 1000).toFixed(2)}s`;
+
+                if (kind === 'dps') {
+                    const dps = Math.round(this._getLineValueAt(state.dpsLine, t));
+                    this._showChartTooltip(
+                        tooltip,
+                        `<div><b>${timeLabel}</b></div><div>DPS: ${dps.toLocaleString()}</div>`,
+                        x,
+                        y
+                    );
+                    return;
+                }
+
+                if (y <= layout.intensityBottom) {
+                    const entries = [];
+                    for (const [name, line] of Object.entries(state.effectLines)) {
+                        if (!state.toggles[name]) continue;
+                        const value = Math.round(this._getLineValueAt(line, t));
+                        if (value > 0) entries.push(`<div>${esc(name)}: ${value}</div>`);
+                    }
+                    const body = entries.length > 0 ? entries.join('') : '<div>No visible stack effects</div>';
+                    this._showChartTooltip(tooltip, `<div><b>${timeLabel}</b></div>${body}`, x, y);
+                    return;
+                }
+
+                const rowY = y - layout.durationTop;
+                const rowIndex = Math.floor(rowY / layout.rowStride);
+                const effect = state.activeDurEffects[rowIndex];
+                if (!effect) {
+                    this._hideChartTooltip(tooltip);
+                    return;
+                }
+                const active = state.durationStacksByName[effect]?.some(s => s.t <= t && s.expiresAt > t);
+                this._showChartTooltip(
+                    tooltip,
+                    `<div><b>${timeLabel}</b></div><div>${esc(effect)}: ${active ? 'active' : 'inactive'}</div>`,
+                    x,
+                    y
+                );
+            });
+
+            canvas.dataset.hoverBound = '1';
+        };
+
+        bind('rotation-chart', 'rotation-chart-tooltip', 'dps');
+        bind('rotation-effects-chart', 'rotation-effects-tooltip', 'effects');
+    }
+
     _drawChart() {
-        const canvas = document.getElementById('rotation-chart');
-        if (!canvas || !this.sim?.results) return;
         const r = this.sim.results;
+        const resultCombatStart = Number.isFinite(r.combatStartTime) ? r.combatStartTime : null;
+        const logCombatStart = r.log.find(e => e.type === 'combat_start')?.t ?? null;
+        const firstHitTime = r.log.find(e =>
+            (e.type === 'hit' && e.strike > 0) || e.type === 'cond_tick'
+        )?.t ?? null;
+        const dpsStart = firstHitTime ?? resultCombatStart ?? logCombatStart ?? 0;
+
+        const dpsCanvas = document.getElementById('rotation-chart');
+        const effectsCanvas = document.getElementById('rotation-effects-chart');
+        if (!dpsCanvas || !effectsCanvas || !this.sim?.results) return;
         const maxTime = r.rotationMs;
         if (maxTime <= 0) return;
 
@@ -2494,24 +2230,44 @@ class App {
         const activeDurEffects = allEffects.filter(e => !INTENSITY_EFFECTS.has(e) && toggles[e]);
         const barRowH = 8;
         const barGap = 1;
-        const barZoneH = activeDurEffects.length > 0 ? activeDurEffects.length * (barRowH + barGap) + 4 : 0;
+        const durationStacksByName = Object.fromEntries(activeDurEffects.map(name => [
+            name,
+            allStacks.filter(s => s.cond === name),
+        ]));
 
-        const wrap = canvas.parentElement;
+        const dpsWrap = dpsCanvas.parentElement;
+        const effectsWrap = effectsCanvas.parentElement;
         const dpr = window.devicePixelRatio || 1;
-        const cssW = wrap.clientWidth;
-        const cssH = 200 + barZoneH;
-        canvas.width = cssW * dpr;
-        canvas.height = cssH * dpr;
-        canvas.style.height = cssH + 'px';
-        const ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
+        const dpsCssW = dpsWrap.clientWidth;
+        const effectsCssW = effectsWrap.clientWidth;
+        const dpsCssH = 320;
+        const effectsPad = { top: 20, right: 16, bottom: 30, left: 120 };
+        const effectPlotH = 150;
+        const durationZoneH = activeDurEffects.length > 0
+            ? activeDurEffects.length * (barRowH + barGap) + 16
+            : 0;
+        const effectsCssH = effectPlotH + effectsPad.top + effectsPad.bottom + durationZoneH;
 
-        const pad = { top: 20, right: 55, bottom: 30 + barZoneH, left: 60 };
-        const pw = cssW - pad.left - pad.right;
-        const ph = cssH - pad.top - pad.bottom;
+        dpsCanvas.width = dpsCssW * dpr;
+        dpsCanvas.height = dpsCssH * dpr;
+        dpsCanvas.style.height = dpsCssH + 'px';
+        effectsCanvas.width = effectsCssW * dpr;
+        effectsCanvas.height = effectsCssH * dpr;
+        effectsCanvas.style.height = effectsCssH + 'px';
+
+        const dpsCtx = dpsCanvas.getContext('2d');
+        const effectsCtx = effectsCanvas.getContext('2d');
+        dpsCtx.scale(dpr, dpr);
+        effectsCtx.scale(dpr, dpr);
+
+        const dpsPad = { top: 20, right: 16, bottom: 30, left: 70 };
+        const dpsPw = dpsCssW - dpsPad.left - dpsPad.right;
+        const dpsPh = dpsCssH - dpsPad.top - dpsPad.bottom;
+        const effectsPw = effectsCssW - effectsPad.left - effectsPad.right;
 
         const dmgEvents = [];
         for (const ev of r.log) {
+            if (ev.t < dpsStart) continue;
             if (ev.type === 'hit' && ev.strike > 0) dmgEvents.push({ t: ev.t, d: ev.strike });
             if (ev.type === 'cond_tick') dmgEvents.push({ t: ev.t, d: ev.total });
         }
@@ -2519,12 +2275,34 @@ class App {
 
         const interval = Math.max(50, Math.round(maxTime / 500));
         const n = Math.ceil(maxTime / interval) + 1;
-        const dpsLine = [];
-        let cum = 0, ei = 0;
-        for (let i = 0; i < n; i++) {
-            const t = i * interval;
-            while (ei < dmgEvents.length && dmgEvents[ei].t <= t) { cum += dmgEvents[ei].d; ei++; }
-            dpsLine.push({ t, v: t > 0 ? cum / (t / 1000) : 0 });
+        const dpsSampleStepMs = 500;
+        const dpsLine = [{ t: 0, v: 0 }];
+        if (dpsStart > 0) dpsLine.push({ t: dpsStart, v: 0 });
+
+        let cum = 0;
+        let ei = 0;
+        const fullSamples = Math.floor(Math.max(0, maxTime - dpsStart) / dpsSampleStepMs);
+        for (let sampleIndex = 1; sampleIndex <= fullSamples; sampleIndex++) {
+            const t = dpsStart + sampleIndex * dpsSampleStepMs;
+            while (ei < dmgEvents.length && dmgEvents[ei].t <= t) {
+                cum += dmgEvents[ei].d;
+                ei++;
+            }
+            dpsLine.push({ t, v: cum / (sampleIndex * (dpsSampleStepMs / 1000)) });
+        }
+
+        if (maxTime > dpsStart) {
+            while (ei < dmgEvents.length && dmgEvents[ei].t <= maxTime) {
+                cum += dmgEvents[ei].d;
+                ei++;
+            }
+            const elapsedSeconds = Math.max(dpsSampleStepMs / 1000, (maxTime - dpsStart) / 1000);
+            const lastValue = fullSamples > 0
+                ? dpsLine[dpsLine.length - 1].v
+                : (cum / elapsedSeconds);
+            if (dpsLine[dpsLine.length - 1].t < maxTime) {
+                dpsLine.push({ t: maxTime, v: lastValue });
+            }
         }
 
         const STACK_CAPS = {
@@ -2549,113 +2327,167 @@ class App {
             effectLines[ct] = line;
         }
 
-        ctx.clearRect(0, 0, cssW, cssH);
-        ctx.fillStyle = '#0c0c14';
-        ctx.fillRect(0, 0, cssW, cssH);
+        const xTickStepSec = this._getTimeTickStep(maxTime);
+        const maxDpsValue = Math.max(...dpsLine.map(d => d.v), 1);
+        const dpsStep = this._getNiceAxisStep(maxDpsValue, 6);
+        const maxDps = Math.max(dpsStep, Math.ceil(maxDpsValue / dpsStep) * dpsStep);
 
-        ctx.strokeStyle = 'rgba(42,42,58,0.5)';
-        ctx.lineWidth = 1;
-        const yGridN = 5;
-        const maxDps = Math.max(...dpsLine.map(d => d.v), 1);
-        for (let i = 0; i <= yGridN; i++) {
-            const y = pad.top + (ph / yGridN) * i;
-            ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(cssW - pad.right, y); ctx.stroke();
-            ctx.fillStyle = '#888899'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'right';
-            ctx.fillText(Math.round(maxDps * (1 - i / yGridN)).toLocaleString(), pad.left - 5, y + 3);
+        dpsCtx.clearRect(0, 0, dpsCssW, dpsCssH);
+        dpsCtx.fillStyle = '#0c0c14';
+        dpsCtx.fillRect(0, 0, dpsCssW, dpsCssH);
+        dpsCtx.strokeStyle = 'rgba(42,42,58,0.5)';
+        dpsCtx.lineWidth = 1;
+        for (let value = 0; value <= maxDps; value += dpsStep) {
+            const y = dpsPad.top + dpsPh - (dpsPh / maxDps) * value;
+            dpsCtx.beginPath(); dpsCtx.moveTo(dpsPad.left, y); dpsCtx.lineTo(dpsCssW - dpsPad.right, y); dpsCtx.stroke();
+            dpsCtx.fillStyle = '#888899'; dpsCtx.font = '10px Segoe UI'; dpsCtx.textAlign = 'right';
+            dpsCtx.fillText(value.toLocaleString(), dpsPad.left - 6, y + 3);
         }
-
-        if (maxStacks > 0) {
-            const labelCount = Math.min(maxStacks, 6);
-            for (let i = 0; i <= labelCount; i++) {
-                const val = Math.round(maxStacks * i / labelCount);
-                const y = pad.top + ph - (ph / maxStacks) * val;
-                ctx.fillStyle = '#665566'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'left';
-                ctx.fillText(val.toString(), cssW - pad.right + 5, y + 3);
-            }
+        for (let sec = 0; sec <= Math.ceil(maxTime / 1000); sec += xTickStepSec) {
+            const t = sec * 1000;
+            const x = dpsPad.left + (dpsPw / maxTime) * Math.min(t, maxTime);
+            dpsCtx.beginPath(); dpsCtx.moveTo(x, dpsPad.top); dpsCtx.lineTo(x, dpsPad.top + dpsPh);
+            dpsCtx.strokeStyle = 'rgba(42,42,58,0.35)'; dpsCtx.stroke();
+            dpsCtx.fillStyle = '#888899'; dpsCtx.textAlign = 'center'; dpsCtx.font = '10px Segoe UI';
+            dpsCtx.fillText(`${sec}s`, x, dpsPad.top + dpsPh + 16);
         }
-
-        const xTicks = Math.min(10, Math.ceil(maxTime / 1000));
-        for (let i = 0; i <= xTicks; i++) {
-            const t = (maxTime / xTicks) * i;
-            const x = pad.left + (pw / maxTime) * t;
-            ctx.beginPath(); ctx.moveTo(x, pad.top + ph); ctx.lineTo(x, pad.top + ph + 5);
-            ctx.strokeStyle = 'rgba(42,42,58,0.5)'; ctx.stroke();
-            ctx.fillStyle = '#888899'; ctx.textAlign = 'center'; ctx.font = '10px Segoe UI';
-            ctx.fillText((t / 1000).toFixed(1) + 's', x, pad.top + ph + 15);
-        }
-
         if (toggles['dps'] !== false) {
-            ctx.strokeStyle = '#44bb44'; ctx.lineWidth = 2; ctx.beginPath();
+            dpsCtx.strokeStyle = '#44bb44'; dpsCtx.lineWidth = 2.5; dpsCtx.beginPath();
             for (let i = 0; i < dpsLine.length; i++) {
-                const x = pad.left + (pw / maxTime) * dpsLine[i].t;
-                const y = pad.top + ph - (ph / maxDps) * dpsLine[i].v;
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                const x = dpsPad.left + (dpsPw / maxTime) * dpsLine[i].t;
+                const y = dpsPad.top + dpsPh - (dpsPh / maxDps) * dpsLine[i].v;
+                if (i === 0) dpsCtx.moveTo(x, y); else dpsCtx.lineTo(x, y);
             }
-            ctx.stroke();
+            dpsCtx.stroke();
         }
+        dpsCtx.fillStyle = '#888899';
+        dpsCtx.font = 'bold 10px Segoe UI';
+        dpsCtx.textAlign = 'left';
+        dpsCtx.fillText('DPS ▲', dpsPad.left + 2, dpsPad.top - 6);
 
         const LABEL_EFFECTS = new Set(['Elemental Empowerment', 'Empowering Auras', 'Persisting Flames']);
+        effectsCtx.clearRect(0, 0, effectsCssW, effectsCssH);
+        effectsCtx.fillStyle = '#0c0c14';
+        effectsCtx.fillRect(0, 0, effectsCssW, effectsCssH);
+        const intensityTop = effectsPad.top;
+        const intensityBottom = effectsPad.top + effectPlotH;
+        const durationTop = intensityBottom + 16;
+        const stackAxisStep = maxStacks > 0 ? Math.max(1, Math.round(this._getNiceAxisStep(maxStacks, 6))) : 1;
+        const stackAxisMax = maxStacks > 0
+            ? Math.max(stackAxisStep, Math.ceil(maxStacks / stackAxisStep) * stackAxisStep)
+            : 1;
+
+        if (maxStacks > 0) {
+            for (let value = 0; value <= stackAxisMax; value += stackAxisStep) {
+                const y = intensityTop + effectPlotH - (effectPlotH / stackAxisMax) * value;
+                effectsCtx.beginPath();
+                effectsCtx.moveTo(effectsPad.left, y);
+                effectsCtx.lineTo(effectsCssW - effectsPad.right, y);
+                effectsCtx.strokeStyle = 'rgba(42,42,58,0.35)';
+                effectsCtx.stroke();
+                effectsCtx.fillStyle = '#888899';
+                effectsCtx.font = '10px Segoe UI';
+                effectsCtx.textAlign = 'right';
+                effectsCtx.fillText(value.toString(), effectsPad.left - 6, y + 3);
+            }
+        }
+        for (let sec = 0; sec <= Math.ceil(maxTime / 1000); sec += xTickStepSec) {
+            const t = sec * 1000;
+            const x = effectsPad.left + (effectsPw / maxTime) * Math.min(t, maxTime);
+            effectsCtx.beginPath();
+            effectsCtx.moveTo(x, effectsPad.top);
+            effectsCtx.lineTo(x, effectsCssH - effectsPad.bottom);
+            effectsCtx.strokeStyle = 'rgba(42,42,58,0.35)';
+            effectsCtx.stroke();
+            effectsCtx.fillStyle = '#888899';
+            effectsCtx.textAlign = 'center';
+            effectsCtx.font = '10px Segoe UI';
+            effectsCtx.fillText(`${sec}s`, x, effectsCssH - 8);
+        }
+
         for (const ct of allEffects) {
             if (!effectLines[ct]) continue;
             const col = EFFECT_COLORS[ct] || '#aaa';
             const line = effectLines[ct];
-            ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.beginPath();
+            effectsCtx.strokeStyle = col; effectsCtx.lineWidth = 1.5; effectsCtx.setLineDash([4, 3]); effectsCtx.beginPath();
             for (let i = 0; i < line.length; i++) {
-                const x = pad.left + (pw / maxTime) * line[i].t;
-                const y = pad.top + ph - (ph / Math.max(maxStacks, 1)) * line[i].v;
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                const x = effectsPad.left + (effectsPw / maxTime) * line[i].t;
+                const y = intensityTop + effectPlotH - (effectPlotH / stackAxisMax) * line[i].v;
+                if (i === 0) effectsCtx.moveTo(x, y); else effectsCtx.lineTo(x, y);
             }
-            ctx.stroke(); ctx.setLineDash([]);
+            effectsCtx.stroke(); effectsCtx.setLineDash([]);
 
             if (LABEL_EFFECTS.has(ct)) {
-                ctx.font = 'bold 9px Segoe UI';
-                ctx.textAlign = 'center';
+                effectsCtx.font = 'bold 9px Segoe UI';
+                effectsCtx.textAlign = 'center';
                 let prevVal = -1;
                 for (let i = 0; i < line.length; i++) {
                     const v = line[i].v;
                     if (v === prevVal || v === 0) { prevVal = v; continue; }
-                    const x = pad.left + (pw / maxTime) * line[i].t;
-                    const y = pad.top + ph - (ph / Math.max(maxStacks, 1)) * v;
-                    ctx.fillStyle = '#0c0c14';
-                    ctx.fillRect(x - 6, y - 10, 12, 11);
-                    ctx.fillStyle = col;
-                    ctx.fillText(v.toString(), x, y - 1);
+                    const x = effectsPad.left + (effectsPw / maxTime) * line[i].t;
+                    const y = intensityTop + effectPlotH - (effectPlotH / stackAxisMax) * v;
+                    effectsCtx.fillStyle = '#0c0c14';
+                    effectsCtx.fillRect(x - 6, y - 10, 12, 11);
+                    effectsCtx.fillStyle = col;
+                    effectsCtx.fillText(v.toString(), x, y - 1);
                     prevVal = v;
                 }
             }
         }
 
         if (activeDurEffects.length > 0) {
-            const barTop = pad.top + ph + 22;
             for (let di = 0; di < activeDurEffects.length; di++) {
                 const ct = activeDurEffects[di];
                 const col = EFFECT_COLORS[ct] || '#aaa';
-                const stacks = allStacks.filter(s => s.cond === ct);
-                const rowY = barTop + di * (barRowH + barGap);
+                const stacks = durationStacksByName[ct] || [];
+                const rowY = durationTop + di * (barRowH + barGap);
 
-                ctx.fillStyle = '#888899'; ctx.font = '9px Segoe UI'; ctx.textAlign = 'right';
-                ctx.fillText(ct, pad.left - 4, rowY + barRowH - 1);
+                effectsCtx.fillStyle = '#888899'; effectsCtx.font = '9px Segoe UI'; effectsCtx.textAlign = 'right';
+                effectsCtx.fillText(ct, effectsPad.left - 6, rowY + barRowH - 1);
 
                 for (let i = 0; i < n - 1; i++) {
                     const t = i * interval;
                     let active = false;
                     for (const s of stacks) { if (s.t <= t && s.expiresAt > t) { active = true; break; } }
                     if (!active) continue;
-                    const x0 = pad.left + (pw / maxTime) * t;
-                    const x1 = pad.left + (pw / maxTime) * Math.min((i + 1) * interval, maxTime);
-                    ctx.fillStyle = col;
-                    ctx.globalAlpha = 0.75;
-                    ctx.fillRect(x0, rowY, x1 - x0 + 0.5, barRowH);
-                    ctx.globalAlpha = 1;
+                    const x0 = effectsPad.left + (effectsPw / maxTime) * t;
+                    const x1 = effectsPad.left + (effectsPw / maxTime) * Math.min((i + 1) * interval, maxTime);
+                    effectsCtx.fillStyle = col;
+                    effectsCtx.globalAlpha = 0.75;
+                    effectsCtx.fillRect(x0, rowY, x1 - x0 + 0.5, barRowH);
+                    effectsCtx.globalAlpha = 1;
                 }
             }
         }
 
-        ctx.fillStyle = '#888899'; ctx.font = 'bold 10px Segoe UI';
-        ctx.textAlign = 'left'; ctx.fillText('DPS ▲', pad.left + 2, pad.top - 5);
-        if (maxStacks > 0) {
-            ctx.textAlign = 'right'; ctx.fillText('Stacks ▲', cssW - pad.right - 2, pad.top - 5);
-        }
+        effectsCtx.fillStyle = '#888899';
+        effectsCtx.font = 'bold 10px Segoe UI';
+        effectsCtx.textAlign = 'left';
+        effectsCtx.fillText('Stacks ▲', effectsPad.left + 2, effectsPad.top - 6);
+
+        this._chartState = {
+            maxTime,
+            dpsLine,
+            effectLines,
+            activeDurEffects,
+            durationStacksByName,
+            toggles,
+            dpsLayout: {
+                cssW: dpsCssW,
+                pad: dpsPad,
+                pw: dpsPw,
+                plotH: dpsPh,
+            },
+            effectsLayout: {
+                cssW: effectsCssW,
+                pad: effectsPad,
+                pw: effectsPw,
+                totalPlotH: effectPlotH + durationZoneH,
+                intensityBottom,
+                durationTop,
+                rowStride: barRowH + barGap,
+            },
+        };
     }
 
     // ─── Rotation actions ───
@@ -2665,150 +2497,68 @@ class App {
     }
 
     _autoRun() {
-        if (!this.sim || this.sim.rotation.length === 0) {
-            this.sim.results = null;
-            this._renderPalette();
-            this._renderTimeline();
-            document.getElementById('rotation-results').innerHTML = '';
-            this._updateOptimizerVisibility(false);
-            this._persistBuild();
-            return;
-        }
-        const tgtHP = this._getTargetHP();
-        const startBullets = this._getStartPistolBullets();
-        this.sim.computeContributions(this.activeAttunement, this.secondaryAttunement, this.evokerElement, this.permaBoons, tgtHP, startBullets);
-        this._renderPalette();
-        this._renderTimeline();
-        this._renderResults();
-        this._updateOptimizerVisibility(true);
-        this._persistBuild();
+        autoRun(this);
     }
 
     _getStartPistolBullets() {
-        // Return only the user's explicitly pre-set starting bullets.
-        // Never use the end-state bullets — those reflect where bullets ended up
-        // after the rotation, not where the user wants to start.
-        if (this._presetPistolBullets) return { ...this._presetPistolBullets };
-        return null;
+        return this._presetPistolBullets ? { ...this._presetPistolBullets } : null;
     }
 
-    _addToRotation(skillName, offset = null, gapFill = false) {
-        if (!this.sim) return;
-        if (offset !== null) {
-            this.sim.addSkill({ name: skillName, offset });
-        } else if (gapFill) {
-            this.sim.addSkill({ name: skillName, gapFill: true });
-        } else {
-            this.sim.addSkill(skillName);
-        }
-        this._autoRun();
+    _addToRotation(skillName, options = {}) {
+        addToRotation(this, skillName, options);
     }
 
     _removeFromRotation(idx) {
-        if (!this.sim) return;
-        this.sim.removeSkill(idx);
-        this._autoRun();
+        removeFromRotation(this, idx);
     }
 
     _clearRotation() {
-        if (!this.sim) return;
-        this.sim.clearRotation();
-        this._renderPalette();
-        this._renderTimeline();
-        document.getElementById('rotation-results').innerHTML = '';
+        clearRotation(this);
     }
 
     // ─── Build persistence ───────────────────────────────────────────────────────
 
     _buildSnapshot() {
-        const savedSkills = {};
-        for (const [slot, skill] of Object.entries(this.selectedSkills)) {
-            savedSkills[slot] = skill ? skill.name : null;
-        }
-        return {
-            build: JSON.parse(JSON.stringify(this.build)),
-            selectedSkills: savedSkills,
-            activeAttunement: this.activeAttunement,
-            secondaryAttunement: this.secondaryAttunement,
-            evokerElement: this.evokerElement,
-            permaBoons: JSON.parse(JSON.stringify(this.permaBoons)),
-            rotation: this._serializeRotation(),
-        };
+        return buildSnapshot(this);
     }
 
     _serializeRotation() {
-        if (!this.sim) return [];
-        return this.sim.rotation.map(item =>
-            typeof item === 'string' ? item : { ...item }
-        );
+        return serializeRotation(this);
     }
 
     _deserializeRotation(items) {
-        if (!this.sim || !Array.isArray(items)) return;
-        this.sim.clearRotation();
-        for (const item of items) {
-            this.sim.addSkill(item);
-        }
+        deserializeRotation(this, items);
     }
 
     _applySnapshot(state) {
-        if (state.build) this.build = state.build;
-        if (state.activeAttunement) this.activeAttunement = state.activeAttunement;
-        if (state.secondaryAttunement) this.secondaryAttunement = state.secondaryAttunement;
-        if ('evokerElement' in state) this.evokerElement = state.evokerElement;
-        if (state.permaBoons && Object.keys(state.permaBoons).length > 0) this.permaBoons = state.permaBoons;
-        if (state.selectedSkills && this.data?.skills) {
-            this.selectedSkills = { heal: null, util1: null, util2: null, util3: null, elite: null };
-            for (const [slot, name] of Object.entries(state.selectedSkills)) {
-                if (name) {
-                    const sk = this.data.skills.find(s => s.name === name);
-                    if (sk) this.selectedSkills[slot] = sk;
-                }
-            }
-        }
-        if (state.rotation) {
-            if (this.sim) {
-                this._deserializeRotation(state.rotation);
-            } else {
-                this._pendingRotation = state.rotation;
-            }
-        }
+        applySnapshot(this, state);
     }
 
     _persistBuild() {
-        try {
-            localStorage.setItem('gw2dps_build', JSON.stringify(this._buildSnapshot()));
-        } catch (_) { /* localStorage unavailable */ }
+        persistBuild(this);
     }
 
     _restoreBuild() {
-        try {
-            const raw = localStorage.getItem('gw2dps_build');
-            if (!raw) return;
-            this._applySnapshot(JSON.parse(raw));
-        } catch (_) { /* corrupt or missing */ }
+        restoreBuild(this);
     }
 
     _exportBuild() {
-        const json = JSON.stringify(this._buildSnapshot(), null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'gw2-build.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadJson('gw2-build.json', this._buildSnapshot());
+    }
+
+    _refreshAfterBuildStateChange() {
+        refreshAfterBuildStateChange(this);
+    }
+
+    _applyLoadedBuildState(state, rotationItems = undefined) {
+        applyLoadedBuildState(this, state, rotationItems);
     }
 
     // ─── Presets ─────────────────────────────────────────────────────────────
 
     async _loadPresets() {
         try {
-            const res = await fetch(`Builds/manifest.json?t=${Date.now()}`);
-            if (!res.ok) return;
-            const presets = await res.json();
+            const presets = await fetchJsonAsset('Builds/manifest.json', { optional: true });
             if (!Array.isArray(presets) || presets.length === 0) return;
 
             const bar = document.getElementById('presets-bar');
@@ -2830,27 +2580,8 @@ class App {
     async _loadPreset(preset, btn) {
         if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
         try {
-            const buildRes = await fetch(`${preset.build}?t=${Date.now()}`);
-            if (!buildRes.ok) throw new Error(`Could not load ${preset.build}`);
-            const buildData = await buildRes.json();
-            this._applySnapshot(buildData);
-
-            if (preset.rotation) {
-                const rotRes = await fetch(`${preset.rotation}?t=${Date.now()}`);
-                if (rotRes.ok) {
-                    const rotData = await rotRes.json();
-                    const items = Array.isArray(rotData) ? rotData : rotData.rotation;
-                    if (Array.isArray(items)) this._deserializeRotation(items);
-                }
-            }
-            // new addition
-            this.data.attributes = calcAttributes(
-                this.build,
-                Object.values(this.selectedSkills).filter(Boolean),
-            );
-
-            this._onBuildChange();
-            this.render();
+            const { buildData, rotationItems } = await loadPresetBundle(preset);
+            this._applyLoadedBuildState(buildData, rotationItems);
         } catch (err) {
             alert('Failed to load preset: ' + err.message);
         } finally {
@@ -2858,457 +2589,92 @@ class App {
         }
     }
 
-    _importBuild(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const state = JSON.parse(e.target.result);
-                this._applySnapshot(state);
-                this._onBuildChange();
-                this.render();
-            } catch (err) {
-                alert('Failed to load build file: ' + err.message);
-            }
-            this.data.attributes = calcAttributes(
-                this.build,
-                Object.values(this.selectedSkills).filter(Boolean),
-            );
-            this._onBuildChange();
-            this.render();
-        };
-        reader.readAsText(file);
+    async _importBuild(file) {
+        try {
+            const state = await readJsonFile(file);
+            this._applyLoadedBuildState(state);
+        } catch (err) {
+            alert('Failed to load build file: ' + err.message);
+        }
     }
 
     _exportRotation() {
-        const payload = { rotation: this._serializeRotation() };
-        const json = JSON.stringify(payload, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'gw2-rotation.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadJson('gw2-rotation.json', { rotation: this._serializeRotation() });
     }
 
-    _importRotation(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const parsed = JSON.parse(e.target.result);
-                // Accept either { rotation: [...] } or a bare array
-                const items = Array.isArray(parsed) ? parsed : parsed.rotation;
-                if (!Array.isArray(items)) throw new Error('No rotation array found in file.');
-                this._deserializeRotation(items);
-                this._autoRun();
-                this.render();
-            } catch (err) {
-                alert('Failed to load rotation file: ' + err.message);
-            }
-        };
-        reader.readAsText(file);
+    async _importRotation(file) {
+        try {
+            const parsed = await readJsonFile(file);
+            const items = getRotationItems(parsed);
+            if (!Array.isArray(items)) throw new Error('No rotation array found in file.');
+            this._deserializeRotation(items);
+            this._autoRun();
+            this.render();
+        } catch (err) {
+            alert('Failed to load rotation file: ' + err.message);
+        }
     }
 
     // ─── Gear Optimizer ──────────────────────────────────────────────────────
 
     _initOptimizer() {
-        this._optimizer = new GearOptimizer({
-            skills: this.data.skills,
-            skillHits: this.data.skillHits,
-            weapons: WEAPON_DATA,
-            sigils: SIGIL_DATA,
-            relics: RELIC_DATA,
-        });
-        this._optResults = [];
-        this._optRunning = false;
-        this._populateOptimizerCheckboxes();
-        this._bindOptimizerEvents();
+        initOptimizer(this);
     }
 
     _updateOptimizerVisibility(show) {
-        const sec = document.getElementById('optimizer-section');
-        if (!sec) return;
-        if (show) {
-            sec.classList.remove('hidden');
-        } else {
-            sec.classList.add('hidden');
-            // Cancel any running optimization when rotation is cleared.
-            if (this._optRunning && this._optimizer) this._optimizer.cancel();
-        }
+        updateOptimizerVisibility(this, show);
     }
 
     _populateOptimizerCheckboxes() {
-        const b = this.build;
-
-        const makeGrid = (containerId, items, group, currentVals) => {
-            const el = document.getElementById(containerId);
-            if (!el) return;
-            el.innerHTML = items.map(name => {
-                const checked = currentVals.includes(name) ? ' checked' : '';
-                const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
-                return `<label title="${esc(name)}">
-                    <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
-                    ${esc(short)}
-                </label>`;
-            }).join('');
-        };
-
-        const makeConsumableGrid = (containerId, items, group, currentVals, descFn) => {
-            const el = document.getElementById(containerId);
-            if (!el) return;
-            el.innerHTML = items.map(name => {
-                const checked = currentVals.includes(name) ? ' checked' : '';
-                const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
-                const desc = descFn(name);
-                return `<label class="consumable-label" title="${esc(name)}">
-                    <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
-                    <span class="opt-consumable-name">${esc(short)}</span>${desc ? `<span class="opt-consumable-desc">${esc(desc)}</span>` : ''}
-                </label>`;
-            }).join('');
-        };
-
-        // Pre-check the build's current choices as sensible defaults.
-        const curPrefix = Object.values(b.gear || {})[0] || PREFIXES[0];
-        makeGrid('opt-prefixes', PREFIXES, 'prefix', [curPrefix, "Assassin's"].filter(p => PREFIXES.includes(p)));
-        makeGrid('opt-runes', RUNE_NAMES, 'rune', [b.rune].filter(Boolean));
-        makeGrid('opt-sigils', SIGIL_NAMES, 'sigil', (b.sigils || []).filter(Boolean));
-        makeGrid('opt-relics', RELIC_NAMES, 'relic', [b.relic].filter(Boolean));
-        makeConsumableGrid('opt-food', FOOD_NAMES, 'food', [b.food].filter(Boolean), _foodDesc);
-        makeConsumableGrid('opt-utility', UTILITY_NAMES, 'utility', [b.utility].filter(Boolean), _utilityDesc);
-
-        // Infusions — stat type checkboxes + total count input.
-        const infEl = document.getElementById('opt-infusions');
-        if (infEl) {
-            const usedStats = new Set((b.infusions || []).filter(x => x.count > 0).map(x => x.stat));
-            infEl.innerHTML = INFUSION_STATS.map(stat => {
-                const checked = usedStats.has(stat) ? ' checked' : '';
-                return `<label title="${esc(stat)}">
-                    <input type="checkbox" data-group="infusion" value="${esc(stat)}"${checked}>
-                    ${esc(stat)}
-                </label>`;
-            }).join('');
-        }
-        // Pre-fill total with current build's infusion count.
-        const curInfTotal = (b.infusions || []).reduce((s, x) => s + (x.count || 0), 0);
-        const infTotalEl = document.getElementById('opt-inf-total');
-        if (infTotalEl && curInfTotal > 0) infTotalEl.value = curInfTotal;
-
-        this._enforcePrefixMax();
-        this._populateSlotConstraints();
+        populateOptimizerCheckboxes(this, {
+            foodDesc: _foodDesc,
+            utilityDesc: _utilityDesc,
+        });
     }
 
     _populateSlotConstraints() {
-        const container = document.getElementById('opt-slot-constraints');
-        if (!container) return;
-        const SLOT_LABELS = {
-            Helm: 'Helm', Shoulders: 'Shld', Chest: 'Coat', Gloves: 'Glov',
-            Leggins: 'Legs', Boots: 'Boot', Amulet: 'Amul', Ring1: 'Rng1',
-            Ring2: 'Rng2', Accessory1: 'Acc1', Accessory2: 'Acc2', Back: 'Back',
-            Weapon1: 'Wep1', Weapon2: 'Wep2', Weapon2H: 'Wep(2H)',
-        };
-        const activeSlots = getActiveGearSlots(this.build.weapons, WEAPON_DATA);
-        const checked = this._getChecked('opt-prefixes');
-        container.innerHTML = activeSlots.map(slot => {
-            const label = SLOT_LABELS[slot] || slot;
-            const opts = checked.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
-            return `<div class="opt-slot-constraint">
-                <label>${esc(label)}</label>
-                <select data-slot="${esc(slot)}">
-                    <option value="">Any</option>
-                    ${opts}
-                </select>
-            </div>`;
-        }).join('');
+        populateSlotConstraints(this);
     }
 
     _readSlotConstraints() {
-        const out = {};
-        document.querySelectorAll('#opt-slot-constraints select').forEach(sel => {
-            if (sel.value) out[sel.dataset.slot] = sel.value;
-        });
-        return out;
+        return readSlotConstraints();
     }
 
     _getActiveSlots() {
-        return getActiveGearSlots(this.build.weapons, WEAPON_DATA);
+        return getActiveSlots(this);
     }
 
     _bindOptimizerEvents() {
-        const groupContainerId = g => ({
-            prefix: 'opt-prefixes', rune: 'opt-runes', sigil: 'opt-sigils',
-            relic: 'opt-relics', food: 'opt-food', utility: 'opt-utility',
-            infusion: 'opt-infusions',
-        }[g]);
-
-        // Select-all / deselect-all buttons
-        document.querySelectorAll('.opt-selall').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = groupContainerId(btn.dataset.group);
-                if (id) document.querySelectorAll(`#${id} input`).forEach(cb => { cb.checked = true; });
-                if (btn.dataset.group === 'prefix') this._enforcePrefixMax();
-            });
-        });
-        document.querySelectorAll('.opt-deselall').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = groupContainerId(btn.dataset.group);
-                if (id) document.querySelectorAll(`#${id} input`).forEach(cb => { cb.checked = false; });
-            });
-        });
-
-        // Prefix max-3 enforcement + refresh slot constraint dropdowns
-        document.getElementById('opt-prefixes')?.addEventListener('change', () => {
-            this._enforcePrefixMax();
-            this._populateSlotConstraints();
-        });
-
-        // Run button
-        document.getElementById('btn-opt-run')?.addEventListener('click', () => this._runOptimizer());
-
-        // Cancel button
-        document.getElementById('btn-opt-cancel')?.addEventListener('click', () => {
-            if (this._optimizer) this._optimizer.cancel();
-        });
-
-        // Export button
-        document.getElementById('btn-opt-export')?.addEventListener('click', () => this._exportOptimizerResults());
+        bindOptimizerEvents(this);
     }
 
     _enforcePrefixMax() {
-        const checked = [...document.querySelectorAll('#opt-prefixes input:checked')];
-        const MAX = 3;
-        document.querySelectorAll('#opt-prefixes label').forEach(lbl => {
-            const cb = lbl.querySelector('input');
-            if (checked.length >= MAX && !cb.checked) {
-                lbl.classList.add('opt-prefix-disabled');
-                cb.disabled = true;
-            } else {
-                lbl.classList.remove('opt-prefix-disabled');
-                cb.disabled = false;
-            }
-        });
+        enforcePrefixMax();
     }
 
     _getChecked(containerId) {
-        return [...document.querySelectorAll(`#${containerId} input:checked`)].map(cb => cb.value);
+        return getOptimizerChecked(containerId);
     }
 
     // C(total + k - 1, k - 1) — number of ways to distribute `total` among `k` bins.
     _infusionComboCount(k, total) {
-        if (k <= 1) return 1;
-        // C(n, r) with n = total+k-1, r = k-1
-        const n = total + k - 1, r = k - 1;
-        let result = 1;
-        for (let i = 0; i < r; i++) result = result * (n - i) / (i + 1);
-        return Math.round(result);
+        return infusionComboCount(k, total);
     }
 
     async _runOptimizer() {
-        if (this._optRunning) return;
-
-        const infusionStats = this._getChecked('opt-infusions');
-        const infusionTotal = Math.max(0, Math.min(18,
-            parseInt(document.getElementById('opt-inf-total')?.value ?? '18') || 0));
-
-        const space = {
-            prefixes: this._getChecked('opt-prefixes'),
-            runes: this._getChecked('opt-runes'),
-            sigils: this._getChecked('opt-sigils'),
-            relics: this._getChecked('opt-relics'),
-            foods: this._getChecked('opt-food'),
-            utilities: this._getChecked('opt-utility'),
-            infusionStats,
-            infusionTotal,
-        };
-
-        const _parseConstraint = id => {
-            const v = parseFloat(document.getElementById(id)?.value);
-            return isNaN(v) ? null : v;
-        };
-        const constraints = {
-            minBoonDuration: _parseConstraint('opt-min-boon-dur'),
-            minCritChance: _parseConstraint('opt-min-crit'),
-            minToughness: _parseConstraint('opt-min-tough'),
-            minVitality: _parseConstraint('opt-min-vit'),
-        };
-
-        const slotConstraints = this._readSlotConstraints();
-
-        if (!space.prefixes.length) { alert('Select at least one gear prefix.'); return; }
-
-        // Combo count estimate for user feedback.
-        // Sigil pairs: n*(n-1)/2 (no duplicates). Infusion distributions: C(total+k-1, k-1) where k=stats.
-        const n = space.sigils.length;
-        const sigilPairs = n < 2 ? 1 : (n * (n - 1)) / 2;
-        const k = infusionStats.length;
-        const infCombos = k === 0 ? 1 : this._infusionComboCount(k, infusionTotal);
-        const combos = Math.max(space.runes.length, 1) * Math.max(space.relics.length, 1)
-            * sigilPairs * Math.max(space.foods.length, 1) * Math.max(space.utilities.length, 1)
-            * infCombos;
-
-        this._optRunning = true;
-        const runBtn = document.getElementById('btn-opt-run');
-        const cancelBtn = document.getElementById('btn-opt-cancel');
-        const progWrap = document.getElementById('opt-progress-wrap');
-        const progFill = document.getElementById('opt-progress-fill');
-        const progLabel = document.getElementById('opt-progress-label');
-        const exportBtn = document.getElementById('btn-opt-export');
-        const resultsEl = document.getElementById('opt-results');
-
-        runBtn.disabled = true;
-        cancelBtn.classList.remove('hidden');
-        progWrap.classList.remove('hidden');
-        exportBtn.classList.add('hidden');
-        if (resultsEl) resultsEl.classList.add('hidden');
-
-        try {
-            const results = await this._optimizer.optimize(
-                {
-                    build: JSON.parse(JSON.stringify(this.build)),
-                    selectedSkills: Object.values(this.selectedSkills).filter(Boolean),
-                    rotation: this.sim.rotation,
-                    space,
-                    constraints,
-                    slotConstraints,
-                    startAtt: this.activeAttunement,
-                    startAtt2: this.secondaryAttunement,
-                    evokerElement: this.evokerElement,
-                    permaBoons: this.permaBoons,
-                    targetHP: this._getTargetHP(),
-                },
-                (done, total, top10, statusMsg) => {
-                    const pct = total > 0 ? Math.min(100, (done / total) * 100) : 0;
-                    progFill.style.width = pct.toFixed(1) + '%';
-                    progLabel.textContent = statusMsg
-                        ? statusMsg
-                        : `${done.toLocaleString()} / ~${total.toLocaleString()} evals (${pct.toFixed(0)}%)`;
-                    this._renderOptimizerResults(top10);
-                }
-            );
-
-            this._optResults = results;
-            progFill.style.width = '100%';
-            progLabel.textContent = `Done — ${results.length} unique builds found`;
-            this._renderOptimizerResults(results);
-            if (results.length) {
-                exportBtn.classList.remove('hidden');
-                if (resultsEl) resultsEl.classList.remove('hidden');
-            }
-        } catch (err) {
-            progLabel.textContent = 'Error: ' + err.message;
-        } finally {
-            this._optRunning = false;
-            runBtn.disabled = false;
-            cancelBtn.classList.add('hidden');
-        }
+        await runOptimizer(this);
     }
 
     _renderOptimizerResults(results) {
-        const body = document.getElementById('opt-results-body');
-        const wrap = document.getElementById('opt-results');
-        if (!body || !results.length) return;
-
-        const PFX_ABBR = {
-            "Berserker's": 'Bers', "Assassin's": 'Assn', "Harrier's": 'Harr',
-            "Viper's": 'Vipr', "Sinister's": 'Sins', "Grieving": 'Grvg',
-            "Ritualist's": 'Ritu', "Celestial": 'Cele', "Diviner's": 'Divn',
-            "Dragon's": 'Drag', "Marshal's": 'Mrsh', "Plaguedoctor's": 'PlgD',
-            "Trailblazer's": 'Trbl', "Seraph's": 'Sera', "Minstrel's": 'Mnst',
-        };
-        const PFX_CSS = {
-            "Berserker's": 'pfx-berserker', "Assassin's": 'pfx-assassin',
-            "Harrier's": 'pfx-harrier', "Viper's": 'pfx-viper',
-            "Sinister's": 'pfx-sinister', "Grieving": 'pfx-grieving',
-            "Ritualist's": 'pfx-ritualist', "Celestial": 'pfx-celestial',
-            "Diviner's": 'pfx-diviner', "Dragon's": 'pfx-dragon',
-            "Marshal's": 'pfx-marshal', "Plaguedoctor's": 'pfx-plaguedoctor',
-            "Trailblazer's": 'pfx-trailblazer', "Seraph's": 'pfx-seraph',
-            "Minstrel's": 'pfx-minstrel',
-        };
-
-        const slotBadge = (prefix) => {
-            const abbr = PFX_ABBR[prefix] || prefix?.slice(0, 4) || '?';
-            const cls = PFX_CSS[prefix] || 'pfx-default';
-            return `<span class="opt-slot-badge ${cls}" title="${esc(prefix || '')}">${esc(abbr)}</span>`;
-        };
-
-        const shortName = (s) => {
-            if (!s) return '—';
-            const trimmed = s.replace(/^Bowl of |^Plate of |^Superior |^Furious |^Toxic |^Potent /i, '');
-            return trimmed.length > 14 ? trimmed.slice(0, 13) + '…' : trimmed;
-        };
-        const infLabel = (infusions) => {
-            if (!infusions?.length) return '—';
-            return infusions.map(x => `${x.count}×${x.stat.slice(0, 3)}`).join('+');
-        };
-
-        body.innerHTML = results.map((r, i) => {
-            const sigilStr = [r.sigil1, r.sigil2].filter(Boolean).join('+') || '—';
-            const dpsStr = r.dps > 0 ? Math.round(r.dps).toLocaleString() : (r.rawDps > 0 ? Math.round(r.rawDps).toLocaleString() + '*' : '—');
-
-            const is2H = TH_WEAPONS.has(this.build.weapons?.[0] || '');
-            const slotCells = GEAR_SLOTS.map(slot => {
-                if (is2H && slot === 'Weapon2') return '<span class="opt-slot-badge pfx-default">—</span>';
-                return slotBadge(r.gear[slot]);
-            }).join('');
-
-            return `<div class="opt-result-row" data-idx="${i}">
-                <span class="opt-rank">${i + 1}</span>
-                <span class="opt-dps">${dpsStr}</span>
-                ${slotCells}
-                <span class="opt-cell" title="${esc(r.rune || '')}">${esc(shortName(r.rune))}</span>
-                <span class="opt-cell" title="${esc(r.relic || '')}">${esc(shortName(r.relic))}</span>
-                <span class="opt-cell" title="${esc(sigilStr)}">${esc(sigilStr)}</span>
-                <span class="opt-cell" title="${esc(r.food || '')}">${esc(shortName(r.food))}</span>
-                <span class="opt-cell" title="${esc(r.utility || '')}">${esc(shortName(r.utility))}</span>
-                <span class="opt-cell" title="${esc(infLabel(r.infusions))}">${esc(infLabel(r.infusions))}</span>
-                <button class="opt-apply-btn" data-idx="${i}">Apply</button>
-            </div>`;
-        }).join('');
-
-        wrap.classList.remove('hidden');
-
-        body.querySelectorAll('.opt-apply-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const idx = parseInt(btn.dataset.idx);
-                this._applyOptimizerResult(this._optResults[idx]);
-            });
-        });
+        renderOptimizerResults(this, results);
     }
 
     _applyOptimizerResult(r) {
-        if (!r) return;
-        this.build.gear = { ...r.gear };
-        if (r.rune) this.build.rune = r.rune;
-        if (r.relic) this.build.relic = r.relic;
-        if (r.sigil1) this.build.sigils = [r.sigil1, r.sigil2].filter(Boolean);
-        if (r.food) this.build.food = r.food;
-        if (r.utility) this.build.utility = r.utility;
-        if (r.infusions) this.build.infusions = r.infusions.map(x => ({ ...x }));
-        this._onBuildChange();
-        this.renderGear();
+        applyOptimizerResult(this, r);
     }
 
     _exportOptimizerResults() {
-        if (!this._optResults?.length) return;
-        const data = this._optResults.map((r, i) => ({
-            rank: i + 1,
-            dps: Math.round(r.dps),
-            gear: r.gear,
-            rune: r.rune || null,
-            relic: r.relic || null,
-            sigils: [r.sigil1, r.sigil2].filter(Boolean),
-            food: r.food || null,
-            utility: r.utility || null,
-            infusions: r.infusions || null,
-        }));
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'gw2-optimized-builds.json';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
+        exportOptimizerResults(this);
     }
 
 }

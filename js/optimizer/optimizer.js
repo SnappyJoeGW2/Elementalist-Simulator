@@ -9,9 +9,9 @@
 // Each non-gear combo (rune × relic × sigil pair × food × utility × infusions)
 // is sent to a Web Worker for parallel exhaustive evaluation.
 
-import { SimulationEngine } from './simulation.js?v=50';
-import { calcAttributes } from './calc-attributes.js';
-import { GEAR_SLOTS, GEAR_STATS, WEAPON_DATA, getActiveGearSlots } from './gear-data.js';
+import { SimulationEngine } from '../simulation.js?v=47';
+import { calcAttributes } from '../core/calc-attributes.js';
+import { GEAR_SLOTS, GEAR_STATS, WEAPON_DATA, getActiveGearSlots } from '../data/gear-data.js';
 
 export class GearOptimizer {
     constructor({ skills, skillHits, weapons, sigils, relics }) {

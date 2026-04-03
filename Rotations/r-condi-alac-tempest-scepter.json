@@ -6,12 +6,12 @@
     "Overload Earth",
     {
       "name": "Hurl",
-      "offset": 0
+      "offset": 100
     },
     "Sand Squall",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Glyph of Elemental Power (Fire)",
     "Phoenix",
@@ -37,7 +37,7 @@
     "Signet of Earth",
     {
       "name": "Earth Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Rock Barrier",
     "Hurl",
@@ -51,7 +51,7 @@
     "Signet of Fire",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Phoenix",
     "Wildfire",
@@ -77,7 +77,7 @@
     "Phoenix",
     {
       "name": "Earth Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Rock Barrier",
     "Hurl",
@@ -91,7 +91,7 @@
     "Signet of Fire",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Phoenix",
     "Signet of Earth",
@@ -117,7 +117,7 @@
     "Phoenix",
     {
       "name": "Earth Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Rock Barrier",
     "Hurl",

@@ -21,8 +21,8 @@ import {
     GEAR_STATS, GEAR_SLOTS, BASE_STATS, JBC_BONUS, INFUSION_BONUS,
     RUNE_DATA, FOOD_DATA, UTILITY_DATA, UTILITY_CONVERSION_RATES, SIGIL_DATA,
     WEAPON_DATA,
-} from './gear-data.js';
-import { getActiveTraits } from './traits-data.js';
+} from '../data/gear-data.js';
+import { getActiveTraits } from '../data/traits-data.js';
 
 const PRIMARY_STATS = [
     'Power', 'Precision', 'Toughness', 'Vitality',

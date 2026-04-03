@@ -168,6 +168,14 @@ export class GW2API {
         this.skillIcons['Aerial Agility (chain)'] = 'https://render.guildwars2.com/file/C42D0718C2AB217B05E8414D514EAEFCC7407EF1/3256332.png';
         this.skillIcons['Aerial Agility (dash)'] = 'https://render.guildwars2.com/file/B10398A8E33A70A9101F294993673004017916C1/3256333.png';
         this.skillIcons['Aerial Agility'] = 'https://render.guildwars2.com/file/ADD2E4D6D49F22AF2C033058A6FF02BD316BFBC9/3256331.png';
+        this.skillIcons['Flame Burst'] = 'https://wiki.guildwars2.com/images/7/79/Flame_Burst.png';
+        this.skillIcons['Flame Burst (trait)'] = 'https://wiki.guildwars2.com/images/7/79/Flame_Burst.png';
+        this.skillIcons['Cleansing Wave'] = 'https://wiki.guildwars2.com/images/0/07/Cleansing_Wave.png';
+        this.skillIcons['Cleansing Wave (trait)'] = 'https://wiki.guildwars2.com/images/0/07/Cleansing_Wave.png';
+        this.skillIcons['Blinding Flash'] = 'https://wiki.guildwars2.com/images/8/89/Blinding_Flash.png';
+        this.skillIcons['Blinding Flash (trait)'] = 'https://wiki.guildwars2.com/images/8/89/Blinding_Flash.png';
+        this.skillIcons['Shock Wave'] = 'https://wiki.guildwars2.com/images/9/93/Shock_Wave.png';
+        this.skillIcons['Shock Wave (trait)'] = 'https://wiki.guildwars2.com/images/9/93/Shock_Wave.png';
     }
 
     getSkillIcon(name) {

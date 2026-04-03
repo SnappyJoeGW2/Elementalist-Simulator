@@ -6,14 +6,14 @@
     "Quantum Strike",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 50
     },
     "Flame Uprising",
     "Ride the Lightning",
     "Pyro Vortex",
     {
       "name": "Arcane Blast",
-      "offset": 100
+      "offset": 1
     },
     {
       "name": "Fire Attunement",
@@ -30,7 +30,7 @@
     "Fire Swipe",
     {
       "name": "Primordial Stance (Earth)",
-      "offset": 0
+      "offset": 1
     },
     "Searing Slash",
     "Lava Skin",
@@ -64,16 +64,16 @@
     "Pyro Vortex",
     {
       "name": "Arcane Blast",
-      "offset": 0
+      "offset": 1
     },
     "Flame Uprising",
     {
       "name": "Arcane Blast",
-      "offset": 0
+      "offset": 1
     },
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Cauterizing Strike",
     "Ring of Fire",
@@ -81,14 +81,14 @@
     "Fire Swipe",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 50
     },
     "Searing Slash",
     "Charged Strike",
     "Polaric Slash",
     {
       "name": "Water Attunement",
-      "offset": 0
+      "offset": 50
     },
     "Call Lightning",
     "Shearing Edge",
@@ -114,7 +114,7 @@
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 200
+      "offset": 100
     },
     "Pyro Vortex",
     "Charged Strike",
@@ -134,21 +134,21 @@
     "Quantum Strike",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Flame Uprising",
     "Fire Strike",
     "Fire Swipe",
     {
       "name": "Primordial Stance (Fire)",
-      "offset": 0
+      "offset": 1
     },
     "Searing Slash",
     "Ride the Lightning",
     "Pyro Vortex",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Cauterizing Strike",
     "Ring of Fire",
@@ -159,7 +159,7 @@
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Charged Strike",
     "Polaric Slash",
@@ -178,7 +178,7 @@
     "Quantum Strike",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Flame Uprising",
     "Pyro Vortex",
@@ -196,7 +196,7 @@
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Charged Strike",
     "Polaric Slash",
@@ -215,7 +215,7 @@
     "Quantum Strike",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Flame Uprising",
     "Pyro Vortex",
@@ -234,7 +234,7 @@
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Charged Strike",
     "Polaric Slash",
@@ -246,23 +246,23 @@
     "Glyph of Storms (Air)",
     {
       "name": "Primordial Stance (Air)",
-      "offset": 0
+      "offset": 1
     },
     "Quantum Strike",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Flame Uprising",
     "Ride the Lightning",
     "Pyro Vortex",
     {
       "name": "Arcane Blast",
-      "offset": 0
+      "offset": 1
     },
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Cauterizing Strike",
     "Ring of Fire",
@@ -270,25 +270,25 @@
     "Fire Swipe",
     {
       "name": "Earth Attunement",
-      "offset": 0
+      "offset": 50
     },
     "Searing Slash",
     "Lava Skin",
     "Earthen Vortex",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Churning Earth",
     "Flame Uprising",
     {
       "name": "Primordial Stance (Fire)",
-      "offset": 0
+      "offset": 1
     },
     "Earthquake",
     {
       "name": "Air Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Charged Strike",
     "Polaric Slash",
@@ -300,22 +300,22 @@
     "Quantum Strike",
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Ride the Lightning",
     {
       "name": "Arcane Blast",
-      "offset": 0
+      "offset": 1
     },
     "Pyro Vortex",
     "Flame Uprising",
     {
       "name": "Arcane Blast",
-      "offset": 0
+      "offset": 1
     },
     {
       "name": "Fire Attunement",
-      "offset": 0
+      "offset": 100
     },
     "Cauterizing Strike",
     "Fire Grab",

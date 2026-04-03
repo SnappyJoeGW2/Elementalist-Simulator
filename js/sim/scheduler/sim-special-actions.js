@@ -1,0 +1,230 @@
+import { enqueueHitEvent, isHitEvent } from '../shared/sim-events.js';
+import {
+    addCatalystEnergy,
+    getCatalystState,
+    getEvokerState,
+} from '../state/sim-specialization-state.js';
+import {
+    buildCastWindow,
+    runConcurrentSteps,
+} from './sim-cast-window.js';
+import { getSkillCooldownReadyAt } from '../state/sim-cooldown-state.js';
+import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
+
+export function anySphereActiveAt(S, time) {
+    const catalystState = getCatalystState(S);
+    for (const w of catalystState.sphereWindows) {
+        if (w.start <= time && w.end > time) return true;
+    }
+    return false;
+}
+
+export function flushPendingEnergy(engine, S, catalystEnergyMax) {
+    const catalystState = getCatalystState(S);
+    if (catalystState.energy === null || catalystState.energy >= catalystEnergyMax) return;
+    for (const ev of S.eq) {
+        if (!isHitEvent(ev) || ev.dmg <= 0 || ev.ws <= 0) continue;
+        if (ev.time > S.t) continue;
+        if (ev._energyCredited) continue;
+        if (!anySphereActiveAt(S, ev.time) || S._hasSphereSpecialist) {
+            addCatalystEnergy(S, 1, catalystEnergyMax);
+            ev._energyCredited = true;
+            if (catalystState.energy >= catalystEnergyMax) break;
+        }
+    }
+}
+
+export function handleJadeSphere(ctx, sk, concurrents, {
+    catalystEnergyMax,
+    catalystSphereCost,
+}) {
+    const state = ctx.S;
+    const catalystState = getCatalystState(state);
+
+    if (state.eliteSpec !== 'Catalyst') {
+        ctx.log({ t: state.t, type: 'err', msg: `Jade Sphere requires Catalyst specialization` });
+        return;
+    }
+    if (sk.attunement !== state.att) {
+        ctx.log({ t: state.t, type: 'err', msg: `Need ${sk.attunement} for ${sk.name}` });
+        return;
+    }
+
+    flushPendingEnergy(ctx.engine, state, catalystEnergyMax);
+    if (catalystState.energy < catalystSphereCost) {
+        ctx.log({ t: state.t, type: 'err', msg: `Not enough energy (${catalystState.energy}/${catalystSphereCost})` });
+        return;
+    }
+
+    const cdKey = ctx.cdKey(sk);
+    const cdReady = getSkillCooldownReadyAt(state, cdKey);
+    ctx.advanceTimeTo(cdReady);
+
+    ctx.spendCatalystEnergy(catalystSphereCost);
+    const durMs = Math.round((sk.duration || 5) * 1000);
+    ctx.activateCatalystSphere(sk.attunement, state.t, durMs);
+
+    ctx.scheduleHits(sk, state.t, x => x);
+    ctx.trackField(sk, state.t);
+
+    if (sk.recharge > 0) {
+        const baseCdMs = ctx.attunementCooldownMs(Math.round(sk.recharge * 1000));
+        ctx.setSkillCooldown(cdKey, state.t + ctx.alacrityAdjustedCooldown(baseCdMs, state.t));
+    }
+
+    ctx.log({ t: state.t, type: 'jade_sphere', skill: sk.name, att: sk.attunement, energy: catalystState.energy, durMs });
+    ctx.recordSkillCast(sk.name, 0);
+    ctx.addStep({ skill: sk.name, start: state.t, end: state.t, att: state.att, type: 'jade_sphere', ri: state._ri });
+
+    if (state._hasSpectacularSphere) {
+        const durMul = state._hasSphereSpecialist ? 1.5 : 1;
+        ctx.trackEffect('Quickness', 1, 1.5 * durMul, state.t);
+        const att = sk.attunement;
+        if (att === 'Fire') ctx.trackEffect('Might', 5, 10 * durMul, state.t);
+        else if (att === 'Water') ctx.trackEffect('Vigor', 1, 5 * durMul, state.t);
+        else if (att === 'Air') ctx.trackEffect('Fury', 1, 5 * durMul, state.t);
+        else if (att === 'Earth') ctx.trackEffect('Aegis', 1, 3 * durMul, state.t);
+    }
+
+    if (state._hasPyroPuissance && state.att === 'Fire' && isCombatActiveAt(state, state.t)) {
+        ctx.trackEffect('Might', 1, 15, state.t);
+    }
+
+    runConcurrentSteps(ctx, concurrents, {
+        anchorTime: state.t,
+        restoreTime: state.t,
+    });
+}
+
+export function handleFamiliar(ctx, sk, concurrents, {
+    evokerElementMap,
+    evokerFamiliarSelectors,
+}) {
+    const state = ctx.S;
+    const evokerState = getEvokerState(state);
+
+    if (state.eliteSpec !== 'Evoker') {
+        ctx.log({ t: state.t, type: 'err', msg: `Familiar skills require Evoker specialization` });
+        return;
+    }
+    const famElement = evokerElementMap[sk.name];
+    if (!famElement) {
+        ctx.log({ t: state.t, type: 'err', msg: `Unknown familiar: ${sk.name}` });
+        return;
+    }
+
+    if (evokerState.element !== famElement) {
+        ctx.log({ t: state.t, type: 'err', msg: `Need ${famElement} familiar selected for ${sk.name} (have ${evokerState.element || 'none'})` });
+        return;
+    }
+
+    const isBasic = evokerFamiliarSelectors.has(sk.name);
+    const chargesNeeded = state._hasSpecializedElements ? 4 : 6;
+    if (isBasic) {
+        if (evokerState.empowered >= 3) {
+            ctx.log({ t: state.t, type: 'err', msg: `Empowered skill ready — cannot use ${sk.name}` });
+            return;
+        }
+        if (evokerState.charges < chargesNeeded) {
+            ctx.log({ t: state.t, type: 'err', msg: `Need ${chargesNeeded} familiar charges for ${sk.name} (have ${evokerState.charges})` });
+            return;
+        }
+    } else if (evokerState.empowered < 3) {
+        ctx.log({ t: state.t, type: 'err', msg: `Need 3 empowered charges for ${sk.name} (have ${evokerState.empowered})` });
+        return;
+    }
+
+    const cdReady = getSkillCooldownReadyAt(state, sk.name);
+    ctx.advanceTimeTo(cdReady);
+
+    const { castMs, scaleOff, start, end } = buildCastWindow(ctx, sk, state.t);
+
+    if (castMs > 0) {
+        ctx.beginCast(sk.name, start, castMs);
+        ctx.setCastUntil(end);
+    }
+
+    if (sk.name === 'Ignite') {
+        const igniteDurations = [2, 0.5, 1, 1.5];
+        const igniteTier = ctx.consumeEvokerIgniteTier(start, { staleAfterMs: 15000, maxTier: 3 });
+        const burnDur = igniteDurations[igniteTier];
+        const igniteHit = sk.hits?.[0];
+        const off = igniteHit?.startOffsetMs || 880;
+        enqueueHitEvent(state.eq, {
+            time: start + off,
+            skill: 'Ignite',
+            hitIdx: 1,
+            sub: 1,
+            totalSubs: 1,
+            dmg: 0.63,
+            ws: ctx.weaponStrength(sk),
+            isField: false,
+            cc: false,
+            conds: { Burning: { stacks: 1, duration: burnDur } },
+            att: state.att,
+            att2: state.att2,
+            castStart: start,
+            conjure: state.conjureEquipped || null,
+        });
+    } else {
+        ctx.scheduleHits(sk, start, scaleOff);
+    }
+
+    if (castMs > 0) ctx.finishCast(sk.name, end);
+    else ctx.setTime(end);
+
+    if (isBasic) {
+        ctx.setEvokerCharges(0);
+        ctx.addEvokerEmpowered(1, 3);
+        ctx.log({ t: end, type: 'familiar_basic', skill: sk.name, empowered: evokerState.empowered });
+    } else {
+        ctx.setEvokerEmpowered(0);
+        ctx.log({ t: end, type: 'familiar_empowered', skill: sk.name });
+    }
+
+    if (sk.recharge > 0) {
+        const baseCdMs = Math.round(sk.recharge * 1000);
+        ctx.setSkillCooldown(sk.name, end + ctx.alacrityAdjustedCooldown(baseCdMs, end));
+    }
+
+    ctx.recordSkillCast(sk.name, castMs);
+    ctx.addStep({ skill: sk.name, start, end, att: state.att, type: 'familiar', ri: state._ri });
+
+    if (state._hasPyroPuissance && state.att === 'Fire' && isCombatActiveAt(state, end)) {
+        ctx.trackEffect('Might', 1, 15, end);
+    }
+
+    if (state._hasFamiliarsProwess) {
+        ctx.grantFamiliarProwess(end);
+    }
+    if (state._hasFamiliarsBlessing) {
+        if (famElement === 'Fire' || famElement === 'Air') {
+            ctx.trackEffect('Quickness', 1, 3, end);
+        } else {
+            ctx.trackEffect('Alacrity', 1, 4, end);
+        }
+    }
+    if (state._hasGalvanicEnchantment) {
+        ctx.adjustProcCounter('electricEnchantmentStacks', 2);
+    }
+    if (sk.name === 'Lightning Blitz') {
+        ctx.adjustProcCounter('electricEnchantmentStacks', 1);
+    }
+    if (sk.name === 'Zap') {
+        ctx.trackEffect('Zap Buff', 1, 5, end);
+        ctx.log({ t: end, type: 'skill_proc', skill: 'Zap', detail: 'Zap Buff 10s' });
+    }
+
+    if (state._hasSpecializedElements) {
+        const pct = isBasic ? 0.10 : 0.50;
+        ctx.rechargeWeaponSkills(pct, end);
+        if (!isBasic) {
+            ctx.triggerAttunementEnterEffects(evokerState.element, end);
+        }
+    }
+
+    runConcurrentSteps(ctx, concurrents, {
+        anchorTime: end,
+        restoreTime: end,
+    });
+}

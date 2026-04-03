@@ -16,68 +16,146 @@ python -m http.server 8000
 
 ---
 
+## Current Status
+
+This document reflects the current folderized codebase.
+
+- `README.md` stays as the user-facing overview.
+- Older planning and refactor notes are archived separately.
+- The simulator now has an explicit `schedule -> resolve` split internally.
+
+The most useful mental model is:
+
+**UI/build state -> prepare run -> schedule timed events -> resolve queued events -> summarize results**
+
+---
+
 ## Project Structure
 
 ```
 GW2/
-├── index.html                         # Entry point, layout skeleton
-├── css/style.css                      # All styling (dark theme, responsive)
+├── index.html                         # Main app entry
+├── fixtures.html                      # Fixture harness entry
+├── css/style.css                      # App styling
 ├── js/
-│   ├── app.js                         # UI controller (App class)
-│   ├── simulation.js                  # Core simulation engine
-│   ├── damage.js                      # Pure damage math formulas
-│   ├── calc-attributes.js             # Dynamic attribute calculation pipeline
-│   ├── gear-data.js                   # Static GW2 data (prefixes, runes, food, sigils, weapons, relics, etc.)
-│   ├── traits-data.js                 # All Elementalist trait definitions + getActiveTraits()
-│   ├── csv-loader.js                  # CSV parsing (Skills + Skill_hits only)
-│   └── gw2-api.js                     # GW2 API icon fetching + cache
+│   ├── app/                           # Browser UI and state wiring
+│   │   ├── app.js
+│   │   ├── app-runtime.js
+│   │   ├── app-state.js
+│   │   ├── app-io.js
+│   │   ├── app-rotation-ui.js
+│   │   ├── app-optimizer.js
+│   │   └── gw2-api.js
+│   ├── core/                          # Shared math/build calculations
+│   │   ├── calc-attributes.js
+│   │   └── damage.js
+│   ├── data/                          # Static data and CSV loading
+│   │   ├── csv-loader.js
+│   │   ├── gear-data.js
+│   │   └── traits-data.js
+│   ├── optimizer/                     # Gear optimizer + worker
+│   │   ├── optimizer.js
+│   │   └── optimizer-worker.js
+│   ├── fixtures/                      # Fixture harness runtime
+│   │   ├── fixture-harness-core.js
+│   │   └── fixture-harness-page.js
+│   ├── sim/                           # Internal simulator modules
+│   │   ├── run/
+│   │   ├── scheduler/
+│   │   ├── resolver/
+│   │   ├── shared/
+│   │   ├── state/
+│   │   └── mechanics/
+│   └── simulation.js                  # Public simulation engine root
 ├── csv input/
 │   ├── Tool_Elementalist - Skills_data.csv
 │   └── Tool_Elementalist - Skill_hits_data.csv
-├── Builds/                            # Saved build JSON files
-└── Rotations/                         # Saved rotation JSON files
+├── fixtures/                          # Saved fixture states + baselines
+├── TODO/                              # User todo list + internal technical roadmap
+└── outdated docs/                     # Archived planning/refactor notes
 ```
 
-**Note:** Gear prefixes, runes, food, utility, sigils, weapons, relics, and traits are all hardcoded in JavaScript (`gear-data.js` and `traits-data.js`). Only Skills and Skill_hits data are loaded from CSV.
+**Note:** Gear prefixes, runes, food, utility, sigils, weapons, relics, and traits are hardcoded in JavaScript (`js/data/gear-data.js` and `js/data/traits-data.js`). Only Skills and Skill_hits data are loaded from CSV.
 
 ---
 
 ## Architecture Overview
 
 ```
-                   ┌─────────────────┐
-                   │   index.html    │
-                   └────────┬────────┘
-                            │
-                   ┌────────▼────────┐
-                   │     App (UI)    │  js/app.js
-                   │  Renders panels │
-                   │  Handles events │
-                   └──┬──────────┬───┘
-                      │          │
-            ┌─────────▼──┐  ┌───▼──────────────┐
-            │ csv-loader  │  │ SimulationEngine │  js/simulation.js
-            │ Skills CSVs │  │  run()           │
-            └─────────────┘  │  computeContribs │
-                             └────────┬─────────┘
-                                      │
-                             ┌────────▼─────────┐
-                             │   damage.js      │
-                             │ strikeDamage()   │
-                             │ conditionTick()  │
-                             └──────────────────┘
-
-Static data flow:
-  gear-data.js  ──┐
-  traits-data.js ─┼──► calc-attributes.js ──► App / SimulationEngine
-  csv-loader.js ──┘
+index.html / fixtures.html
+        │
+        ├── js/app/app.js
+        │       │
+        │       ├── js/app/* helpers
+        │       ├── js/data/*
+        │       ├── js/core/*
+        │       └── js/sim/run/sim-runner.js
+        │               │
+        │               └── js/simulation.js
+        │                       │
+        │                       └── js/sim/run/sim-run-orchestration.js
+        │                               │
+        │                               ├── js/sim/scheduler/*
+        │                               ├── js/sim/shared/sim-scheduled-event-stream.js
+        │                               └── js/sim/resolver/*
+        │
+        └── js/fixtures/fixture-harness-page.js
+                │
+                └── js/fixtures/fixture-harness-core.js
 ```
+
+---
+
+## Current Code Layout
+
+### `js/app/`
+
+Browser-facing application code.
+
+- UI rendering
+- DOM event wiring
+- build/rotation snapshot handling
+- optimizer panel integration
+- GW2 icon/API helpers
+
+### `js/core/`
+
+Shared calculations used by multiple parts of the project.
+
+- attribute calculation
+- strike/condition damage formulas
+
+### `js/data/`
+
+Project data sources.
+
+- static gear/trait data
+- CSV loading for skills and hit tables
+
+### `js/optimizer/`
+
+The gear optimizer and its worker entry.
+
+### `js/fixtures/`
+
+The regression harness used to compare current behavior against saved baselines.
+
+### `js/sim/`
+
+The internal simulator, split by responsibility:
+
+- `run/` = run preparation and orchestration
+- `scheduler/` = convert rotation commands into timed events
+- `resolver/` = process those events in time order
+- `shared/` = explicit handoff/event-stream helpers shared between scheduler and resolver
+- `state/` = named state domains
+- `mechanics/` = gameplay-specific mechanic logic
 
 ---
 
 ## File-by-File Reference
 
-### `js/gear-data.js` — Static GW2 Data
+### `js/data/gear-data.js` — Static GW2 Data
 
 Centralizes all static item/modifier data.
 
@@ -100,7 +178,7 @@ Centralizes all static item/modifier data.
 
 ---
 
-### `js/traits-data.js` — Trait Definitions
+### `js/data/traits-data.js` — Trait Definitions
 
 All Elementalist trait data.
 
@@ -115,7 +193,7 @@ All Elementalist trait data.
 
 ---
 
-### `js/calc-attributes.js` — Attribute Calculation Pipeline
+### `js/core/calc-attributes.js` — Attribute Calculation Pipeline
 
 Computes all character attributes dynamically from the current build state. Called by `App` whenever the build changes.
 
@@ -164,7 +242,7 @@ Each primary stat entry: `{ final, base, gear, runes, food, utility, jbc, traits
 
 ---
 
-### `js/csv-loader.js` — Data Loading
+### `js/data/csv-loader.js` — Data Loading
 
 Now only loads the two skills CSVs. All gear/trait/sigil/weapon/relic data has been migrated to JS modules.
 
@@ -181,7 +259,7 @@ Now only loads the two skills CSVs. All gear/trait/sigil/weapon/relic data has b
 
 ---
 
-### `js/damage.js` — Damage Formulas
+### `js/core/damage.js` — Damage Formulas
 
 Pure math functions with no side effects. Constants:
 - `TARGET_ARMOR = 2597` (standard golem armor)
@@ -198,7 +276,7 @@ Pure math functions with no side effects. Constants:
 
 ---
 
-### `js/gw2-api.js` — Icon Fetching
+### `js/app/gw2-api.js` — Icon Fetching
 
 `GW2API` class fetches skill/trait/specialization icons from the official GW2 API.
 
@@ -256,7 +334,7 @@ The main simulation method. Processes the rotation and produces complete results
 
 3. **Permanent Effects** — Applies permanent boons from `permaBoons` with expiry at `999999999ms`.
 
-4. **Rotation Processing** — Iterates through `this.rotation`, calling `_step(S, skillName)` for each entry. Rotation items can be strings (skill names) or `{ name, offset }` objects for concurrent skills.
+4. **Rotation Processing** — Iterates through `this.rotation`, calling `_step(S, skillName)` for each entry. Rotation items can be plain strings, concurrent objects (`{ name, offset }`), interrupted-cast objects (`{ name, interruptMs }`), or virtual utility entries such as `__combat_start`.
 
 5. **Event Loop** — Processes `S.eq` in chronological order. Event types:
    - `relic_activate` — Deferred relic activation
@@ -267,7 +345,7 @@ The main simulation method. Processes the rotation and produces complete results
 
 **DPS window calculation:**
 
-`firstHitTime` records the first damaging event. `lastHitTime` tracks the last. The DPS window runs from `firstHitTime` to `max(rotEnd, lastHitTime)` (or `deathTime` if the target was killed). This matches the GW2 benchmark convention of starting the timer on the first hit, not on cast start.
+`firstHitTime` records the first damaging event. `lastHitTime` tracks the last. If the rotation contains an explicit `Combat Start` marker, the DPS window starts there; otherwise it starts at `firstHitTime`. The end of the window is `max(rotEnd, lastHitTime)` (or `deathTime` if the target was killed).
 
 #### `computeContributions(startAtt, startAtt2, evokerElement, permaBoons, targetHP)`
 
@@ -283,7 +361,7 @@ Modifier types handled:
 
 ---
 
-### `js/app.js` — UI Controller
+### `js/app/app.js` — UI Controller
 
 The `App` class manages all DOM rendering and user interaction.
 
@@ -355,7 +433,12 @@ The build (gear, traits, selected skills, permaBoons) and rotation are auto-save
 | `_serializeRotation()` | Converts `sim.rotation` to a JSON-safe array |
 | `_deserializeRotation(items)` | Populates `sim.rotation` from a serialized array |
 
-The rotation format is an array where each item is either a plain string (`"Charged Strike"`) or a concurrent object (`{ name: "Air Attunement", offset: 120 }` — see Concurrent Skills below).
+The rotation format is an array where each item is one of:
+
+- a plain string (`"Charged Strike"`)
+- a concurrent object (`{ name: "Air Attunement", offset: 120 }`)
+- an interrupted-cast object (`{ name: "Arc Lightning", interruptMs: 1300 }`)
+- a virtual marker (`"__combat_start"`)
 
 #### Rotation Builder
 
@@ -364,8 +447,20 @@ The rotation is built by clicking skill icons in the palette. The simulation run
 **Concurrent (mid-animation) skills:**
 - Skills with zero cast time (attunement swaps, signets, stances, etc.) can be fired during another skill's animation by **Shift+clicking** them.
 - They appear as `{ name, offset }` objects in the rotation array, where `offset` is the ms delay from the anchor skill's start.
+- Offsets are normalized to a minimum of `1ms`, so concurrent entries never start at exactly the same timestamp as their anchor.
 - In the timeline UI they render with a dashed border.
 - The simulation processes them inside the anchor's `_step` with a `skipCastUntil` flag so they don't advance `S.t`.
+
+**Interrupted casts:**
+- Any non-instant skill can be inserted as an interrupted cast by **Ctrl+clicking** it.
+- These entries are stored as `{ name, interruptMs }`, where `interruptMs` is measured from cast start.
+- The scheduler shortens the cast to that timestamp and only schedules hits whose natural hit time is `<= interruptMs`.
+- End-of-cast followups are skipped for genuinely interrupted casts.
+
+**Combat Start marker:**
+- The virtual `__combat_start` entry marks when the target becomes active / when the DPS window should begin.
+- Events before the marker are treated as precombat setup.
+- If the marker is absent, the simulator falls back to the old "first damaging event starts DPS" behavior.
 
 **Skills on cooldown:**
 - Clicking a skill that is on cooldown inserts it normally; the simulation automatically waits (`S.t` advances to the cooldown expiry before casting).
@@ -734,6 +829,8 @@ Applied in `calcAttributes()` in a specific order to handle interdependencies:
 - **Attunement tracking:** WeaponSwap state change events (isStateChange = 11) are captured for the PoV player, providing attunement context even when skill activation events are unavailable.
 - **Variant skill resolution:** Skills whose tool name requires an attunement suffix (e.g., `Glyph of Storms` → `Glyph of Storms (Air)`) are automatically resolved based on the current attunement at cast time.
 - Instant-cast skills fired during another skill's cast window are marked as concurrent `{ name, offset }` objects, matching the Shift+click format of the rotation builder.
+- Interrupted casts are exported as `{ name, interruptMs }`.
+- Explicit combat-start markers are exported as `__combat_start`.
 - Export to `gw2-rotation.json`, then load it in the main tool via **↑ Load Rotation**.
 
 ---
@@ -768,8 +865,10 @@ Applied in `calcAttributes()` in a specific order to handle interdependencies:
 
 14. **Data in JS, not CSV** — Gear prefixes, runes, food, utility, sigils, weapons, relics, and traits are all hardcoded in `gear-data.js` and `traits-data.js`. Only skills remain as CSV.
 
-15. **Concurrent (mid-animation) skills** — The `run()` loop collects `{ name, offset }` items that follow an anchor skill and processes them inside the anchor's `_step` call before `S.t` advances, using a `skipCastUntil` flag. This allows instant-cast skills (attunement swaps, signets) to fire mid-animation without advancing the timeline.
+15. **Concurrent (mid-animation) skills** — The scheduler collects `{ name, offset }` items that follow an anchor skill and processes them inside the anchor's step before the main timeline advances. Offsets are clamped to at least `1ms` to avoid duplicate cast-start timestamps.
 
-16. **DPS window starts at first hit** — `S.firstHitTime` is set on the first damaging event. The DPS denominator is `effectiveEnd − firstHitTime`, not `0 − firstHitTime`. This matches the GW2 benchmark convention.
+16. **Interrupted casts are first-class rotation items** — `{ name, interruptMs }` entries shorten the cast window itself and filter out any hits scheduled after the interrupt point. They behave like a real cancel rather than a completed cast with truncated damage.
 
-17. **Conjured weapon stat locking** — Hit events embed `conjure: S.conjureEquipped || null` at schedule time. This ensures the stat bonus reflects the equipped weapon at cast time.
+17. **DPS window can start explicitly** — If `__combat_start` exists in the rotation, the DPS denominator uses that timestamp. Otherwise the simulator falls back to `S.firstHitTime`, preserving older rotation behavior.
+
+18. **Conjured weapon stat locking** — Hit events embed `conjure: S.conjureEquipped || null` at schedule time. This ensures the stat bonus reflects the equipped weapon at cast time.

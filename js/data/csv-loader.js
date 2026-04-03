@@ -74,6 +74,7 @@ export function loadSkills(text) {
             comboField: skill['Combo Field'],
             duration: num(skill['Duration']),
             aura: skill['Aura'],
+            endurance: num(skill['Endurance']),
         });
     }
     return skills;

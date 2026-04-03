@@ -1,0 +1,162 @@
+import { getProcState } from '../state/sim-proc-state.js';
+import { getCatalystState } from '../state/sim-specialization-state.js';
+import {
+    getSkillCooldownReadyAt,
+    getChargeState,
+} from '../state/sim-cooldown-state.js';
+
+export function prepareStandardSkillAvailability(ctx, sk, key) {
+    const { S } = ctx;
+    const isCharged = sk.maximumCount > 0 && sk.countRecharge > 0;
+
+    if (isCharged) {
+        ctx.initCharges(key, sk);
+
+        const cdReady = getSkillCooldownReadyAt(S, key);
+        ctx.advanceTimeTo(cdReady);
+
+        ctx.catchUpCharges(key, sk);
+        const chargeState = getChargeState(S, key);
+
+        if (chargeState.count <= 0) {
+            ctx.advanceTimeTo(chargeState.nextChargeAt);
+            ctx.adjustChargeCount(key, 1);
+            const baseMs = ctx.weaponRechargeMs(sk, Math.round(sk.countRecharge * 1000));
+            const nextReadyAt = chargeState.count < sk.maximumCount
+                ? S.t + ctx.alacrityAdjustedCooldown(baseMs, S.t)
+                : Infinity;
+            ctx.setChargeReadyAt(key, nextReadyAt);
+        }
+
+        ctx.adjustChargeCount(key, -1);
+        if (chargeState.nextChargeAt === Infinity && chargeState.count < sk.maximumCount) {
+            const baseMs = ctx.weaponRechargeMs(sk, Math.round(sk.countRecharge * 1000));
+            ctx.setChargeReadyAt(key, S.t + ctx.alacrityAdjustedCooldown(baseMs, S.t));
+        }
+    } else {
+        const cdReady = getSkillCooldownReadyAt(S, key);
+        ctx.advanceTimeTo(cdReady);
+    }
+
+    return { isCharged };
+}
+
+export function prepareStandardHitScheduling(ctx, name) {
+    const { S } = ctx;
+    ctx.setFlag('_frigidFlurryProcActive', name === 'Frigid Flurry' && S.pistolBullets.Water === true);
+    ctx.setFlag('_purblindingCDReduce', name === 'Purblinding Plasma' && S.pistolBullets.Air === true);
+}
+
+export function finishStandardHitScheduling(ctx) {
+    ctx.setFlag('_frigidFlurryProcActive', false);
+}
+
+function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
+    const { S } = ctx;
+    const catalystState = getCatalystState(S);
+    const procState = getProcState(S);
+    if (name === 'Rock Barrier') return;
+    if (sk.recharge <= 0) return;
+
+    let finalCd;
+    if (ctx.arcaneEchoActiveAt(end) && sk.type === 'Weapon skill') {
+        finalCd = end + 1000;
+        ctx.clearArcaneEchoWindow();
+        ctx.log({ t: end, type: 'skill_proc', skill: 'Arcane Echo', detail: `${name} CD → 1s` });
+    } else {
+        let baseCdMs = ctx.weaponRechargeMs(sk, Math.round(sk.recharge * 1000));
+        if (catalystState.elemBalanceActive && end <= catalystState.elemBalanceExpiry
+            && sk.type === 'Weapon skill') {
+            baseCdMs = Math.round(baseCdMs * 0.34);
+            ctx.consumeCatalystElemBalance();
+        }
+        if (name === 'Ride the Lightning') baseCdMs = Math.round(baseCdMs / 2);
+        if (S.spearNextCdReduce && sk.weapon === 'Spear' && sk.type === 'Weapon skill' && sk.slot !== '1') {
+            baseCdMs = Math.round(baseCdMs * (2 / 3));
+            ctx.setFlag('spearNextCdReduce', false);
+            ctx.log({ t: end, type: 'skill_proc', skill: 'Ripple', detail: `${name} CD -33%` });
+        }
+        if (procState.dazingDischargeUntil > end && sk.weapon === 'Pistol' && sk.type === 'Weapon skill' && sk.slot !== '1') {
+            baseCdMs = Math.round(baseCdMs * (2 / 3));
+            ctx.setFlag('dazingDischargeUntil', 0);
+            ctx.log({ t: end, type: 'skill_proc', skill: 'Dazing Discharge', detail: `${name} CD -33%` });
+        }
+        if (name === 'Purblinding Plasma' && S._purblindingCDReduce) {
+            baseCdMs = Math.round(baseCdMs * (2 / 3));
+            ctx.log({ t: end, type: 'skill_proc', skill: 'Purblinding Plasma', detail: 'Air bullet → CD -33%' });
+        }
+        finalCd = end + ctx.alacrityAdjustedCooldown(baseCdMs, end);
+    }
+
+    ctx.setSkillCooldown(key, finalCd);
+}
+
+function updateStandardSkillChainProgress(ctx, sk, end) {
+    if (!sk.chainSkill) return;
+
+    const chainRoot = ctx.getChainRoot(sk);
+    const expiryAt = name => {
+        if (name === 'Rock Barrier') return end + 30000;
+        return sk.slot !== '1' ? end + 5000 : null;
+    };
+    ctx.setChainProgress(chainRoot, sk.chainSkill, expiryAt(sk.name));
+}
+
+function reconcilePendingCarryover(ctx) {
+    const pendingPrev = ctx.takePendingAACPrevious();
+    if (pendingPrev === undefined) return;
+
+    ctx.setAACarryover(ctx.detectAACarryoverFromAttunement(pendingPrev));
+}
+
+function consumeResolvedCarryover(ctx, sk, isAACarryover) {
+    const { S } = ctx;
+    if (!S.aaCarryover) return;
+
+    if (isAACarryover) {
+        if (sk.chainSkill === S.aaCarryover.root) ctx.clearAACarryover();
+    } else if (sk.slot === '1' && ctx.attOK(sk)) {
+        ctx.clearAACarryover();
+    }
+}
+
+export function finalizeStandardSkillBookkeeping(ctx, sk, name, {
+    key,
+    start,
+    end,
+    castMs,
+    isAACarryover,
+    interrupted = false,
+    interruptMs = undefined,
+    fullCastMs = castMs,
+}) {
+    resolveStandardSkillCooldown(ctx, sk, name, key, end);
+    updateStandardSkillChainProgress(ctx, sk, end);
+    if (name === 'Hurl') {
+        const rootSkill = ctx.skill('Rock Barrier');
+        if (rootSkill) {
+            const rootKey = ctx.cdKey(rootSkill);
+            const baseCdMs = ctx.weaponRechargeMs(rootSkill, Math.round(rootSkill.recharge * 1000));
+            ctx.setSkillCooldown(rootKey, end + ctx.alacrityAdjustedCooldown(baseCdMs, end));
+        }
+    }
+    reconcilePendingCarryover(ctx);
+    consumeResolvedCarryover(ctx, sk, isAACarryover);
+
+    ctx.resetChainsOnCast(sk);
+
+    ctx.recordSkillCast(name, castMs);
+    const partialFill = ctx.takePendingPartialFill();
+    ctx.addStep({
+        skill: name,
+        start,
+        end,
+        att: ctx.S.att,
+        type: 'skill',
+        ri: ctx.S._ri,
+        partialFill: partialFill || undefined,
+        interrupted: interrupted || undefined,
+        interruptMs,
+        fullCastMs: interrupted ? fullCastMs : undefined,
+    });
+}
