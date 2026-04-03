@@ -10,6 +10,7 @@ import { getProcState } from '../state/sim-proc-state.js';
 import { getEvokerState } from '../state/sim-specialization-state.js';
 import {
     getAttunementCooldownReadyAt,
+    getAttunementCooldownMeta,
     getSkillCooldownReadyAt,
 } from '../state/sim-cooldown-state.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
@@ -22,6 +23,14 @@ function buildCooldownDisplayMeta(state, startedAt, displayDurationMs, {
         displayDurationMs,
         alacrityUntil: applyAlacrity ? (state.alacrityUntil || 0) : 0,
     };
+}
+
+function pickAttunementCooldownDisplayMeta(state, attunement, nextReadyAt, nextMeta) {
+    const existingReadyAt = getAttunementCooldownReadyAt(state, attunement);
+    if (existingReadyAt > nextReadyAt) {
+        return getAttunementCooldownMeta(state, attunement, nextMeta);
+    }
+    return nextMeta;
 }
 
 function getNextOffAttunementReadyAt(ctx, state, attunement, defaultReadyAt, {
@@ -94,10 +103,16 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
     const rawPrevBaseCd = (isEvoker && prev === evoEl) ? offAttCd : Math.round(sk.recharge * 1000);
     const prevBaseCd = ctx.attunementCooldownMs(rawPrevBaseCd);
     const existingCD = getAttunementCooldownReadyAt(state, prev);
+    const nextPrevReadyAt = state.t + ctx.alacrityAdjustedCooldown(prevBaseCd, state.t);
     ctx.setAttunementCooldown(
         prev,
-        Math.max(existingCD, state.t + ctx.alacrityAdjustedCooldown(prevBaseCd, state.t)),
-        buildCooldownDisplayMeta(state, state.t, rawPrevBaseCd),
+        Math.max(existingCD, nextPrevReadyAt),
+        pickAttunementCooldownDisplayMeta(
+            state,
+            prev,
+            nextPrevReadyAt,
+            buildCooldownDisplayMeta(state, state.t, rawPrevBaseCd),
+        ),
     );
 
     const defaultDurationMs = ctx.alacrityAdjustedCooldown(ctx.attunementCooldownMs(offAttCd), state.t);
@@ -121,9 +136,14 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
         ctx.setAttunementCooldown(
             other,
             newCD,
-            preserveShortCooldown
-                ? buildCooldownDisplayMeta(state, state.t, preservedRemainingMs, { applyAlacrity: false })
-                : buildCooldownDisplayMeta(state, state.t, offAttCd),
+            pickAttunementCooldownDisplayMeta(
+                state,
+                other,
+                defaultReadyAt,
+                preserveShortCooldown
+                    ? buildCooldownDisplayMeta(state, state.t, preservedRemainingMs, { applyAlacrity: false })
+                    : buildCooldownDisplayMeta(state, state.t, offAttCd),
+            ),
         );
     }
 
