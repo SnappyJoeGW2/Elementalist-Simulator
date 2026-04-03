@@ -2,6 +2,7 @@ import { getProcState } from '../state/sim-proc-state.js';
 import { getActiveTimedStacks, pushTimedStack } from '../state/sim-runtime-state.js';
 import { isSetupPhase, isCombatActiveAt } from '../run/sim-run-phase-state.js';
 import { isTraitIcdReady, armTraitIcd } from '../state/sim-icd-state.js';
+import { getEvokerState } from '../state/sim-specialization-state.js';
 import { buildAuraFollowupAction } from '../shared/sim-deferred-runtime-actions.js';
 import { processFreshAirCandidate } from './sim-fresh-air-state.js';
 
@@ -11,6 +12,18 @@ function enqueueTraitHit(ctx, event) {
 
 function shouldBlockPrecombatProc(S, time) {
     return !isCombatActiveAt(S, time);
+}
+
+function grantEvasiveArcanaEvokerCharges(ctx, attunement) {
+    const { S } = ctx;
+    if (S.eliteSpec !== 'Evoker' || attunement === 'Air') return;
+
+    const evokerState = getEvokerState(S);
+    if (!evokerState.element) return;
+
+    const bonus = evokerState.element === attunement ? 2 : 1;
+    const maxCharges = S._hasSpecializedElements ? 4 : 6;
+    ctx.grantEvokerCharges(bonus, maxCharges);
 }
 
 export function triggerSunspot(ctx, time) {
@@ -182,6 +195,7 @@ export function triggerEvasiveArcana(ctx, time) {
     ctx.scheduleHits(skill, time);
     ctx.trackField(skill, time);
     ctx.trackAura(skill, time);
+    grantEvasiveArcanaEvokerCharges(ctx, attunement);
     ctx.log({ t: time, type: 'trait_proc', trait: 'Evasive Arcana', skill: skillName });
     ctx.addStep({
         skill: skillName,
