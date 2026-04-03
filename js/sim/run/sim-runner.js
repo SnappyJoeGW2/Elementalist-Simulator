@@ -1,5 +1,5 @@
 import { calcAttributes } from '../../core/calc-attributes.js';
-import { SimulationEngine } from '../../simulation.js?v=47';
+import { SimulationEngine } from '../../simulation.js?v=46';
 import { WEAPON_DATA, SIGIL_DATA, RELIC_DATA } from '../../data/gear-data.js';
 import { cloneRotationItems } from '../../app/app-state.js';
 
