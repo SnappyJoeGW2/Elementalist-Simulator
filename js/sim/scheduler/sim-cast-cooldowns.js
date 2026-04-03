@@ -59,8 +59,12 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
     if (sk.recharge <= 0) return;
 
     let finalCd;
+    let displayDurationMs = null;
+    let displayUsesAlacrity = true;
     if (ctx.arcaneEchoActiveAt(end) && sk.type === 'Weapon skill') {
         finalCd = end + 1000;
+        displayDurationMs = 1000;
+        displayUsesAlacrity = false;
         ctx.clearArcaneEchoWindow();
         ctx.log({ t: end, type: 'skill_proc', skill: 'Arcane Echo', detail: `${name} CD → 1s` });
     } else {
@@ -85,10 +89,15 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
             baseCdMs = Math.round(baseCdMs * (2 / 3));
             ctx.log({ t: end, type: 'skill_proc', skill: 'Purblinding Plasma', detail: 'Air bullet → CD -33%' });
         }
+        displayDurationMs = baseCdMs;
         finalCd = end + ctx.alacrityAdjustedCooldown(baseCdMs, end);
     }
 
-    ctx.setSkillCooldown(key, finalCd);
+    ctx.setSkillCooldown(key, finalCd, {
+        startedAt: end,
+        displayDurationMs,
+        alacrityUntil: displayUsesAlacrity ? (S.alacrityUntil || 0) : 0,
+    });
 }
 
 function updateStandardSkillChainProgress(ctx, sk, end) {
@@ -137,7 +146,11 @@ export function finalizeStandardSkillBookkeeping(ctx, sk, name, {
         if (rootSkill) {
             const rootKey = ctx.cdKey(rootSkill);
             const baseCdMs = ctx.weaponRechargeMs(rootSkill, Math.round(rootSkill.recharge * 1000));
-            ctx.setSkillCooldown(rootKey, end + ctx.alacrityAdjustedCooldown(baseCdMs, end));
+            ctx.setSkillCooldown(rootKey, end + ctx.alacrityAdjustedCooldown(baseCdMs, end), {
+                startedAt: end,
+                displayDurationMs: baseCdMs,
+                alacrityUntil: S.alacrityUntil || 0,
+            });
         }
     }
     reconcilePendingCarryover(ctx);

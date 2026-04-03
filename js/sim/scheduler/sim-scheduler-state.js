@@ -87,12 +87,12 @@ export function finishScheduledCast(S, {
     pushSchedulerLog(S, { t: end, type: 'cast_end', skill });
 }
 
-export function setSchedulerSkillCooldown(S, key, readyAt) {
-    return setSkillCooldownReadyAt(S, key, readyAt);
+export function setSchedulerSkillCooldown(S, key, readyAt, meta = undefined) {
+    return setSkillCooldownReadyAt(S, key, readyAt, meta);
 }
 
-export function setSchedulerAttunementCooldown(S, attunement, readyAt) {
-    return setAttunementCooldownReadyAt(S, attunement, readyAt);
+export function setSchedulerAttunementCooldown(S, attunement, readyAt, meta = undefined) {
+    return setAttunementCooldownReadyAt(S, attunement, readyAt, meta);
 }
 
 export function pushSchedulerAttunementTimeline(S, entry) {

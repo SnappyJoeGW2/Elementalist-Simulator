@@ -1757,6 +1757,27 @@ class App {
         return expiry + this._esAlaCd(es, Math.round(skill.recharge * 1000), expiry);
     }
 
+    _getDisplayedCooldownMs(es, readyAt, meta = null) {
+        if (!es) return null;
+        const t = es.time;
+        const actualRemainingMs = readyAt - t;
+        if (actualRemainingMs <= 0) return null;
+        if (!meta || !Number.isFinite(meta.startedAt) || !Number.isFinite(meta.displayDurationMs)) {
+            return actualRemainingMs;
+        }
+
+        const startedAt = meta.startedAt;
+        const displayDurationMs = meta.displayDurationMs;
+        const alaUntil = meta.alacrityUntil || 0;
+        const elapsedMs = Math.max(0, t - startedAt);
+        const alaElapsedMs = alaUntil > startedAt
+            ? Math.max(0, Math.min(t, alaUntil) - startedAt)
+            : 0;
+        const displayElapsedMs = elapsedMs + (alaElapsedMs * 0.25);
+        const displayRemainingMs = Math.max(0, displayDurationMs - displayElapsedMs);
+        return displayRemainingMs > 0 ? displayRemainingMs : null;
+    }
+
     _getSkillCD(skill) {
         const es = this.sim?.results?.endState;
         if (!es) return null;
@@ -1766,7 +1787,8 @@ class App {
         // Attunement swap
         if (skill.type === 'Attunement' && !name.startsWith('Overload')) {
             const target = name.replace(' Attunement', '');
-            const cd = ((es.attCD[target] || 0) - t) / 1000;
+            const cdMs = this._getDisplayedCooldownMs(es, es.attCD[target] || 0, es.attCDMeta?.[target]);
+            const cd = cdMs !== null ? (cdMs / 1000) : null;
             return cd > 0 ? cd : null;
         }
 
@@ -1802,7 +1824,9 @@ class App {
             }
         }
         const cd = ((es.skillCD[cdKey] || 0) - t) / 1000;
-        return cd > 0 ? cd : null;
+        const cdMs = this._getDisplayedCooldownMs(es, es.skillCD[cdKey] || 0, es.skillCDMeta?.[cdKey]);
+        const displayCd = cdMs !== null ? (cdMs / 1000) : null;
+        return displayCd > 0 ? displayCd : (cd > 0 ? cd : null);
     }
 
     _getChargeCount(sk) {
@@ -1933,6 +1957,14 @@ class App {
                 case 'conjure': desc = `CONJURE ${ev.weapon} equipped (pickup expires ${(ev.pickupExpires / 1000).toFixed(1)}s)`; break;
                 case 'jade_sphere': desc = `JADE SPHERE ${ev.att} (energy: ${ev.energy}, dur: ${ev.durMs}ms) [${ev.skill}]`; break;
                 case 'familiar_select': desc = `FAMILIAR ${ev.element} selected [${ev.skill}]`; break;
+                case 'familiar_basic': desc = `FAMILIAR ${ev.skill} used → charges:${ev.charges}/${ev.maxCharges} empowered:${ev.empowered}/3`; break;
+                case 'familiar_empowered': desc = `FAMILIAR ${ev.skill} used → empowered:${ev.empowered}/3`; break;
+                case 'evoker_charges': {
+                    const sign = ev.amount > 0 ? '+' : '';
+                    desc = `FAMILIAR charges ${sign}${ev.amount} → ${ev.charges}/${ev.maxCharges} [${ev.skill}]`;
+                    break;
+                }
+                case 'skill_proc': desc = `PROC  ${ev.skill}${ev.detail ? ` (${ev.detail})` : ''}`; break;
                 case 'drop': desc = `DROP ${ev.weapon}`; break;
                 case 'pickup': desc = `PICKUP ${ev.weapon}`; break;
                 case 'wait': desc = `WAIT ${ev.durMs}ms`; break;

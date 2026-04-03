@@ -226,6 +226,7 @@ export function checkBloodstoneBlast(ctx, time) {
 
     relicState.bloodstoneStacks++;
     relicState.bloodstoneStacksUntil = time + proc.volatilityDuration;
+    const volatilityStacks = relicState.bloodstoneStacks;
 
     const volatility = peekTimedStacks(S, 'Bloodstone Volatility');
     if (volatility) {
@@ -234,8 +235,14 @@ export function checkBloodstoneBlast(ctx, time) {
         }
     }
     pushTimedStack(S, { t: time, cond: 'Bloodstone Volatility', expiresAt: time + proc.volatilityDuration });
+    ctx.log({
+        t: time,
+        type: 'skill_proc',
+        skill: 'Bloodstone Volatility',
+        detail: `${volatilityStacks}/${proc.stacksNeeded}`,
+    });
 
-    if (relicState.bloodstoneStacks >= proc.stacksNeeded) {
+    if (volatilityStacks >= proc.stacksNeeded) {
         relicState.bloodstoneStacks = 0;
         relicState.bloodstoneExplosionUntil = time + proc.effectDuration;
 
@@ -245,21 +252,18 @@ export function checkBloodstoneBlast(ctx, time) {
                 stack.expiresAt = time;
             }
         }
-        pushTimedStack(S, { t: time, cond: 'Bloodstone Explosion', expiresAt: time + proc.effectDuration });
+        pushTimedStack(S, { t: time, cond: 'Bloodstone Fervor', expiresAt: time + proc.effectDuration });
+
+        const explosionTime = time + (proc.explosionDelay || 0);
 
         const hitEvent = {
-            time,
+            time: explosionTime,
             skill: 'Bloodstone Explosion', hitIdx: 1, sub: 1, totalSubs: 1,
             dmg: proc.strikeCoeff, ws: proc.strikeWs,
-            isField: false, cc: false, conds: null,
+            isField: false, cc: false, conds: proc.conditions,
             isRelicProc: true, noCrit: false, att: S.att,
         };
         ctx.queueHitEvent(hitEvent);
-
-        for (const [cond, value] of Object.entries(proc.conditions)) {
-            ctx.applyCondition(cond, value.stacks, value.dur, time, 'Bloodstone Explosion');
-        }
-
-        logRelicProc(S, 'Bloodstone', time, proc.icon, 'Bloodstone Explosion');
+        logRelicProcCtx(ctx, 'Bloodstone', time, proc.icon, 'Bloodstone Fervor');
     }
 }

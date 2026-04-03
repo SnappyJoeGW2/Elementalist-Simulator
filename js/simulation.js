@@ -194,6 +194,7 @@ const RELIC_PROCS = {
     Bloodstone: {
         trigger: 'blast_combo', icd: 0, strikeDmgM: 0.07, effectDuration: 8000,
         volatilityDuration: 10000, stacksNeeded: 4,
+        explosionDelay: 680,
         strikeCoeff: 3.0, strikeWs: 690.5,
         conditions: { Bleeding: { stacks: 6, dur: 6 } },
         icon: 'https://render.guildwars2.com/file/A7327A7EDB4705EA05261110526D72AFEAF7DAB4/3629397.png',
@@ -587,7 +588,9 @@ export class SimulationEngine {
             att2: S.att2,
             attEnteredAt: S.attEnteredAt,
             attCD: { ...S.attCD },
+            attCDMeta: S.attCDMeta ? JSON.parse(JSON.stringify(S.attCDMeta)) : {},
             skillCD: { ...S.skillCD },
+            skillCDMeta: S.skillCDMeta ? JSON.parse(JSON.stringify(S.skillCDMeta)) : {},
             charges: JSON.parse(JSON.stringify(S.charges)),
             chainState: { ...S.chainState },
             chainExpiry: { ...S.chainExpiry },

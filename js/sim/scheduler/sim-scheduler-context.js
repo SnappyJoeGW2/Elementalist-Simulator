@@ -222,12 +222,12 @@ export function createSchedulerContext(engine, S, config = {}) {
             return finishScheduledCast(S, { skill, end, setCastUntil });
         },
 
-        setSkillCooldown(key, readyAt) {
-            return setSchedulerSkillCooldown(S, key, readyAt);
+        setSkillCooldown(key, readyAt, meta = undefined) {
+            return setSchedulerSkillCooldown(S, key, readyAt, meta);
         },
 
-        setAttunementCooldown(attunement, readyAt) {
-            return setSchedulerAttunementCooldown(S, attunement, readyAt);
+        setAttunementCooldown(attunement, readyAt, meta = undefined) {
+            return setSchedulerAttunementCooldown(S, attunement, readyAt, meta);
         },
 
         pushAttunementTimeline(entry) {

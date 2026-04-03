@@ -273,6 +273,7 @@ export const FOOD_DATA = {
     'Meaty Asparagus Skewer': { isConverted: true, stats: { 'Condition Damage': 70 }, durations: { 'Torment Duration': 15 } },
     'Meaty Rice Bowl': { isConverted: true, stats: { 'Condition Damage': 70 }, durations: { 'Bleeding Duration': 15 } },
     'Plate of Kimchi Pancakes': { isConverted: true, stats: { 'Condition Damage': 70 }, durations: { 'Confusion Duration': 15 } },
+    'Bowl of Fire Meat Chili': { isConverted: true, stats: { 'Precision': 70 }, durations: { 'Burning Duration': 15 } },
     "Dragon's Revelry Starcake": { isConverted: false, stats: { Power: 45, Ferocity: 45, Precision: 45, 'Condition Damage': 45, Expertise: 45, Vitality: 45, Toughness: 45, Concentration: 45 }, durations: {} },
 };
 

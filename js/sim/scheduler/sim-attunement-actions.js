@@ -14,6 +14,33 @@ import {
 } from '../state/sim-cooldown-state.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
 
+function buildCooldownDisplayMeta(state, startedAt, displayDurationMs, {
+    applyAlacrity = true,
+} = {}) {
+    return {
+        startedAt,
+        displayDurationMs,
+        alacrityUntil: applyAlacrity ? (state.alacrityUntil || 0) : 0,
+    };
+}
+
+function getNextOffAttunementReadyAt(ctx, state, attunement, defaultReadyAt, {
+    preservedRemainingMs = null,
+    defaultDurationMs,
+} = {}) {
+    const existingReadyAt = getAttunementCooldownReadyAt(state, attunement);
+    if (state.eliteSpec !== 'Evoker') return Math.max(existingReadyAt, defaultReadyAt);
+
+    if (
+        Number.isFinite(preservedRemainingMs)
+        && preservedRemainingMs > 0
+        && preservedRemainingMs < defaultDurationMs
+    ) {
+        return state.t + preservedRemainingMs;
+    }
+    return Math.max(existingReadyAt, defaultReadyAt);
+}
+
 export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
     attunements,
     offAttCd,
@@ -49,6 +76,12 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
         ctx.setPendingAACPrevious(state.att);
     }
 
+    const preAdvanceTime = state.t;
+    const preservedOffCooldowns = {};
+    for (const attunement of attunements) {
+        preservedOffCooldowns[attunement] = Math.max(0, getAttunementCooldownReadyAt(state, attunement) - preAdvanceTime);
+    }
+
     advanceSwapToReadyTime(ctx, target);
 
     const prev = state.att;
@@ -61,16 +94,37 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
     const rawPrevBaseCd = (isEvoker && prev === evoEl) ? offAttCd : Math.round(sk.recharge * 1000);
     const prevBaseCd = ctx.attunementCooldownMs(rawPrevBaseCd);
     const existingCD = getAttunementCooldownReadyAt(state, prev);
-    ctx.setAttunementCooldown(prev, Math.max(existingCD, state.t + ctx.alacrityAdjustedCooldown(prevBaseCd, state.t)));
+    ctx.setAttunementCooldown(
+        prev,
+        Math.max(existingCD, state.t + ctx.alacrityAdjustedCooldown(prevBaseCd, state.t)),
+        buildCooldownDisplayMeta(state, state.t, rawPrevBaseCd),
+    );
 
+    const defaultDurationMs = ctx.alacrityAdjustedCooldown(ctx.attunementCooldownMs(offAttCd), state.t);
     for (const other of attunements) {
         if (other === target || other === prev) continue;
-        const existingOther = getAttunementCooldownReadyAt(state, other);
-        let newCD = Math.max(existingOther, state.t + ctx.alacrityAdjustedCooldown(ctx.attunementCooldownMs(offAttCd), state.t));
+        const defaultReadyAt = state.t + defaultDurationMs;
+        const preservedRemainingMs = preservedOffCooldowns[other];
+        let newCD = getNextOffAttunementReadyAt(ctx, state, other, defaultReadyAt, {
+            preservedRemainingMs,
+            defaultDurationMs,
+        });
         if (other === 'Air' && state._hasFreshAir && procState.freshAirResetAt >= state.t) {
             newCD = Math.min(newCD, procState.freshAirResetAt);
         }
-        ctx.setAttunementCooldown(other, newCD);
+        const preserveShortCooldown = (
+            state.eliteSpec === 'Evoker'
+            && Number.isFinite(preservedRemainingMs)
+            && preservedRemainingMs > 0
+            && preservedRemainingMs < defaultDurationMs
+        );
+        ctx.setAttunementCooldown(
+            other,
+            newCD,
+            preserveShortCooldown
+                ? buildCooldownDisplayMeta(state, state.t, preservedRemainingMs, { applyAlacrity: false })
+                : buildCooldownDisplayMeta(state, state.t, offAttCd),
+        );
     }
 
     ctx.scheduleHits(sk, state.t);
@@ -86,7 +140,20 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
     });
     if (combatActive && state._hasElemDynamo && target === evokerState.element) {
         const maxCh = state._hasSpecializedElements ? 4 : 6;
-        ctx.grantEvokerCharges(1, maxCh);
+        const prevCharges = evokerState.charges;
+        const nextCharges = ctx.grantEvokerCharges(1, maxCh);
+        if (nextCharges !== prevCharges) {
+            ctx.log({
+                t: state.t,
+                type: 'evoker_charges',
+                skill: 'Elemental Dynamo',
+                source: 'trait',
+                amount: nextCharges - prevCharges,
+                prevCharges,
+                charges: nextCharges,
+                maxCharges: maxCh,
+            });
+        }
     }
     if (state._hasElemBalance && target === evokerState.element) {
         ctx.incrementCatalystElemBalance(state.t, { activateEvery: 2, durationMs: 5000 });
@@ -148,7 +215,11 @@ export function handleWeaverSwap(ctx, target, sk, isConcurrent, concurrents, {
         if (a === 'Air' && S._hasFreshAir && procState.freshAirResetAt >= S.t) {
             newCD = Math.min(newCD, procState.freshAirResetAt);
         }
-        ctx.setAttunementCooldown(a, newCD);
+        ctx.setAttunementCooldown(
+            a,
+            newCD,
+            buildCooldownDisplayMeta(S, S.t, weaveSelfWasActive ? 2000 : weaverSwapCd),
+        );
     }
 
     ctx.scheduleHits(sk, S.t);
@@ -235,8 +306,16 @@ export function handleOverload(ctx, sk, concurrents, {
 
     const olBaseCd = ctx.attunementCooldownMs(Math.round(sk.recharge * 1000));
     const olEffCd = ctx.alacrityAdjustedCooldown(olBaseCd, end);
-    ctx.setAttunementCooldown(olAtt, end + olEffCd);
-    ctx.setSkillCooldown(sk.name, end + olEffCd);
+    ctx.setAttunementCooldown(
+        olAtt,
+        end + olEffCd,
+        buildCooldownDisplayMeta(state, end, Math.round(sk.recharge * 1000)),
+    );
+    ctx.setSkillCooldown(
+        sk.name,
+        end + olEffCd,
+        buildCooldownDisplayMeta(state, end, Math.round(sk.recharge * 1000)),
+    );
 
     ctx.resetChainsOnCast(sk);
 

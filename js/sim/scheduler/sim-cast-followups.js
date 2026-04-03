@@ -26,7 +26,7 @@ function applyConjureProgression(ctx, sk, end) {
     if (S._hasConjurer) ctx.applyAura('Fire Aura', 4000, end, 'Conjurer');
 }
 
-function applyEvokerChargeProgression(ctx, sk) {
+function applyEvokerChargeProgression(ctx, sk, time) {
     const { S } = ctx;
     const evokerState = getEvokerState(S);
     if (S.eliteSpec !== 'Evoker' || !evokerState.element) return;
@@ -38,7 +38,20 @@ function applyEvokerChargeProgression(ctx, sk) {
     const skillAtt = sk.attunement ? sk.attunement.split('+') : [];
     const bonus = skillAtt.includes(evokerState.element) ? 2 : 1;
     const maxCharges = S._hasSpecializedElements ? 4 : 6;
-    ctx.grantEvokerCharges(bonus, maxCharges);
+    const prevCharges = evokerState.charges;
+    const nextCharges = ctx.grantEvokerCharges(bonus, maxCharges);
+    if (nextCharges !== prevCharges) {
+        ctx.log({
+            t: time,
+            type: 'evoker_charges',
+            skill: sk.name,
+            source: 'skill',
+            amount: nextCharges - prevCharges,
+            prevCharges,
+            charges: nextCharges,
+            maxCharges,
+        });
+    }
 }
 
 function applyEnduranceProgression(ctx, sk, end) {
@@ -135,7 +148,7 @@ export function applyStandardCastProgression(ctx, sk, name, {
     scaleOff,
 }) {
     applyConjureProgression(ctx, sk, end);
-    applyEvokerChargeProgression(ctx, sk);
+    applyEvokerChargeProgression(ctx, sk, end);
     applyEnduranceProgression(ctx, sk, end);
 
     ctx.checkRelicOnCast(sk, start, end);

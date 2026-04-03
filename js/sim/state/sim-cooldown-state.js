@@ -30,7 +30,9 @@ function cloneValue(value) {
 export function getCooldownStateTarget(S) {
     const target = S?.schedulerCooldownState || S;
     if (!target.attCD) target.attCD = {};
+    if (!target.attCDMeta) target.attCDMeta = {};
     if (!target.skillCD) target.skillCD = {};
+    if (!target.skillCDMeta) target.skillCDMeta = {};
     if (!target.charges) target.charges = {};
     if (!target.chainState) target.chainState = {};
     if (!target.chainExpiry) target.chainExpiry = {};
@@ -41,7 +43,9 @@ export function createCooldownStateSnapshot(source) {
     const target = source?.schedulerCooldownState || source || {};
     return {
         attCD: cloneValue(target.attCD || {}),
+        attCDMeta: cloneValue(target.attCDMeta || {}),
         skillCD: cloneValue(target.skillCD || {}),
+        skillCDMeta: cloneValue(target.skillCDMeta || {}),
         charges: cloneValue(target.charges || {}),
         chainState: cloneValue(target.chainState || {}),
         chainExpiry: cloneValue(target.chainExpiry || {}),
@@ -51,7 +55,9 @@ export function createCooldownStateSnapshot(source) {
 export function restoreCooldownState(S, cooldownState) {
     const target = getCooldownStateTarget(S);
     target.attCD = cloneValue(cooldownState?.attCD || {});
+    target.attCDMeta = cloneValue(cooldownState?.attCDMeta || {});
     target.skillCD = cloneValue(cooldownState?.skillCD || {});
+    target.skillCDMeta = cloneValue(cooldownState?.skillCDMeta || {});
     target.charges = cloneValue(cooldownState?.charges || {});
     target.chainState = cloneValue(cooldownState?.chainState || {});
     target.chainExpiry = cloneValue(cooldownState?.chainExpiry || {});
@@ -63,9 +69,17 @@ export function getSkillCooldownReadyAt(S, key, fallback = 0) {
     return target.skillCD[key] ?? fallback;
 }
 
-export function setSkillCooldownReadyAt(S, key, readyAt) {
+export function getSkillCooldownMeta(S, key, fallback = null) {
+    const target = getCooldownStateTarget(S);
+    return target.skillCDMeta[key] ?? fallback;
+}
+
+export function setSkillCooldownReadyAt(S, key, readyAt, meta = undefined) {
     const target = getCooldownStateTarget(S);
     target.skillCD[key] = readyAt;
+    if (meta === undefined) delete target.skillCDMeta[key];
+    else if (meta) target.skillCDMeta[key] = cloneValue(meta);
+    else delete target.skillCDMeta[key];
     return readyAt;
 }
 
@@ -78,9 +92,17 @@ export function getAttunementCooldownReadyAt(S, attunement, fallback = 0) {
     return target.attCD[attunement] ?? fallback;
 }
 
-export function setAttunementCooldownReadyAt(S, attunement, readyAt) {
+export function getAttunementCooldownMeta(S, attunement, fallback = null) {
+    const target = getCooldownStateTarget(S);
+    return target.attCDMeta[attunement] ?? fallback;
+}
+
+export function setAttunementCooldownReadyAt(S, attunement, readyAt, meta = undefined) {
     const target = getCooldownStateTarget(S);
     target.attCD[attunement] = readyAt;
+    if (meta === undefined) delete target.attCDMeta[attunement];
+    else if (meta) target.attCDMeta[attunement] = cloneValue(meta);
+    else delete target.attCDMeta[attunement];
     return readyAt;
 }
 

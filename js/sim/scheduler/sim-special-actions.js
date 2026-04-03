@@ -69,7 +69,11 @@ export function handleJadeSphere(ctx, sk, concurrents, {
 
     if (sk.recharge > 0) {
         const baseCdMs = ctx.attunementCooldownMs(Math.round(sk.recharge * 1000));
-        ctx.setSkillCooldown(cdKey, state.t + ctx.alacrityAdjustedCooldown(baseCdMs, state.t));
+        ctx.setSkillCooldown(cdKey, state.t + ctx.alacrityAdjustedCooldown(baseCdMs, state.t), {
+            startedAt: state.t,
+            displayDurationMs: Math.round(sk.recharge * 1000),
+            alacrityUntil: state.alacrityUntil || 0,
+        });
     }
 
     ctx.log({ t: state.t, type: 'jade_sphere', skill: sk.name, att: sk.attunement, energy: catalystState.energy, durMs });
@@ -176,15 +180,26 @@ export function handleFamiliar(ctx, sk, concurrents, {
     if (isBasic) {
         ctx.setEvokerCharges(0);
         ctx.addEvokerEmpowered(1, 3);
-        ctx.log({ t: end, type: 'familiar_basic', skill: sk.name, empowered: evokerState.empowered });
+        ctx.log({
+            t: end,
+            type: 'familiar_basic',
+            skill: sk.name,
+            charges: 0,
+            maxCharges: chargesNeeded,
+            empowered: evokerState.empowered,
+        });
     } else {
         ctx.setEvokerEmpowered(0);
-        ctx.log({ t: end, type: 'familiar_empowered', skill: sk.name });
+        ctx.log({ t: end, type: 'familiar_empowered', skill: sk.name, empowered: 0 });
     }
 
     if (sk.recharge > 0) {
         const baseCdMs = Math.round(sk.recharge * 1000);
-        ctx.setSkillCooldown(sk.name, end + ctx.alacrityAdjustedCooldown(baseCdMs, end));
+        ctx.setSkillCooldown(sk.name, end + ctx.alacrityAdjustedCooldown(baseCdMs, end), {
+            startedAt: end,
+            displayDurationMs: baseCdMs,
+            alacrityUntil: state.alacrityUntil || 0,
+        });
     }
 
     ctx.recordSkillCast(sk.name, castMs);

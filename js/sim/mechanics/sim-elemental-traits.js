@@ -14,7 +14,7 @@ function shouldBlockPrecombatProc(S, time) {
     return !isCombatActiveAt(S, time);
 }
 
-function grantEvasiveArcanaEvokerCharges(ctx, attunement) {
+function grantEvasiveArcanaEvokerCharges(ctx, attunement, time, skillName) {
     const { S } = ctx;
     if (S.eliteSpec !== 'Evoker' || attunement === 'Air') return;
 
@@ -23,7 +23,20 @@ function grantEvasiveArcanaEvokerCharges(ctx, attunement) {
 
     const bonus = evokerState.element === attunement ? 2 : 1;
     const maxCharges = S._hasSpecializedElements ? 4 : 6;
-    ctx.grantEvokerCharges(bonus, maxCharges);
+    const prevCharges = evokerState.charges;
+    const nextCharges = ctx.grantEvokerCharges(bonus, maxCharges);
+    if (nextCharges !== prevCharges) {
+        ctx.log({
+            t: time,
+            type: 'evoker_charges',
+            skill: skillName,
+            source: 'trait',
+            amount: nextCharges - prevCharges,
+            prevCharges,
+            charges: nextCharges,
+            maxCharges,
+        });
+    }
 }
 
 export function triggerSunspot(ctx, time) {
@@ -195,7 +208,7 @@ export function triggerEvasiveArcana(ctx, time) {
     ctx.scheduleHits(skill, time);
     ctx.trackField(skill, time);
     ctx.trackAura(skill, time);
-    grantEvasiveArcanaEvokerCharges(ctx, attunement);
+    grantEvasiveArcanaEvokerCharges(ctx, attunement, time, skillName);
     ctx.log({ t: time, type: 'trait_proc', trait: 'Evasive Arcana', skill: skillName });
     ctx.addStep({
         skill: skillName,

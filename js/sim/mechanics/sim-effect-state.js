@@ -64,7 +64,20 @@ export function triggerAttunementEnterEffects(ctx, element, time) {
     }
     if (combatActive && S._hasElemDynamo && element === evokerState.element) {
         const maxCh = S._hasSpecializedElements ? 4 : 6;
-        ctx.grantEvokerCharges(1, maxCh);
+        const prevCharges = evokerState.charges;
+        const nextCharges = ctx.grantEvokerCharges(1, maxCh);
+        if (nextCharges !== prevCharges) {
+            ctx.log({
+                t: time,
+                type: 'evoker_charges',
+                skill: 'Elemental Dynamo',
+                source: 'trait',
+                amount: nextCharges - prevCharges,
+                prevCharges,
+                charges: nextCharges,
+                maxCharges: maxCh,
+            });
+        }
     }
     if (S._hasElemBalance && element === evokerState.element) {
         ctx.incrementCatalystElemBalance(time, { activateEvery: 2, durationMs: 5000 });
