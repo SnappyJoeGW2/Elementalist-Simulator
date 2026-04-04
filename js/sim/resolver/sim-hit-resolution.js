@@ -15,7 +15,9 @@ function buildHitEffectSnapshot(ctx, ev) {
     const effectStacks = effect => ctx.effectStacksAt(effect, time);
 
     return {
-        freshAirActive: S._hasFreshAir && effectStacks('Fresh Air') > 0,
+        freshAirActive: S._hasFreshAir
+            && !S._suppressFreshAirContributionBuff
+            && effectStacks('Fresh Air') > 0,
         arcaneLightningActive: S._hasArcaneLightning && effectStacks('Arcane Lightning') > 0,
         weaknessActive: S._hasSuperiorElements && effectStacks('Weakness') > 0,
         hammerAirOrbUp: effectStacks('Hammer Orb Air') > 0,
@@ -23,7 +25,9 @@ function buildHitEffectSnapshot(ctx, ev) {
             ? Math.min(effectStacks('Persisting Flames'), 5)
             : 0,
         tempestuousAriaUp: S._hasTempestuousAria && effectStacks('Tempestuous Aria') > 0,
-        transcendentTempestUp: S._hasTranscendentTempest && effectStacks('Transcendent Tempest') > 0,
+        transcendentTempestUp: S._hasTranscendentTempest
+            && !S._suppressTranscendentTempestContributionBuff
+            && effectStacks('Transcendent Tempest') > 0,
         elementsOfRageUp: S._hasElementsOfRage && effectStacks('Elements of Rage') > 0,
         hasSpeed: S._hasSwiftRevenge
             && (effectStacks('Swiftness') > 0 || effectStacks('Superspeed') > 0),
@@ -200,6 +204,8 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
         ...critCtx,
         addStrike,
         baseStrike,
+        sigilStrikeAdd: sigilMuls.strikeAdd,
+        sigilStrikeMul: sigilMuls.strikeMul,
         pyroMul,
         fieryMightMul,
         serratedMul,
@@ -214,9 +220,17 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
 }
 
 function buildCritMultiplierContext(ctx, ev, tgtHP, cc, effectiveCritDmg) {
-    const critMult = expectedCritMultiplier(cc, effectiveCritDmg);
+    const critMult = ev.doubleOnCrit
+        ? buildDoubleOnCritExpectedMultiplier(cc, effectiveCritDmg)
+        : expectedCritMultiplier(cc, effectiveCritDmg);
     const relicStrikeMul = ctx.getRelicStrikeMul(ev, tgtHP);
     return { critMult, relicStrikeMul };
+}
+
+function buildDoubleOnCritExpectedMultiplier(critChancePct, critDamagePct) {
+    const cc = Math.min(critChancePct / 100, 1);
+    const critOnlyMultiplier = critDamagePct / 100;
+    return 1 + cc * ((critOnlyMultiplier * 2) - 1);
 }
 
 function buildProcEvent(ctx, ev) {
@@ -321,6 +335,8 @@ export function applyResolvedHit(ctx, ev, hitCtx, { skipVuln }) {
             strikeMul: hitCtx.strikeMul,
             baseStrike: hitCtx.baseStrike,
             addStrike: hitCtx.addStrike,
+            sigilStrikeAdd: hitCtx.sigilStrikeAdd,
+            sigilStrikeMul: hitCtx.sigilStrikeMul,
             pyroMul: hitCtx.pyroMul,
             stormMul: hitCtx.stormsoulMul,
             boltMul: hitCtx.boltMul,

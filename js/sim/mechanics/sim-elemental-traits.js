@@ -138,7 +138,7 @@ export function triggerElectricDischarge(ctx, time) {
         isField: false, cc: false,
         conds: { Vulnerability: { stacks: 1, duration: 8 } },
         noCrit: false, att: S.att, isTraitProc: true,
-        bonusCritDmg: 100,
+        doubleOnCrit: true,
     });
 
     ctx.log({ t: time, type: 'trait_proc', trait: 'Electric Discharge', skill: 'Electric Discharge' });
@@ -149,6 +149,7 @@ export function triggerElectricDischarge(ctx, time) {
 }
 
 export function applyFreshAirBuff(ctx, time) {
+    if (ctx.S._suppressFreshAirContributionBuff) return;
     ctx.refreshEffect('Fresh Air', 5, time);
     ctx.log({
         t: time,

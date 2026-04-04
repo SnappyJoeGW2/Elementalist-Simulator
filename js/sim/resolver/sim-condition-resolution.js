@@ -33,7 +33,11 @@ function buildConditionTickEffectSnapshot(ctx, ev) {
     return {
         hammerFireOrb: effectStacks('Hammer Orb Fire') > 0 ? 0.05 : 0,
         tempestuousAria: S._hasTempestuousAria && effectStacks('Tempestuous Aria') > 0 ? 0.05 : 0,
-        transcendentTempest: S._hasTranscendentTempest && effectStacks('Transcendent Tempest') > 0 ? 0.20 : 0,
+        transcendentTempest: S._hasTranscendentTempest
+            && !S._suppressTranscendentTempestContributionBuff
+            && effectStacks('Transcendent Tempest') > 0
+            ? 0.20
+            : 0,
         elementsOfRage: S._hasElementsOfRage && effectStacks('Elements of Rage') > 0 ? 0.05 : 0,
         empoweringAuras: S._hasEmpoweringAuras ? Math.min(effectStacks('Empowering Auras'), 5) * 0.01 : 0,
         familiarsProwess: (S._hasFamiliarsProwess && evokerState.element === 'Fire'
@@ -100,6 +104,7 @@ function buildConditionTickContext(ctx, ev, {
         condMul,
         sigilCondAdd: sigilMuls.condAdd,
         sigilCondMul: sigilMuls.condMul,
+        hammerFireOrb: effectSnapshot.hammerFireOrb,
         tempAria: effectSnapshot.tempestuousAria,
         transcTemp: effectSnapshot.transcendentTempest,
         elemRage: effectSnapshot.elementsOfRage,
@@ -111,6 +116,7 @@ function buildConditionTickContext(ctx, ev, {
     };
 
     return {
+        hammerFireOrb: effectSnapshot.hammerFireOrb,
         infernoPower,
         condMul,
         diag,

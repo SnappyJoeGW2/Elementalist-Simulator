@@ -59,6 +59,7 @@ import {
     computeSigilMultipliers,
 } from './sim/shared/sim-stat-recharge-helpers.js';
 import { pushTimedStack } from './sim/state/sim-runtime-state.js';
+import { expectedCritMultiplier, strikeDamage } from './core/damage.js';
 
 const DAMAGING_CONDITIONS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
@@ -111,6 +112,91 @@ const SIGIL_PROCS = {
         icon: null,
     },
 };
+
+const TARGET_ARMOR = 2597;
+const FRESH_AIR_FEROCITY_CRIT_DAMAGE = 250 / 15;
+
+function buildEffectWindows(allCondStacks = [], effectName) {
+    return allCondStacks
+        .filter(stack => stack.cond === effectName)
+        .map(stack => ({ start: stack.t, end: stack.expiresAt }))
+        .sort((a, b) => a.start - b.start);
+}
+
+function isEffectActiveAt(windows, time) {
+    for (const window of windows) {
+        if (window.start > time) return false;
+        if (window.start <= time && window.end > time) return true;
+    }
+    return false;
+}
+
+function expectedDoubleOnCritMultiplier(critChancePct, critDamagePct) {
+    const cc = Math.min(critChancePct / 100, 1);
+    const critOnlyMultiplier = critDamagePct / 100;
+    return 1 + cc * ((critOnlyMultiplier * 2) - 1);
+}
+
+function computeFreshAirEffectContribution(results) {
+    const windows = buildEffectWindows(results.allCondStacks, 'Fresh Air');
+    if (windows.length === 0) return 0;
+
+    let total = 0;
+    for (const entry of (results.log || [])) {
+        if (entry.type !== 'hit' || !entry.diag) continue;
+        if (!isEffectActiveAt(windows, entry.t)) continue;
+        if (!(entry.coeff > 0) || !(entry.diag.ws > 0) || !(entry.diag.power > 0)) continue;
+
+        const withoutCritDmg = entry.diag.critDmg - FRESH_AIR_FEROCITY_CRIT_DAMAGE;
+        const withoutCritMult = entry.skill === 'Electric Discharge'
+            ? expectedDoubleOnCritMultiplier(entry.diag.critCh || 0, withoutCritDmg)
+            : expectedCritMultiplier(entry.diag.critCh || 0, withoutCritDmg);
+        const withCritMult = entry.diag.critMul || 0;
+        const rawStrike = strikeDamage(entry.coeff, entry.diag.ws, entry.diag.power, TARGET_ARMOR);
+        total += rawStrike * (withCritMult - withoutCritMult) * (entry.diag.strikeMul || 0);
+    }
+
+    return total;
+}
+
+function computeTranscendentTempestEffectContribution(results) {
+    const windows = buildEffectWindows(results.allCondStacks, 'Transcendent Tempest');
+    if (windows.length === 0) return 0;
+
+    let total = 0;
+
+    for (const entry of (results.log || [])) {
+        if (entry.type === 'hit' && entry.diag && isEffectActiveAt(windows, entry.t)) {
+            if (!(entry.coeff > 0) || !(entry.diag.ws > 0) || !(entry.diag.power > 0)) continue;
+            const baseStrike = entry.diag.baseStrike || 0;
+            const strikeMul = entry.diag.strikeMul || 0;
+            const sigilStrikeAdd = entry.diag.sigilStrikeAdd || 0;
+            const sigilStrikeMul = entry.diag.sigilStrikeMul || 1;
+            const addStrikeWithout = (entry.diag.addStrike || 0) - 0.25;
+            const baseStrikeWithout = (1 + sigilStrikeAdd + addStrikeWithout) * sigilStrikeMul;
+            if (!(baseStrike > 0) || !(baseStrikeWithout >= 0)) continue;
+
+            const rawStrike = strikeDamage(entry.coeff, entry.diag.ws, entry.diag.power, TARGET_ARMOR);
+            const strikeMulWithout = strikeMul * (baseStrikeWithout / baseStrike);
+            total += rawStrike * (entry.diag.critMul || 0) * (strikeMul - strikeMulWithout);
+            continue;
+        }
+
+        if (entry.type === 'cond_tick' && entry.diag && isEffectActiveAt(windows, entry.t)) {
+            const sigilCondAdd = entry.diag.sigilCondAdd || 0;
+            const sigilCondMul = entry.diag.sigilCondMul || 1;
+            const otherAdd = (entry.diag.hammerFireOrb || 0)
+                + (entry.diag.tempAria || 0)
+                + (entry.diag.elemRage || 0)
+                + (entry.diag.empAuras || 0)
+                + (entry.diag.famProwess || 0);
+            const condMulWithout = (1 + sigilCondAdd + otherAdd) * sigilCondMul * (entry.diag.vulnMul || 1);
+            total += (entry.diag.baseTick || 0) * (entry.stacks || 0) * ((entry.diag.condMul || 0) - condMulWithout);
+        }
+    }
+
+    return total;
+}
 const RELIC_PROCS = {
     Akeem: {
         trigger: 'cc_5torment_confusion', icd: 10000, strikeDmgM: 0, effectDuration: 0,
@@ -733,6 +819,7 @@ export class SimulationEngine {
         // allows HP-gated mechanics (Bolt to the Heart, Eagle relic) to fire correctly.
         // When there is no kill (infinite dummy), fall back to the old no-cap approach.
         let fullDps, baselineWindowSec, baselineStop;
+        let fullResultsForContrib = fullResults;
         if (targetHP > 0 && fullResults.deathTime !== null) {
             fullDps = fullResults.dps;
             baselineWindowSec = fullResults.dpsWindowMs / 1000;
@@ -742,6 +829,7 @@ export class SimulationEngine {
             // modifier effects on kill time.
             this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0, null, startPistolBullets);
             fullDps = this.results.dps;
+            fullResultsForContrib = this.results;
             baselineWindowSec = null;
             baselineStop = null;
         }
@@ -823,6 +911,7 @@ export class SimulationEngine {
         if (baselineStop !== null) {
             this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0, null, startPistolBullets);
             fullDpsForContrib = this.results.dps;
+            fullResultsForContrib = this.results;
         }
 
         const contributions = [];
@@ -852,6 +941,21 @@ export class SimulationEngine {
                     dpsIncrease: increase,
                     pctIncrease: withoutDps > 0 ? (increase / withoutDps) * 100 : 0,
                 });
+            }
+        }
+
+        const contribWindowSec = (fullResultsForContrib?.dpsWindowMs || 0) / 1000;
+        if (contribWindowSec > 0) {
+            const effectOnlyOverrides = new Map([
+                ['Trait:Fresh Air', computeFreshAirEffectContribution(fullResultsForContrib)],
+                ['Trait:Transcendent Tempest', computeTranscendentTempestEffectContribution(fullResultsForContrib)],
+            ]);
+            for (const contribution of contributions) {
+                if (!effectOnlyOverrides.has(contribution.id)) continue;
+                const increase = effectOnlyOverrides.get(contribution.id) / contribWindowSec;
+                const withoutDps = fullDpsForContrib - increase;
+                contribution.dpsIncrease = increase;
+                contribution.pctIncrease = withoutDps > 0 ? (increase / withoutDps) * 100 : 0;
             }
         }
 

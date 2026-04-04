@@ -135,6 +135,7 @@ export function createRunState(engine, {
         _hasAeroTraining: engine._hasTrait("Aeromancer's Training"),
         _hasBoltToHeart: engine._hasTrait('Bolt to the Heart'),
         _hasFreshAir: engine._hasTrait('Fresh Air'),
+        _suppressFreshAirContributionBuff: false,
         _hasLightningRod: engine._hasTrait('Lightning Rod'),
         _hasEarthsEmbrace: engine._hasTrait("Earth's Embrace"),
         _hasSerratedStones: engine._hasTrait('Serrated Stones'),
@@ -165,6 +166,7 @@ export function createRunState(engine, {
         _hasInvigoratingTorrents: engine._hasTrait('Invigorating Torrents'),
         _hasHardyConduit: engine._hasTrait('Hardy Conduit'),
         _hasTranscendentTempest: engine._hasTrait('Transcendent Tempest'),
+        _suppressTranscendentTempestContributionBuff: false,
         _hasLucidSingularity: engine._hasTrait('Lucid Singularity'),
         _hasElementalBastion: engine._hasTrait('Elemental Bastion'),
         _hasSuperiorElements: engine._hasTrait('Superior Elements'),
@@ -220,12 +222,20 @@ export function createRunState(engine, {
 export function applyDisabledTraitFlags(S, disTrait) {
     if (!disTrait) return;
 
+    if (disTrait === 'Fresh Air') {
+        S._suppressFreshAirContributionBuff = true;
+        return;
+    }
+    if (disTrait === 'Transcendent Tempest') {
+        S._suppressTranscendentTempestContributionBuff = true;
+        return;
+    }
+
     const traitFlags = {
         'Empowering Flame': '_hasEmpoweringFlame',
         'Power Overwhelming': '_hasPowerOverwhelming',
         "Aeromancer's Training": '_hasAeroTraining',
         'Raging Storm': '_hasRagingStorm',
-        'Fresh Air': '_hasFreshAir',
         'Elemental Polyphony': '_hasElemPolyphony',
         'Elemental Empowerment': '_hasElemEmpowermentTrait',
         'Enhanced Potency': '_hasEnhancedPotency',
@@ -236,7 +246,6 @@ export function applyDisabledTraitFlags(S, disTrait) {
         "Pyromancer's Training": '_hasPyroTraining',
         'Stormsoul': '_hasStormsoul',
         'Bolt to the Heart': '_hasBoltToHeart',
-        'Transcendent Tempest': '_hasTranscendentTempest',
         'Elements of Rage': '_hasElementsOfRage',
         'Swift Revenge': '_hasSwiftRevenge',
         'Empowering Auras': '_hasEmpoweringAuras',

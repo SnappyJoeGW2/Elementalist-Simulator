@@ -356,7 +356,7 @@ export function handleOverload(ctx, sk, concurrents, {
     if (sk.attunement === 'Air') ctx.triggerElectricDischarge(start);
     if (sk.attunement === 'Earth') ctx.triggerEarthenBlast(start);
 
-    if (state._hasTranscendentTempest) {
+    if (state._hasTranscendentTempest && !state._suppressTranscendentTempestContributionBuff) {
         ctx.refreshEffect('Transcendent Tempest', 7, end);
     }
 
