@@ -1,4 +1,4 @@
-import { pushTimedStack, peekTimedStacks } from '../state/sim-runtime-state.js';
+import { pushTimedStack, peekTimedStacks, findActiveTimedStack } from '../state/sim-runtime-state.js';
 import { isSetupPhase } from '../run/sim-run-phase-state.js';
 import { pushReportingLog } from '../state/sim-reporting-state.js';
 
@@ -68,7 +68,12 @@ export function applyOnAuraGainEffects(ctx, time) {
     }
 
     if (S._hasTempestuousAria) {
-        ctx.refreshEffect('Tempestuous Aria', 5, time);
+        const existing = findActiveTimedStack(S, 'Tempestuous Aria', time, { includePerma: false });
+        if (existing) {
+            existing.expiresAt = Math.min(existing.expiresAt + 5000, time + 10000);
+        } else {
+            ctx.trackEffect('Tempestuous Aria', 1, 5, time);
+        }
     }
 
     if (S._hasElementalBastion) {

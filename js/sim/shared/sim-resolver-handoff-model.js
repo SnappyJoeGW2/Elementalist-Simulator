@@ -49,6 +49,7 @@ const RESOLVER_HANDOFF_SPECIALIZATION_KEYS = Object.freeze([
     'etchingOtherCasts',
     'hammerOrbs',
     'hammerOrbGrantedBy',
+    'hammerOrbDamageWindows',
     'hammerOrbLastCast',
     'hammerOrbsUsed',
     'pistolBullets',
@@ -254,6 +255,7 @@ function validateResolverHandoff(value) {
     if (!(value.specialization.weaveSelfVisited instanceof Set)) return 'specialization.weaveSelfVisited must be a Set';
     if (!isPlainObject(value.specialization.hammerOrbs)) return 'specialization.hammerOrbs must be a plain object';
     if (!isPlainObject(value.specialization.hammerOrbGrantedBy)) return 'specialization.hammerOrbGrantedBy must be a plain object';
+    if (!isPlainObject(value.specialization.hammerOrbDamageWindows)) return 'specialization.hammerOrbDamageWindows must be a plain object';
     if (!(value.specialization.hammerOrbsUsed instanceof Set)) return 'specialization.hammerOrbsUsed must be a Set';
     if (!isPlainObject(value.specialization.pistolBullets)) return 'specialization.pistolBullets must be a plain object';
     if (!isPlainObject(value.specialization._pistolBulletMapEntry)) return 'specialization._pistolBulletMapEntry must be a plain object';

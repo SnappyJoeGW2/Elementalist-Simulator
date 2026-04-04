@@ -2,11 +2,13 @@ import { pushTimedStack } from '../state/sim-runtime-state.js';
 import { peekTimedStacks } from '../state/sim-runtime-state.js';
 
 const HAMMER_ORB_ELEMENTS = Object.freeze(['Fire', 'Water', 'Air', 'Earth']);
+const HAMMER_ORB_BUFF_LINGER_MS = 1000;
 
 export function createHammerOrbState() {
     return {
         hammerOrbs: { Fire: null, Water: null, Air: null, Earth: null },
         hammerOrbGrantedBy: { Fire: null, Water: null, Air: null, Earth: null },
+        hammerOrbDamageWindows: { Fire: [], Water: [], Air: [], Earth: [] },
         hammerOrbLastCast: -Infinity,
         hammerOrbsUsed: new Set(),
     };
@@ -22,7 +24,30 @@ export function getHammerOrbGrantedBy(S, element) {
 
 export function isHammerOrbActiveAt(S, element, time) {
     const expiryAt = getHammerOrbExpiry(S, element);
-    return expiryAt !== null && expiryAt > time;
+    return expiryAt !== null && expiryAt >= time;
+}
+
+function getHammerOrbDamageWindows(S, element) {
+    if (!S.hammerOrbDamageWindows) {
+        S.hammerOrbDamageWindows = { Fire: [], Water: [], Air: [], Earth: [] };
+    }
+    if (!Array.isArray(S.hammerOrbDamageWindows[element])) {
+        S.hammerOrbDamageWindows[element] = [];
+    }
+    return S.hammerOrbDamageWindows[element];
+}
+
+function findActiveHammerOrbDamageWindow(S, element, time) {
+    const windows = getHammerOrbDamageWindows(S, element);
+    for (let i = windows.length - 1; i >= 0; i--) {
+        const window = windows[i];
+        if (window.start <= time && window.end >= time) return window;
+    }
+    return null;
+}
+
+export function isHammerOrbDamageActiveAt(S, element, time) {
+    return !!findActiveHammerOrbDamageWindow(S, element, time);
 }
 
 export function listActiveHammerOrbsAt(S, time) {
@@ -49,9 +74,7 @@ export function refreshActiveHammerOrbs(S, time, durationMs) {
     const expiresAt = time + durationMs;
     const refreshed = [];
     for (const element of HAMMER_ORB_ELEMENTS) {
-        // Preserve existing hammer chronology: refresh any tracked orb slot until
-        // it is explicitly consumed/cleared, even if the previous expiry elapsed.
-        if (getHammerOrbExpiry(S, element) === null) continue;
+        if (!isHammerOrbActiveAt(S, element, time)) continue;
         S.hammerOrbs[element] = expiresAt;
         refreshed.push(element);
     }
@@ -84,12 +107,15 @@ export function clearUsedHammerOrbSkills(S) {
 function refreshActiveOrbs(S, end, durationMs, buffKeys) {
     const expiresAt = end + durationMs;
     for (const element of refreshActiveHammerOrbs(S, end, durationMs)) {
+        const damageWindow = findActiveHammerOrbDamageWindow(S, element, end);
+        if (damageWindow) damageWindow.end = expiresAt;
+
         const buffKey = buffKeys[element];
         if (!buffKey) continue;
         const arr = peekTimedStacks(S, buffKey);
         if (!arr) continue;
         for (const stack of arr) {
-            if (stack.t <= end && stack.expiresAt > end) stack.expiresAt = expiresAt;
+            if (stack.t <= end && stack.expiresAt >= end) stack.expiresAt = expiresAt;
         }
     }
 }
@@ -98,11 +124,19 @@ function grantOrbs(ctx, granted, skillName, end, durationMs, buffKeys) {
     const { S } = ctx;
     for (const element of granted) {
         setHammerOrb(S, element, end + durationMs, skillName);
+        const existingDamageWindow = findActiveHammerOrbDamageWindow(S, element, end);
+        if (existingDamageWindow) existingDamageWindow.end = end;
+        getHammerOrbDamageWindows(S, element).push({ start: end, end: end + durationMs });
+
         const buffKey = buffKeys[element];
         if (buffKey) {
             const old = peekTimedStacks(S, buffKey);
             if (old) {
-                for (const stack of old) stack.expiresAt = end;
+                for (const stack of old) {
+                    if (stack.t <= end && stack.expiresAt >= end) {
+                        stack.expiresAt = end;
+                    }
+                }
             }
             pushTimedStack(S, { t: end, cond: buffKey, expiresAt: end + durationMs });
         }
@@ -115,14 +149,25 @@ function grantOrbs(ctx, granted, skillName, end, durationMs, buffKeys) {
     }
 }
 
-function expireConsumedOrbs(S, consumed, end, buffKeys) {
+function expireConsumedOrbDamage(S, consumed, start) {
     for (const element of consumed) {
         clearHammerOrb(S, element);
+        const damageWindow = findActiveHammerOrbDamageWindow(S, element, start);
+        if (damageWindow) damageWindow.end = start;
+    }
+}
+
+function expireConsumedOrbBuffs(S, consumed, start, end, buffKeys) {
+    for (const element of consumed) {
         const buffKey = buffKeys[element];
         if (!buffKey) continue;
         const arr = peekTimedStacks(S, buffKey);
         if (!arr) continue;
-        for (const stack of arr) stack.expiresAt = end;
+        for (const stack of arr) {
+            if (stack.t <= start && stack.expiresAt >= start) {
+                stack.expiresAt = end + HAMMER_ORB_BUFF_LINGER_MS;
+            }
+        }
     }
 }
 
@@ -179,8 +224,9 @@ export function handleHammerPostCast(ctx, sk, name, start, end) {
 
     setHammerOrbLastCast(S, end);
     clearUsedHammerOrbSkills(S);
-    const consumed = ctx.hammerActiveOrbs(end);
-    expireConsumedOrbs(S, consumed, end, ctx.hammerOrbBuffKey);
+    const consumed = ctx.hammerActiveOrbs(start);
+    expireConsumedOrbDamage(S, consumed, start);
+    expireConsumedOrbBuffs(S, consumed, start, end, ctx.hammerOrbBuffKey);
     scheduleGrandFinaleHits(ctx, consumed, start, end, ctx.hammerGfConditions);
     ctx.log({
         t: end,

@@ -112,7 +112,10 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
                 spearDmgBonus: spearDmgBonus || undefined,
                 spearForceCrit: spearForceCrit || undefined,
                 spearCCHit: (spearCCHit && isFirstHit) || undefined,
-                hammerOrbElement: (hammerOrbElement && durBased) ? hammerOrbElement : undefined,
+                hammerOrbElement: hammerOrbElement || undefined,
+                hammerOrbRepeatMs: hammerOrbElement
+                    ? (effectiveRep > 0 ? effectiveRep : ((h.interval || 0) > 0 ? h.interval * 1000 : 0))
+                    : undefined,
                 frigidFlurryProc: S._frigidFlurryProcActive || undefined,
                 onResolveActions: sk.name.startsWith('Primordial Stance')
                     ? [buildPrimordialStanceAction({ time: t })]

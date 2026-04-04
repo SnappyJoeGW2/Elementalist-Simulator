@@ -1,6 +1,5 @@
 export const PROC_STATE_KEYS = new Set([
     'bountifulPowerStacks',
-    'overloadAirBonusPending',
     'sigilCritAccum',
     'sigilDoomPending',
     'traitBurnPrecAccum',
@@ -18,7 +17,6 @@ export const PROC_STATE_KEYS = new Set([
 export function createProcState() {
     return {
         bountifulPowerStacks: 0,
-        overloadAirBonusPending: false,
         sigilCritAccum: 0,
         sigilDoomPending: false,
         traitBurnPrecAccum: 0,

@@ -535,7 +535,6 @@ The `S` object is the central mutable state during a simulation run. Key fields:
 | `igniteLastUse` | number | Last time Ignite was used (for 15s reset) |
 | `electricEnchantmentStacks` | number | Galvanic Enchantment: stacks consumed on next hit |
 | `arcaneEchoActive` | boolean | Whether Arcane Echo's next-weapon-skill reduction is primed |
-| `overloadAirBonusHit` | boolean | Whether the post-Overload Air bonus strike is pending |
 | `relentlessFireUntil` | number | Expiry of Relentless Fire +10% strike buff |
 | `shatteringIceUntil` | number | Expiry of Shattering Ice buff |
 | `_has*` flags | boolean | ~60+ cached trait detection flags (set once at state init) |
@@ -599,7 +598,7 @@ While a conjured weapon is equipped (`S.conjureEquipped`), stat bonuses are appl
 These are flat additions embedded into each scheduled `hit` event at cast time (so the bonus is locked to the equipped weapon at cast time, not at hit time).
 
 ### Overload Air
-On cast completion, the next hit from any source gains an additional strike (coeff `1.32`, weapon strength `690.5`, cannot crit).
+On cast completion, `Overload Air` triggers `Lightning Jolt`: an additional strike (coeff `1.32`, weapon strength `690.5`, cannot crit).
 
 ### Primordial Stance
 Has four variants in the CSV (one per attunement). The correct variant is determined by **both** current attunements at hit time. If both attunements are the same element, all conditions are applied twice.

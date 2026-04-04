@@ -191,22 +191,20 @@ export function handleComboHitEffects(ctx, ev, triggerCtx) {
     ctx.checkCombo(ev);
 }
 
-export function handleQueuedFollowupHits(ctx, ev, triggerCtx) {
-    const { S } = ctx;
-    const procState = getProcState(S);
-    if (procState.overloadAirBonusPending && triggerCtx.directStrike) {
-        procState.overloadAirBonusPending = false;
-        enqueueTriggeredHit(ctx, {
-            time: ev.time,
-            skill: 'Overload Air Bonus', hitIdx: 1, sub: 1, totalSubs: 1,
-            dmg: 1.32, ws: 690.5,
-            isField: false, cc: false, conds: null,
-            noCrit: true, att: ev.att, isTraitProc: true,
-        }, {
-            logEntry: { t: ev.time, type: 'skill_proc', skill: 'Overload Air Bonus' },
-        });
-    }
+export function handleRecurringHammerOrbHits(ctx, ev) {
+    if (!ev.hammerOrbElement || !(ev.hammerOrbRepeatMs > 0)) return;
 
+    const { _queueSeq, ...evWithoutQueueSeq } = ev;
+    const nextEv = {
+        ...evWithoutQueueSeq,
+        time: ev.time + ev.hammerOrbRepeatMs,
+    };
+    if (!ctx.shouldSkipHammerOrbHit(nextEv)) {
+        ctx.queueHitEvent(nextEv);
+    }
+}
+
+export function handleQueuedFollowupHits(ctx, ev, triggerCtx) {
     if (ctx.canTriggerShatteringIceProc(ev)) {
         ctx.queueShatteringIceProc(ev);
     }
@@ -264,6 +262,7 @@ export function handlePostHitTriggers(ctx, ev, hitCtx, triggerCtx) {
     handleCritAndCcTriggers(ctx, ev, hitCtx, triggerCtx);
     handleOverloadHitEffects(ctx, ev);
     handleComboHitEffects(ctx, ev, triggerCtx);
+    handleRecurringHammerOrbHits(ctx, ev);
     handleQueuedFollowupHits(ctx, ev, triggerCtx);
     handlePostHitConditions(ctx, ev, triggerCtx);
 }

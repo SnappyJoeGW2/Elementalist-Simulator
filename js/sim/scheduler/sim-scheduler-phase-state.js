@@ -49,6 +49,7 @@ const SCHEDULER_WORKING_STATE_FIXED_KEYS = Object.freeze([
     'etchingOtherCasts',
     'hammerOrbs',
     'hammerOrbGrantedBy',
+    'hammerOrbDamageWindows',
     'hammerOrbLastCast',
     'hammerOrbsUsed',
     'pistolBullets',

@@ -361,6 +361,16 @@ export function handleOverload(ctx, sk, concurrents, {
     }
 
     if (sk.attunement === 'Air') {
-        ctx.setFlag('overloadAirBonusPending', true);
+        ctx.queueHitEvent({
+            time: end,
+            skill: 'Lightning Jolt', hitIdx: 1, sub: 1, totalSubs: 1,
+            dmg: 1.32, ws: 690.5,
+            isField: false, cc: false, conds: null,
+            noCrit: true, att: state.att, isTraitProc: true,
+        });
+        ctx.ensurePerSkill('Lightning Jolt');
+        ctx.recordSkillCast('Lightning Jolt', 0);
+        ctx.log({ t: end, type: 'skill_proc', skill: 'Lightning Jolt' });
+        ctx.addStep({ skill: 'Lightning Jolt', start: end, end, att: state.att, type: 'skill_proc', ri: -1 });
     }
 }

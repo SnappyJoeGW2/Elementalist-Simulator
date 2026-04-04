@@ -1,7 +1,7 @@
 import { enqueueHitEvent } from '../shared/sim-events.js';
 import { getTraitIcd, setTraitIcd } from '../state/sim-icd-state.js';
 import { effectStacksAt } from '../shared/sim-state-queries.js';
-import { isHammerOrbActiveAt } from '../mechanics/sim-hammer.js';
+import { isHammerOrbDamageActiveAt } from '../mechanics/sim-hammer.js';
 import { pushReportingLog } from '../state/sim-reporting-state.js';
 
 export function canTriggerShatteringIceProc(S, ev) {
@@ -46,8 +46,8 @@ export function shouldSkipHammerOrbHit(S, ev, { hammerDualOrbSkills }) {
 
     if (ev.hammerOrbElement === 'Dual') {
         const dualEls = hammerDualOrbSkills[ev.skill];
-        return !!(dualEls && dualEls.every(el => !isHammerOrbActiveAt(S, el, ev.time)));
+        return !!(dualEls && dualEls.every(el => !isHammerOrbDamageActiveAt(S, el, ev.time)));
     }
 
-    return !isHammerOrbActiveAt(S, ev.hammerOrbElement, ev.time);
+    return !isHammerOrbDamageActiveAt(S, ev.hammerOrbElement, ev.time);
 }

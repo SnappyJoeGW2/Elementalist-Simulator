@@ -31,6 +31,7 @@ function buildConditionTickEffectSnapshot(ctx, ev) {
     const effectStacks = effect => ctx.effectStacksAt(effect, time);
 
     return {
+        hammerFireOrb: effectStacks('Hammer Orb Fire') > 0 ? 0.05 : 0,
         tempestuousAria: S._hasTempestuousAria && effectStacks('Tempestuous Aria') > 0 ? 0.05 : 0,
         transcendentTempest: S._hasTranscendentTempest && effectStacks('Transcendent Tempest') > 0 ? 0.20 : 0,
         elementsOfRage: S._hasElementsOfRage && effectStacks('Elements of Rage') > 0 ? 0.05 : 0,
@@ -85,6 +86,7 @@ function buildConditionTickContext(ctx, ev, {
 
     const condMul = (1
         + sigilMuls.condAdd
+        + effectSnapshot.hammerFireOrb
         + effectSnapshot.tempestuousAria
         + effectSnapshot.transcendentTempest
         + effectSnapshot.elementsOfRage
