@@ -670,16 +670,17 @@ export function renderTimeline(app, {
         </div>`;
     }).join('');
 
-    const PROC_COLORS = { relic_proc: '#ddaa33', sigil_proc: '#4488cc', trait_proc: '#77cc77' };
+    const PROC_COLORS = { relic_proc: '#ddaa33', sigil_proc: '#4488cc', trait_proc: '#77cc77', skill_proc: '#bb88ff' };
     const procSteps = (app.sim.results?.steps || [])
-        .filter(s => s.ri === -1 && (s.type === 'relic_proc' || s.type === 'sigil_proc' || s.type === 'trait_proc'))
+        .filter(s => s.ri === -1 && (s.type === 'relic_proc' || s.type === 'sigil_proc' || s.type === 'trait_proc' || s.type === 'skill_proc'))
         .sort((a, b) => a.start - b.start);
     if (procSteps.length > 0) {
         const procsHtml = procSteps.map(s => {
             const ts = app._formatResultsTimeMs(s.start, 2);
             const pc = PROC_COLORS[s.type] || 'var(--border-light)';
-            const typeLabel = s.type === 'relic_proc' ? 'Relic' : s.type === 'sigil_proc' ? 'Sigil' : 'Trait';
-            return `<div class="proc-icon" title="${esc(s.skill)}\n${typeLabel} proc @ ${ts}" style="--proc-color:${pc}">
+            const typeLabel = s.type === 'relic_proc' ? 'Relic' : s.type === 'sigil_proc' ? 'Sigil' : s.type === 'trait_proc' ? 'Trait' : 'Skill';
+            const detailLine = s.detail ? `\n${s.detail}` : '';
+            return `<div class="proc-icon" title="${esc(s.skill)}\n${typeLabel} proc @ ${ts}${esc(detailLine)}" style="--proc-color:${pc}">
                 <img src="${s.icon || PLACEHOLDER_ICON}" />
                 <span class="proc-time">${ts}</span>
             </div>`;

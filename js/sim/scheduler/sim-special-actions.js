@@ -11,6 +11,8 @@ import {
 import { getSkillCooldownReadyAt } from '../state/sim-cooldown-state.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
 
+const ELECTRIC_ENCHANTMENT_ICON = 'https://wiki.guildwars2.com/images/7/7b/Hare%27s_Agility.png';
+
 export function anySphereActiveAt(S, time) {
     const catalystState = getCatalystState(S);
     for (const w of catalystState.sphereWindows) {
@@ -221,9 +223,31 @@ export function handleFamiliar(ctx, sk, concurrents, {
     }
     if (state._hasGalvanicEnchantment) {
         ctx.adjustProcCounter('electricEnchantmentStacks', 2);
+        ctx.log({ t: end, type: 'trait_proc', trait: 'Galvanic Enchantment', skill: 'Electric Enchantment', detail: '+2 stacks' });
+        ctx.addStep({
+            skill: 'Electric Enchantment',
+            start: end,
+            end,
+            att: state.att,
+            type: 'trait_proc',
+            ri: -1,
+            icon: ELECTRIC_ENCHANTMENT_ICON,
+            detail: '+2 stacks',
+        });
     }
     if (sk.name === 'Lightning Blitz') {
         ctx.adjustProcCounter('electricEnchantmentStacks', 1);
+        ctx.log({ t: end, type: 'skill_proc', skill: 'Electric Enchantment', detail: '+1 stack' });
+        ctx.addStep({
+            skill: 'Electric Enchantment',
+            start: end,
+            end,
+            att: state.att,
+            type: 'skill_proc',
+            ri: -1,
+            icon: ELECTRIC_ENCHANTMENT_ICON,
+            detail: '+1 stack',
+        });
     }
     if (sk.name === 'Zap') {
         ctx.trackEffect('Zap Buff', 1, 5, end);

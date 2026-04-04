@@ -3,6 +3,7 @@ import { getCatalystState, getEvokerState } from '../state/sim-specialization-st
 import { setSkillCooldownReadyAt } from '../state/sim-cooldown-state.js';
 
 const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
+const ELECTRIC_ENCHANTMENT_ICON = 'https://wiki.guildwars2.com/images/7/7b/Hare%27s_Agility.png';
 
 export function applySkillSpecificPostCast(ctx, sk, { start, end, scaleOff }) {
     const { S } = ctx;
@@ -55,6 +56,16 @@ export function applySkillSpecificPostCast(ctx, sk, { start, end, scaleOff }) {
     if (sk.name === "Hare's Agility") {
         procState.electricEnchantmentStacks += 5;
         ctx.log({ t: end, type: 'skill_proc', skill: "Hare's Agility", detail: '+5 electric enchantment' });
+        ctx.addStep({
+            skill: 'Electric Enchantment',
+            start: end,
+            end,
+            att: S.att,
+            type: 'skill_proc',
+            ri: -1,
+            icon: ELECTRIC_ENCHANTMENT_ICON,
+            detail: '+5 stacks',
+        });
     }
 
     if (sk.name === "Toad's Fortitude" && evokerState.element === 'Earth') {
