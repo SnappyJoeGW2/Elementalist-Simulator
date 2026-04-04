@@ -145,6 +145,10 @@ export function handleCritAndCcTriggers(ctx, ev, hitCtx, triggerCtx) {
         ctx.triggerLightningRod(ev.time);
     }
 
+    if (triggerCtx.ccPlayerHit) {
+        ctx.procOnCcSigils(ev.time);
+    }
+
     if (S._hasStrengthOfStone && triggerCtx.playerHit
         && ctx.effectStacksAt('Immobilize', ev.time) > 0
         && ctx.traitIcdReady('StrengthOfStone', ev.time)) {

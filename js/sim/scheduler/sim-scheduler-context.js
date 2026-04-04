@@ -82,6 +82,7 @@ import {
     getAttunementCooldownMs,
     triggerBountifulPower,
     procOnSwapSigils,
+    procOnCcSigils,
 } from '../mechanics/sim-crit-sigil-helpers.js';
 import {
     attunementAt,
@@ -324,6 +325,10 @@ export function createSchedulerContext(engine, S, config = {}) {
 
         refreshArcaneLightningBuff(time) {
             return engine._refreshArcaneLightningBuff(S, time);
+        },
+
+        procOnCcSigils(time) {
+            return procOnCcSigils(this, time);
         },
 
         pushCondStack(entry) {

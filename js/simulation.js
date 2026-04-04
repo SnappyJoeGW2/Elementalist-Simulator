@@ -111,6 +111,11 @@ const SIGIL_PROCS = {
         trigger: 'swap', icd: 9000, effect: 'endurance', amount: 50,
         icon: null,
     },
+    Severance: {
+        trigger: 'cc', icd: 1000, effect: 'buff',
+        precision: 250, ferocity: 250, dur: 4,
+        icon: null,
+    },
 };
 
 const TARGET_ARMOR = 2597;

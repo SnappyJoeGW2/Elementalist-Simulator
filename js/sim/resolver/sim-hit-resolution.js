@@ -18,6 +18,7 @@ function buildHitEffectSnapshot(ctx, ev) {
         freshAirActive: S._hasFreshAir
             && !S._suppressFreshAirContributionBuff
             && effectStacks('Fresh Air') > 0,
+        severanceUp: effectStacks('Severance') > 0,
         arcaneLightningActive: S._hasArcaneLightning && effectStacks('Arcane Lightning') > 0,
         weaknessActive: S._hasSuperiorElements && effectStacks('Weakness') > 0,
         hammerAirOrbUp: effectStacks('Hammer Orb Air') > 0,
@@ -94,16 +95,19 @@ function buildPowerAndCritContext(ctx, ev, {
     const ragingFerocity = (S._hasRagingStorm && fury) ? 12 : 0;
     const aeroFerocity = (S._hasAeroTraining && hitAtt === 'Air') ? 10 : 0;
     const freshAirFerocity = effectSnapshot.freshAirActive ? (250 / 15) : 0;
+    const severanceFerocity = effectSnapshot.severanceUp ? (250 / 15) : 0;
     const zapPassiveFer = (evokerState.element === 'Air' && fury) ? 75 / 15 : 0;
     const arcaneLightningFer = effectSnapshot.arcaneLightningActive ? 150 / 15 : 0;
     const effectiveCritDmg = critDmg + ragingFerocity + aeroFerocity
-        + freshAirFerocity + polyFer + empCritDmg + conjureFer + zapPassiveFer + arcaneLightningFer + (ev.bonusCritDmg || 0);
+        + freshAirFerocity + severanceFerocity + polyFer + empCritDmg + conjureFer + zapPassiveFer + arcaneLightningFer + (ev.bonusCritDmg || 0);
 
     const signetFireLost = ctx.signetFirePassiveLostAt(ev.time) ? (180 / 21) : 0;
     const supElemCrit = effectSnapshot.weaknessActive ? 15 : 0;
     const hammerAirCritBonus = effectSnapshot.hammerAirOrbUp ? 15 : 0;
+    const severanceCritBonus = effectSnapshot.severanceUp ? (250 / 21) : 0;
     const cc = ev.noCrit ? 0 : (ev.spearForceCrit ? 100 : Math.min(
-        baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit + empCritCh + conjurePrec + hammerAirCritBonus,
+        baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit
+        + empCritCh + conjurePrec + hammerAirCritBonus + severanceCritBonus,
         100
     ));
 

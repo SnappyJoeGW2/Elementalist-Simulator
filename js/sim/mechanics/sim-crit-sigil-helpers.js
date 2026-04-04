@@ -14,6 +14,12 @@ function logSigilProc(ctx, name, time, icon) {
     ctx.addStep({ skill: `Sigil of ${name}`, start: time, end: time, att: S.att, type: 'sigil_proc', ri: -1, icon });
 }
 
+function refreshSingleEffectStack(S, effect, time, durationMs) {
+    const existing = findActiveTimedStack(S, effect, time, { includePerma: false });
+    if (existing) existing.expiresAt = time;
+    pushTimedStack(S, { t: time, cond: effect, expiresAt: time + durationMs });
+}
+
 export function checkOnCritSigils(ctx, time, critChancePct) {
     const { S, sigilProcs = {}, activeProcSigils = [] } = ctx;
     const procState = getProcState(S);
@@ -164,6 +170,24 @@ export function procOnSwapSigils(ctx, time) {
             ctx.applyCondition(proc.cond, proc.stacks, proc.dur, time, `Sigil of ${name}`);
         } else if (proc.effect === 'endurance') {
             ctx.gainEndurance(proc.amount, time);
+        }
+
+        logSigilProc(ctx, name, time, proc.icon);
+    }
+}
+
+export function procOnCcSigils(ctx, time) {
+    const { S, sigilProcs = {}, activeProcSigils = [] } = ctx;
+    if (!isCombatActiveAt(S, time)) return;
+
+    const ccSigils = activeProcSigils.filter(name => sigilProcs[name].trigger === 'cc');
+    for (const name of ccSigils) {
+        const proc = sigilProcs[name];
+        if (!ctx.sigilIcdReady(name, time)) continue;
+        ctx.armSigilIcd(name, time, proc.icd);
+
+        if (proc.effect === 'buff') {
+            refreshSingleEffectStack(S, 'Severance', time, proc.dur * 1000);
         }
 
         logSigilProc(ctx, name, time, proc.icon);

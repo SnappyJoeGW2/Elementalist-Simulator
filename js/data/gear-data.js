@@ -335,7 +335,7 @@ export const WEAPON_DATA = {
 // Stat values are percentages stored as numbers (e.g. 7 = 7%).
 // Only non-zero fields are listed; all others default to 0 when accessed with ||0.
 // Sigils with no stat effect (proc-only: Air, Blight, Earth, Torment, Doom,
-// Energy, Geomancy, Hydromancy) are included for the dropdown but have no fields.
+// Energy, Geomancy, Hydromancy, Severance) are included for the dropdown but have no fields.
 export const SIGIL_DATA = {
     Accuracy: { criticalChance: 7 },
     Force: { strikeDamageA: 5 },
@@ -354,6 +354,7 @@ export const SIGIL_DATA = {
     Energy: {},
     Geomancy: {},
     Hydromancy: {},
+    Severance: {},
 };
 
 export const SIGIL_NAMES = Object.keys(SIGIL_DATA);

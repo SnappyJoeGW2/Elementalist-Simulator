@@ -6,6 +6,7 @@ import { procHit } from './sim-hit-application.js';
 import { grantPersistingFlames, triggerLightningRod, checkRagingStorm, checkFreshAir } from '../mechanics/sim-elemental-traits.js';
 import {
     checkOnCritSigils,
+    procOnCcSigils,
     checkBurningPrecision,
     checkArcanePrecision,
     checkRenewingStamina,
@@ -174,6 +175,10 @@ export function createRuntimeContext(engine, S, config = {}) {
 
         checkOnCritSigils(time, critChancePct) {
             return checkOnCritSigils(this, time, critChancePct);
+        },
+
+        procOnCcSigils(time) {
+            return procOnCcSigils(this, time);
         },
 
         checkBurningPrecision(time, critChancePct) {
