@@ -41,6 +41,8 @@ export function buildSnapshot(app) {
         activeAttunement: app.activeAttunement,
         secondaryAttunement: app.secondaryAttunement,
         evokerElement: app.evokerElement,
+        evokerStartCharges: app.evokerStartCharges,
+        evokerStartEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
         rotation: serializeRotation(app),
     });
@@ -52,6 +54,8 @@ export function applySnapshot(app, state) {
         activeAttunement: app.activeAttunement,
         secondaryAttunement: app.secondaryAttunement,
         evokerElement: app.evokerElement,
+        evokerStartCharges: app.evokerStartCharges,
+        evokerStartEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
         selectedSkills: app.selectedSkills,
     }, state, app.data?.skills);
@@ -60,6 +64,8 @@ export function applySnapshot(app, state) {
     app.activeAttunement = merged.activeAttunement;
     app.secondaryAttunement = merged.secondaryAttunement;
     app.evokerElement = merged.evokerElement;
+    app.evokerStartCharges = merged.evokerStartCharges;
+    app.evokerStartEmpowered = merged.evokerStartEmpowered;
     app.permaBoons = merged.permaBoons;
     app.selectedSkills = merged.selectedSkills;
 
@@ -124,6 +130,8 @@ export function autoRun(app) {
         activeAttunement: app.activeAttunement,
         secondaryAttunement: app.secondaryAttunement,
         evokerElement: app.evokerElement,
+        startEvokerCharges: app.evokerStartCharges,
+        startEvokerEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
         targetHP: app._getTargetHP(),
         startPistolBullets: getStartPistolBullets(app),

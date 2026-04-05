@@ -245,6 +245,8 @@ class App {
         this.activeAttunement = 'Fire';
         this.secondaryAttunement = 'Fire';
         this.evokerElement = null;
+        this.evokerStartCharges = 6;
+        this.evokerStartEmpowered = 0;
         this.selectedSkills = createEmptySelectedSkills();
         this.permaBoons = createDefaultPermaBoons();
         this.openDropdown = null;

@@ -10,11 +10,16 @@ export function createCatalystState(eliteSpec, catalystEnergyMax) {
     };
 }
 
-export function createEvokerState(eliteSpec, startEvokerElement) {
+export function createEvokerState(
+    eliteSpec,
+    startEvokerElement,
+    startEvokerCharges = 6,
+    startEvokerEmpowered = 0,
+) {
     return {
         element: (eliteSpec === 'Evoker' && startEvokerElement) ? startEvokerElement : null,
-        charges: eliteSpec === 'Evoker' ? 6 : 0,
-        empowered: 0,
+        charges: eliteSpec === 'Evoker' ? Math.max(0, Math.min(6, startEvokerCharges)) : 0,
+        empowered: eliteSpec === 'Evoker' ? Math.max(0, Math.min(3, startEvokerEmpowered)) : 0,
         igniteStep: 0,
         igniteLastUse: -Infinity,
     };

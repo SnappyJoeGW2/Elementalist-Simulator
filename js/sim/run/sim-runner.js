@@ -35,6 +35,8 @@ export function runSimulationContributions({
     activeAttunement,
     secondaryAttunement,
     evokerElement,
+    startEvokerCharges = 6,
+    startEvokerEmpowered = 0,
     permaBoons,
     targetHP = 0,
     startPistolBullets = null,
@@ -46,6 +48,8 @@ export function runSimulationContributions({
         permaBoons,
         targetHP,
         startPistolBullets,
+        startEvokerCharges,
+        startEvokerEmpowered,
     );
     return sim.results;
 }

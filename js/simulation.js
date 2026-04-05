@@ -531,12 +531,25 @@ export class SimulationEngine {
         return ctx;
     }
 
-    run(startAtt = 'Fire', startAtt2 = null, startEvokerElement = null, permaBoons = {}, disabled = null, targetHP = 0, stopAtTime = null, startPistolBullets = null) {
+    run(
+        startAtt = 'Fire',
+        startAtt2 = null,
+        startEvokerElement = null,
+        permaBoons = {},
+        disabled = null,
+        targetHP = 0,
+        stopAtTime = null,
+        startPistolBullets = null,
+        startEvokerCharges = 6,
+        startEvokerEmpowered = 0,
+    ) {
         const a = this.attributes.attributes;
         const runCtx = this._prepareRunContext(a, {
             startAtt,
             startAtt2,
             startEvokerElement,
+            startEvokerCharges,
+            startEvokerEmpowered,
             permaBoons,
             disabled,
             startPistolBullets,
@@ -560,6 +573,8 @@ export class SimulationEngine {
         startAtt,
         startAtt2,
         startEvokerElement,
+        startEvokerCharges,
+        startEvokerEmpowered,
         permaBoons,
         disabled,
         startPistolBullets,
@@ -568,6 +583,8 @@ export class SimulationEngine {
             startAtt,
             startAtt2,
             startEvokerElement,
+            startEvokerCharges,
+            startEvokerEmpowered,
             permaBoons,
             disabled,
             startPistolBullets,
@@ -616,6 +633,8 @@ export class SimulationEngine {
         realStartAtt,
         realStartAtt2,
         startEvokerElement,
+        startEvokerCharges,
+        startEvokerEmpowered,
         activeRelic,
         relicProc,
         startPistolBullets,
@@ -625,6 +644,8 @@ export class SimulationEngine {
             realStartAtt,
             realStartAtt2,
             startEvokerElement,
+            startEvokerCharges,
+            startEvokerEmpowered,
             activeRelic,
             relicProc,
             startPistolBullets,
@@ -814,9 +835,29 @@ export class SimulationEngine {
         return scheduledStream;
     }
 
-    computeContributions(startAtt, startAtt2, evokerElement, permaBoons, targetHP = 0, startPistolBullets = null) {
+    computeContributions(
+        startAtt,
+        startAtt2,
+        evokerElement,
+        permaBoons,
+        targetHP = 0,
+        startPistolBullets = null,
+        startEvokerCharges = 6,
+        startEvokerEmpowered = 0,
+    ) {
         // Full run WITH target HP — used for the displayed DPS/kill-time results.
-        this.run(startAtt, startAtt2, evokerElement, permaBoons, null, targetHP, null, startPistolBullets);
+        this.run(
+            startAtt,
+            startAtt2,
+            evokerElement,
+            permaBoons,
+            null,
+            targetHP,
+            null,
+            startPistolBullets,
+            startEvokerCharges,
+            startEvokerEmpowered,
+        );
         const fullResults = this.results;
 
         // When the target actually dies, run comparison sims with the same targetHP and cap
@@ -832,7 +873,18 @@ export class SimulationEngine {
         } else {
             // No kill — run a separate no-cap baseline so the window is independent of
             // modifier effects on kill time.
-            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0, null, startPistolBullets);
+            this.run(
+                startAtt,
+                startAtt2,
+                evokerElement,
+                permaBoons,
+                null,
+                0,
+                null,
+                startPistolBullets,
+                startEvokerCharges,
+                startEvokerEmpowered,
+            );
             fullDps = this.results.dps;
             fullResultsForContrib = this.results;
             baselineWindowSec = null;
@@ -914,7 +966,18 @@ export class SimulationEngine {
         // it actually fires and produces a non-zero contribution.
         let fullDpsForContrib = fullDps;
         if (baselineStop !== null) {
-            this.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0, null, startPistolBullets);
+            this.run(
+                startAtt,
+                startAtt2,
+                evokerElement,
+                permaBoons,
+                null,
+                0,
+                null,
+                startPistolBullets,
+                startEvokerCharges,
+                startEvokerEmpowered,
+            );
             fullDpsForContrib = this.results.dps;
             fullResultsForContrib = this.results;
         }
@@ -925,7 +988,18 @@ export class SimulationEngine {
             if (baselineStop !== null && isBolt) {
                 // Bolt to the Heart: must use finite-HP so it actually fires.
                 // Stop at baseline kill time so the window is fixed.
-                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, targetHP, baselineStop, startPistolBullets);
+                this.run(
+                    startAtt,
+                    startAtt2,
+                    evokerElement,
+                    permaBoons,
+                    mod.id,
+                    targetHP,
+                    baselineStop,
+                    startPistolBullets,
+                    startEvokerCharges,
+                    startEvokerEmpowered,
+                );
                 const withoutDps = this.results.totalDamage / baselineWindowSec;
                 const increase = fullDps - withoutDps;
                 contributions.push({
@@ -937,7 +1011,18 @@ export class SimulationEngine {
             } else {
                 // All other mods (and infinite-HP mode): compare using infinite-HP runs so
                 // each modifier's contribution is isolated and cannot interact with Bolt.
-                this.run(startAtt, startAtt2, evokerElement, permaBoons, mod.id, 0, null, startPistolBullets);
+                this.run(
+                    startAtt,
+                    startAtt2,
+                    evokerElement,
+                    permaBoons,
+                    mod.id,
+                    0,
+                    null,
+                    startPistolBullets,
+                    startEvokerCharges,
+                    startEvokerEmpowered,
+                );
                 const withoutDps = this.results.dps;
                 const increase = fullDpsForContrib - withoutDps;
                 contributions.push({

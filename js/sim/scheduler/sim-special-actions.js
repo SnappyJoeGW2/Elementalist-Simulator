@@ -179,6 +179,14 @@ export function handleFamiliar(ctx, sk, concurrents, {
     if (castMs > 0) ctx.finishCast(sk.name, end);
     else ctx.setTime(end);
 
+    const fieldSpawnTime = sk.name === 'Buoyant Deluge'
+        ? Math.max(
+            end,
+            start + ((ctx.skillHits?.[sk.name]?.find(hit => (hit.hit || 0) === 1)?.startOffsetMs) || 0),
+        )
+        : end;
+    ctx.trackField(sk, fieldSpawnTime);
+
     if (isBasic) {
         ctx.setEvokerCharges(0);
         ctx.addEvokerEmpowered(1, 3);

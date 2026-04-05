@@ -43,5 +43,10 @@
     "label": "Power Evoker Hare",
     "build": "Builds/b-power-evoker-hare.json",
     "rotation": "Rotations/r-power-evoker-hare.json"
+  },
+  {
+    "label": "Power Alac Evoker Toad",
+    "build": "Builds/b-power-alac-evoker-toad.json",
+    "rotation": "Rotations/r-power-alac-evoker-toad.json"
   }
 ]

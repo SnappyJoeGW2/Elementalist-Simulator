@@ -2227,6 +2227,16 @@ header .accent {
     box-shadow: 0 0 4px rgba(255, 80, 30, 0.6);
 }
 
+[data-role="evoker-start-basic"],
+[data-role="evoker-start-emp"] {
+    cursor: pointer;
+}
+
+[data-role="evoker-start-basic"]:hover,
+[data-role="evoker-start-emp"]:hover {
+    filter: brightness(1.2);
+}
+
 /* ─── Modifier Contributions ─── */
 .res-contributions {
     margin-top: 12px;

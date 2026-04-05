@@ -176,9 +176,9 @@ export function renderPalette(app, {
     if (elite === 'Evoker') {
         const EVOKER_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
         const curEl = es?.evokerElement || app.evokerElement || null;
-        const charges = es?.evokerCharges ?? 6;
+        const charges = es?.evokerCharges ?? Math.max(0, Math.min(6, app.evokerStartCharges ?? 6));
         const maxCharges = es?.evokerMaxCharges ?? 6;
-        const empowered = es?.evokerEmpowered ?? 0;
+        const empowered = es?.evokerEmpowered ?? Math.max(0, Math.min(3, app.evokerStartEmpowered ?? 0));
         const elLabel = curEl ? curEl[0] : '?';
         h += `<div class="pal-group"><div class="pal-label" style="color:${curEl ? ATTUNEMENT_COLORS[curEl] : '#888'}">F5<br><small>${elLabel}</small></div><div class="pal-row" style="flex-wrap:wrap;gap:4px">`;
         if (curEl) {
@@ -495,6 +495,8 @@ export function renderStartAttSelector(app, { ATTUNEMENTS, ATTUNEMENT_COLORS }) 
 
     if (elite === 'Evoker') {
         const EVOKER_SEL_NAMES = { Fire: 'Ignite', Water: 'Splash', Air: 'Zap', Earth: 'Calcify' };
+        const startCharges = Math.max(0, Math.min(6, app.evokerStartCharges ?? 6));
+        const startEmpowered = Math.max(0, Math.min(3, app.evokerStartEmpowered ?? 0));
         h += `<span class="start-att-label" style="margin-left:6px">F5:</span>`;
         for (const att of ATTUNEMENTS) {
             const selName = EVOKER_SEL_NAMES[att];
@@ -504,6 +506,17 @@ export function renderStartAttSelector(app, { ATTUNEMENTS, ATTUNEMENT_COLORS }) 
             h += `<button class="start-att-btn${active}" data-att="${att}" data-role="evoker" style="--att-c:${color}" title="Familiar: ${selName} (${att})">
                 <img src="${icon || PLACEHOLDER_ICON}" /></button>`;
         }
+        h += `<span class="start-att-label" style="margin-left:8px">Start:</span>`;
+        h += `<div class="evoker-charge-wrap" title="Starting familiar charges">
+            <div class="evoker-charge-outer">`;
+        for (let i = 0; i < 6; i++) {
+            h += `<span class="evoker-pip${i < startCharges ? ' filled' : ''}" data-role="evoker-start-basic" data-count="${i + 1}" title="Starting familiar charges: ${i + 1}"></span>`;
+        }
+        h += `</div><div class="evoker-charge-inner">`;
+        for (let i = 0; i < 3; i++) {
+            h += `<span class="evoker-emp${i < startEmpowered ? ' filled' : ''}" data-role="evoker-start-emp" data-count="${i + 1}" title="Starting empowered charges: ${i + 1}"></span>`;
+        }
+        h += `</div></div>`;
     }
 
     el.innerHTML = h;
@@ -527,6 +540,27 @@ export function renderStartAttSelector(app, { ATTUNEMENTS, ATTUNEMENT_COLORS }) 
                 app.setAttunement(btn.dataset.att);
                 app._renderStartAttSelector();
             }
+        });
+    });
+
+    el.querySelectorAll('[data-role="evoker-start-basic"], [data-role="evoker-start-emp"]').forEach(pip => {
+        pip.addEventListener('click', () => {
+            const count = parseInt(pip.dataset.count || '', 10);
+            if (!Number.isFinite(count)) return;
+
+            if (pip.dataset.role === 'evoker-start-basic') {
+                const next = app.evokerStartCharges === count ? count - 1 : count;
+                if (next === app.evokerStartCharges) return;
+                app.evokerStartCharges = Math.max(0, Math.min(6, next));
+            } else {
+                const next = app.evokerStartEmpowered === count ? count - 1 : count;
+                if (next === app.evokerStartEmpowered) return;
+                app.evokerStartEmpowered = Math.max(0, Math.min(3, next));
+            }
+
+            app._renderStartAttSelector();
+            if (app.sim?.rotation.length > 0) app._autoRun();
+            else app._renderPalette();
         });
     });
 }
