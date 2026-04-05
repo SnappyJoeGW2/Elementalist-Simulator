@@ -68,6 +68,8 @@
   "activeAttunement": "Earth",
   "secondaryAttunement": "Air",
   "evokerElement": "Earth",
+  "evokerStartCharges": 6,
+  "evokerStartEmpowered": 0,
   "permaBoons": {
     "Might": 25,
     "Fury": true,
@@ -96,6 +98,7 @@
       "name": "__wait",
       "waitMs": 8000
     },
+    "__combat_start",
     "Dragon's Tooth",
     "Elemental Procession",
     {

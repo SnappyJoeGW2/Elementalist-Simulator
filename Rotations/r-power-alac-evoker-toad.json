@@ -6,6 +6,7 @@
       "name": "__wait",
       "waitMs": 8000
     },
+    "__combat_start",
     "Dragon's Tooth",
     "Elemental Procession",
     {

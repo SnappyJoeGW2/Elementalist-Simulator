@@ -259,6 +259,13 @@ class App {
             freshAir: false,
             superiorElements: false,
             weaversProwess: false,
+            severance: false,
+            ragingStorm: false,
+            arcaneLightning: false,
+            crescentWind: false,
+            conjureFrostBow: false,
+            conjureLightningHammer: false,
+            conjureFieryGreatsword: false,
         };
     }
 
@@ -590,8 +597,15 @@ class App {
         const c = this.conditions;
         const activeTraits = this.data.attributes?.activeTraits || [];
         const specs = this.data.attributes?.specializations || [];
-
         const hasTrait = name => activeTraits.some(t => t.name === name);
+        const selectedSkillNames = new Set(Object.values(this.selectedSkills || {}).filter(Boolean).map(s => s.name));
+        const hasSeveranceSigil = (this.build?.sigils || []).includes('Severance');
+        const hasArcaneLightning = hasTrait('Arcane Lightning');
+        const hasHammer = (this.data.attributes?.weapons || []).includes('Hammer');
+        const hasConjureFrostBow = selectedSkillNames.has('Conjure Frost Bow');
+        const hasConjureLightningHammer = selectedSkillNames.has('Conjure Lightning Hammer');
+        const hasConjureFieryGreatsword = selectedSkillNames.has('Conjure Fiery Greatsword');
+
         const hasPolyphony = hasTrait('Elemental Polyphony');
         const hasEmpoweringFlame = hasTrait('Empowering Flame');
         const hasAeroTraining = hasTrait("Aeromancer's Training");
@@ -633,15 +647,6 @@ class App {
         const eeDesc = hasEmpEmpowerment
             ? 'stacks × +1.5% (max 10 → +20%)'
             : 'stacks × +1%';
-
-        // Auto-applied effects: shown as info rows (no checkbox), only when trait is in active build
-        const autoRows = [
-            hasEmpoweringFlame ? { label: 'Empowering Flame', text: '+150 Power — primary Fire only (secondary Fire gives nothing)' } : null,
-            hasAeroTraining ? { label: "Aeromancer's Tr.", text: '+150 Ferocity — primary Air only (secondary Air gives nothing)' } : null,
-            hasPowerOverwhelming ? { label: 'Power Overwhelm.', text: '+300 Pwr if primary Fire, +150 Pwr otherwise — requires ≥10 Might' } : null,
-            hasRagingStorm ? { label: 'Raging Storm', text: '+12 Crit Dmg when Fury active' } : null,
-            hasBurningPrecision ? { label: 'Burning Precision', text: '+20% Burn Duration (always in base stats) + 33% on-crit burning proc' } : null,
-        ].filter(Boolean);
 
         container.innerHTML = `
             <div class="cond-header">Conditional Effects <span class="cond-hint">(for hero panel validation)</span></div>
@@ -699,6 +704,53 @@ class App {
                 </div>` : ''}
             </div>` : ''}
 
+            ${(hasSeveranceSigil || hasRagingStorm || hasArcaneLightning || hasHammer || hasConjureFrostBow || hasConjureLightningHammer || hasConjureFieryGreatsword) ? `
+            <div class="cond-section">Other Buffs</div>
+            <div class="cond-grid">
+                ${hasSeveranceSigil ? `
+                <label class="cond-label">Severance</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-severance"${c.severance ? ' checked' : ''} />
+                    <span class="cond-unit">+250 Precision, +250 Ferocity</span>
+                </div>` : ''}
+                ${hasRagingStorm ? `
+                <label class="cond-label">Raging Storm</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-raging-storm"${c.ragingStorm ? ' checked' : ''} />
+                    <span class="cond-unit">+180 Ferocity (under Fury)</span>
+                </div>` : ''}
+                ${hasArcaneLightning ? `
+                <label class="cond-label">Arcane Lightning</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-arcane-lightning"${c.arcaneLightning ? ' checked' : ''} />
+                    <span class="cond-unit">+150 Ferocity</span>
+                </div>` : ''}
+                ${hasHammer ? `
+                <label class="cond-label">Crescent Wind</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-crescent-wind"${c.crescentWind ? ' checked' : ''} />
+                    <span class="cond-unit">+15% Crit Chance</span>
+                </div>` : ''}
+                ${hasConjureFrostBow ? `
+                <label class="cond-label">Conjure Frost Bow</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-conjure-frost-bow"${c.conjureFrostBow ? ' checked' : ''} />
+                    <span class="cond-unit">+20% Cond. Duration, +180 Healing Power</span>
+                </div>` : ''}
+                ${hasConjureLightningHammer ? `
+                <label class="cond-label">Conjure Lightning Hammer</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-conjure-lightning-hammer"${c.conjureLightningHammer ? ' checked' : ''} />
+                    <span class="cond-unit">+75 Ferocity, +180 Precision</span>
+                </div>` : ''}
+                ${hasConjureFieryGreatsword ? `
+                <label class="cond-label">Conjure Fiery Greatsword</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-conjure-fiery-greatsword"${c.conjureFieryGreatsword ? ' checked' : ''} />
+                    <span class="cond-unit">+260 Power, +180 Cond. Damage</span>
+                </div>` : ''}
+            </div>` : ''}
+
             ${hasCatalyst ? `
             <div class="cond-section">Elemental Empowerment</div>
             <div class="cond-grid">
@@ -713,7 +765,6 @@ class App {
             </div>` : ''}
 
             `;
-        // autoRows are still built and used by _getConditionalAttrs() via this.conditions — just not displayed.
 
         const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('change', fn); };
         bind('cond-might', e => { c.might = Math.max(0, Math.min(25, parseInt(e.target.value) || 0)); e.target.value = c.might; this.renderAttributes(); });
@@ -724,6 +775,13 @@ class App {
         bind('cond-fresh-air', e => { c.freshAir = e.target.checked; this.renderAttributes(); });
         bind('cond-sup-elem', e => { c.superiorElements = e.target.checked; this.renderAttributes(); });
         bind('cond-wp', e => { c.weaversProwess = e.target.checked; this.renderAttributes(); });
+        bind('cond-severance', e => { c.severance = e.target.checked; this.renderAttributes(); });
+        bind('cond-raging-storm', e => { c.ragingStorm = e.target.checked; this.renderAttributes(); });
+        bind('cond-arcane-lightning', e => { c.arcaneLightning = e.target.checked; this.renderAttributes(); });
+        bind('cond-crescent-wind', e => { c.crescentWind = e.target.checked; this.renderAttributes(); });
+        bind('cond-conjure-frost-bow', e => { c.conjureFrostBow = e.target.checked; this.renderAttributes(); });
+        bind('cond-conjure-lightning-hammer', e => { c.conjureLightningHammer = e.target.checked; this.renderAttributes(); });
+        bind('cond-conjure-fiery-greatsword', e => { c.conjureFieryGreatsword = e.target.checked; this.renderAttributes(); });
     }
 
     // ─── Compute attributes with conditions applied ───
@@ -736,8 +794,14 @@ class App {
         if (!base) return null;
         const activeTraits = this.data.attributes?.activeTraits || [];
         const specs = this.data.attributes?.specializations || [];
-
         const hasTrait = name => activeTraits.some(t => t.name === name);
+        const selectedSkillNames = new Set(Object.values(this.selectedSkills || {}).filter(Boolean).map(s => s.name));
+        const hasSeveranceSigil = (this.build?.sigils || []).includes('Severance');
+        const hasHammer = (this.data.attributes?.weapons || []).includes('Hammer');
+        const hasConjureFrostBow = selectedSkillNames.has('Conjure Frost Bow');
+        const hasConjureLightningHammer = selectedSkillNames.has('Conjure Lightning Hammer');
+        const hasConjureFieryGreatsword = selectedSkillNames.has('Conjure Fiery Greatsword');
+
         const hasPolyphony = hasTrait('Elemental Polyphony');
         const hasEmpoweringFlame = hasTrait('Empowering Flame');
         const hasAeroTraining = hasTrait("Aeromancer's Training");
@@ -748,6 +812,7 @@ class App {
         const hasWeaversProwess = hasTrait("Weaver's Prowess");
         const hasEnhancedPotency = hasTrait('Enhanced Potency');
         const hasEmpEmpowerment = hasTrait('Empowered Empowerment');
+        const hasArcaneLightning = hasTrait('Arcane Lightning');
         const isEvoker = specs.some(s => s.name === 'Evoker');
 
         // Determine if any condition is effectively active
@@ -755,8 +820,14 @@ class App {
             || c.primaryAtt !== 'None' || c.secondaryAtt !== 'None'
             || c.elemEmpowerment > 0
             || c.freshAir || c.superiorElements || c.weaversProwess
-            || (hasPowerOverwhelming && c.might >= 10)
-            || (hasRagingStorm && c.fury);
+            || (hasSeveranceSigil && c.severance)
+            || (hasRagingStorm && c.ragingStorm && c.fury)
+            || (hasArcaneLightning && c.arcaneLightning)
+            || (hasHammer && c.crescentWind)
+            || (hasConjureFrostBow && c.conjureFrostBow)
+            || (hasConjureLightningHammer && c.conjureLightningHammer)
+            || (hasConjureFieryGreatsword && c.conjureFieryGreatsword)
+            || (hasPowerOverwhelming && c.might >= 10);
         if (!hasAny) return null;
 
         const PRIMARY_STATS = ['Power', 'Precision', 'Toughness', 'Vitality', 'Ferocity', 'Condition Damage', 'Expertise', 'Concentration', 'Healing Power'];
@@ -811,6 +882,33 @@ class App {
             addPrimary('Ferocity', 250);
         }
 
+        if (c.severance && hasSeveranceSigil) {
+            addPrimary('Precision', 250);
+            addPrimary('Ferocity', 250);
+        }
+
+        if (c.ragingStorm && c.fury && hasRagingStorm) {
+            addPrimary('Ferocity', 180);
+        }
+
+        if (c.arcaneLightning && hasArcaneLightning) {
+            addPrimary('Ferocity', 150);
+        }
+
+        if (c.conjureFrostBow && hasConjureFrostBow) {
+            addPrimary('Healing Power', 180);
+        }
+
+        if (c.conjureLightningHammer && hasConjureLightningHammer) {
+            addPrimary('Ferocity', 75);
+            addPrimary('Precision', 180);
+        }
+
+        if (c.conjureFieryGreatsword && hasConjureFieryGreatsword) {
+            addPrimary('Power', 260);
+            addPrimary('Condition Damage', 180);
+        }
+
         // ── Elemental Empowerment ──
         // EE pool = base + gear + runes + infusions + food (utility and traits excluded).
         // Empowered Empowerment: stacks × 1.5%, 10-stack cap locks to flat 20%.
@@ -839,11 +937,10 @@ class App {
         const furyCC = c.fury ? (hasEnhancedPotency ? 40 : 25) : 0;
         // Superior Elements: +15% Crit Chance vs. Weakened enemies
         const supElemCC = (c.superiorElements && hasSuperiorElements) ? 15 : 0;
-        out['Critical Chance'] = { ...out['Critical Chance'], final: newPrecCC + traitCC + sigilCC + furyCC + supElemCC };
+        const crescentWindCC = (c.crescentWind && hasHammer) ? 15 : 0;
+        out['Critical Chance'] = { ...out['Critical Chance'], final: newPrecCC + traitCC + sigilCC + furyCC + supElemCC + crescentWindCC };
 
-        // Critical Damage: Raging Storm adds +12 when Fury is active (simulation: ragingFerocity = 12)
-        const ragingBonus = (hasRagingStorm && c.fury) ? 12 : 0;
-        out['Critical Damage'] = { ...out['Critical Damage'], final: 150 + fer / 15 + ragingBonus };
+        out['Critical Damage'] = { ...out['Critical Damage'], final: 150 + fer / 15 };
 
         // Boon Duration: non-concentration bonus preserved; concentration component updated
         const boonFixedBonus = (base['Boon Duration']?.final ?? 0) - (base['Concentration']?.final ?? 0) / 15;
@@ -855,7 +952,8 @@ class App {
         const wpBonus = (c.weaversProwess && hasWeaversProwess
             && c.secondaryAtt !== 'None' && c.primaryAtt !== c.secondaryAtt) ? 20 : 0;
         const condFixedBonus = (base['Condition Duration']?.final ?? 0) - (base['Expertise']?.final ?? 0) / 15;
-        out['Condition Duration'] = { ...out['Condition Duration'], final: exp / 15 + condFixedBonus + wpBonus };
+        const frostBowCondBonus = (c.conjureFrostBow && hasConjureFrostBow) ? 20 : 0;
+        out['Condition Duration'] = { ...out['Condition Duration'], final: exp / 15 + condFixedBonus + wpBonus + frostBowCondBonus };
 
         return out;
     }
