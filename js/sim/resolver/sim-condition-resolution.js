@@ -32,6 +32,9 @@ function buildConditionTickEffectSnapshot(ctx, ev) {
 
     return {
         hammerFireOrb: effectStacks('Hammer Orb Fire') > 0 ? 0.05 : 0,
+        nourys: S.activeRelic === 'Nourys' && effectStacks('Nourys') > 0
+            ? (ctx.getRelicProc('Nourys')?.condDmgA || 0)
+            : 0,
         tempestuousAria: S._hasTempestuousAria && effectStacks('Tempestuous Aria') > 0 ? 0.05 : 0,
         transcendentTempest: S._hasTranscendentTempest
             && !S._suppressTranscendentTempestContributionBuff
@@ -91,6 +94,7 @@ function buildConditionTickContext(ctx, ev, {
     const condMul = (1
         + sigilMuls.condAdd
         + effectSnapshot.hammerFireOrb
+        + effectSnapshot.nourys
         + effectSnapshot.tempestuousAria
         + effectSnapshot.transcendentTempest
         + effectSnapshot.elementsOfRage
@@ -105,6 +109,7 @@ function buildConditionTickContext(ctx, ev, {
         sigilCondAdd: sigilMuls.condAdd,
         sigilCondMul: sigilMuls.condMul,
         hammerFireOrb: effectSnapshot.hammerFireOrb,
+        nourys: effectSnapshot.nourys,
         tempAria: effectSnapshot.tempestuousAria,
         transcTemp: effectSnapshot.transcendentTempest,
         elemRage: effectSnapshot.elementsOfRage,

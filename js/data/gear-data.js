@@ -370,6 +370,7 @@ export const RELIC_DATA = {
     Akeem: { trigger: 'CC enemy with 5+ Torment/Confusion stacks', cooldown: 10 },
     Fireworks: { trigger: 'Use weapon skill (CD ≥20s)', cooldown: 0 },
     'Mount Balrior': { trigger: 'Use elite skill', cooldown: 30 },
+    Nourys: { trigger: 'Gain 1 stack every 3s in combat (10 stacks → 5s damage buff)', cooldown: 0 },
     Peitha: { trigger: 'Shadowstep or deception skill', cooldown: 4 },
     Aristocracy: { trigger: 'Apply weakness or vulnerability', cooldown: 1 },
     Blightbringer: { trigger: '6th poison application on enemy', cooldown: 8 },

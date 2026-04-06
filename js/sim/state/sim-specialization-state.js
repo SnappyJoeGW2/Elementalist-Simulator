@@ -80,6 +80,9 @@ export function incrementCatalystElemBalance(S, time, {
     durationMs = 5000,
 } = {}) {
     const catalystState = getCatalystState(S);
+    if (catalystState.elemBalanceExpiry <= time) {
+        catalystState.elemBalanceActive = false;
+    }
     catalystState.elemBalanceCount++;
     let activated = false;
     if (catalystState.elemBalanceCount % activateEvery === 0) {
@@ -96,6 +99,7 @@ export function incrementCatalystElemBalance(S, time, {
 export function consumeCatalystElemBalance(S) {
     const catalystState = getCatalystState(S);
     catalystState.elemBalanceActive = false;
+    catalystState.elemBalanceExpiry = 0;
     return false;
 }
 

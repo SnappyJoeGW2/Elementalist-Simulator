@@ -18,6 +18,7 @@ function buildHitEffectSnapshot(ctx, ev) {
         freshAirActive: S._hasFreshAir
             && !S._suppressFreshAirContributionBuff
             && effectStacks('Fresh Air') > 0,
+        nourysActive: S.activeRelic === 'Nourys' && effectStacks('Nourys') > 0,
         severanceUp: effectStacks('Severance') > 0,
         arcaneLightningActive: S._hasArcaneLightning && effectStacks('Arcane Lightning') > 0,
         weaknessActive: S._hasSuperiorElements && effectStacks('Weakness') > 0,
@@ -153,6 +154,8 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
     const relentlessFireUp = effectSnapshot.relentlessFireUp;
     const bountifulPowerUp = effectSnapshot.bountifulPowerUp;
     const hammerFireOrbUp = effectSnapshot.hammerFireOrbUp;
+    const nourysStrikeAdd = effectSnapshot.nourysActive ? (ctx.getRelicProc('Nourys')?.strikeDmgA || 0) : 0;
+    const nourysCondAdd = effectSnapshot.nourysActive ? (ctx.getRelicProc('Nourys')?.condDmgA || 0) : 0;
     const wsFireBonus = (S.weaveSelfVisited.has('Fire') && ev.time < S.weaveSelfUntil)
         || ev.time < S.perfectWeaveUntil;
     const wsAirBonus = (S.weaveSelfVisited.has('Air') && ev.time < S.weaveSelfUntil)
@@ -168,14 +171,16 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
         + (bountifulPowerUp ? 0.20 : 0)
         + (wsAirBonus ? 0.10 : 0)
         + fpStrike
-        + (hammerFireOrbUp ? 0.05 : 0);
+        + (hammerFireOrbUp ? 0.05 : 0)
+        + nourysStrikeAdd;
     const addCond = (tempAriaUp ? 0.05 : 0)
         + (transcTempUp ? 0.20 : 0)
         + (elemRageUp ? 0.05 : 0)
         + empAurasStacks * 0.01
         + (wsFireBonus ? 0.20 : 0)
         + fpCond
-        + (hammerFireOrbUp ? 0.05 : 0);
+        + (hammerFireOrbUp ? 0.05 : 0)
+        + nourysCondAdd;
 
     const baseStrike = (1 + sigilMuls.strikeAdd + addStrike) * sigilMuls.strikeMul;
     const baseCond = (1 + sigilMuls.condAdd + addCond) * sigilMuls.condMul;

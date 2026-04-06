@@ -1,6 +1,7 @@
 import { getChainProgress, getChainExpiry } from '../state/sim-cooldown-state.js';
 import { getHammerOrbLastCast, hasUsedHammerOrbSkill } from '../mechanics/sim-hammer.js';
 import { activateCombatStartEffects } from '../mechanics/sim-effect-state.js';
+import { buildNourysTickAction, queueRuntimeAction } from '../shared/sim-deferred-runtime-actions.js';
 
 const PICKUP_CAST_MS = 300;
 const MIN_WAIT_MS = 1;
@@ -43,6 +44,9 @@ export function handleBundleStepCommand(ctx, name, rotationMeta = {}) {
         }
         S.combatStartTime = S.t;
         activateCombatStartEffects(S, S.t);
+        if (S.activeRelic === 'Nourys') {
+            queueRuntimeAction(S, buildNourysTickAction({ time: S.t + 3000 }));
+        }
         ctx.log({ t: S.t, type: 'combat_start', skill: 'Combat Start' });
         ctx.addStep({ skill: name, start: S.t, end: S.t, att: S.att, type: 'combat_start', ri: S._ri });
         return true;

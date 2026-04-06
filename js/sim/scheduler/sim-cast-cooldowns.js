@@ -69,8 +69,12 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
         ctx.log({ t: end, type: 'skill_proc', skill: 'Arcane Echo', detail: `${name} CD → 1s` });
     } else {
         let baseCdMs = ctx.weaponRechargeMs(sk, Math.round(sk.recharge * 1000));
-        if (catalystState.elemBalanceActive && end <= catalystState.elemBalanceExpiry
-            && sk.type === 'Weapon skill') {
+        if (
+            catalystState.elemBalanceActive
+            && end <= catalystState.elemBalanceExpiry
+            && sk.type === 'Weapon skill'
+            && sk.slot !== '1'
+        ) {
             baseCdMs = Math.round(baseCdMs * 0.34);
             ctx.consumeCatalystElemBalance();
         }

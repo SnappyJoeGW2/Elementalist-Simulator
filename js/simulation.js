@@ -213,6 +213,12 @@ const RELIC_PROCS = {
         conditions: null,
         icon: 'https://render.guildwars2.com/file/2999CCF7C94267B2EE3DDA7459050864622927C9/3122349.png',
     },
+    Nourys: {
+        trigger: 'nourys', icd: 0, strikeDmgA: 0.25, condDmgA: 0.25, effectDuration: 5000,
+        stackInterval: 3000, stacksNeeded: 10,
+        conditions: null,
+        icon: 'https://wiki.guildwars2.com/images/3/3f/Relic_of_Nourys.png',
+    },
     'Mount Balrior': {
         trigger: 'elite_delayed', icd: 30000, delay: 1000, strikeDmgM: 0.15, effectDuration: 6000,
         conditions: null,
