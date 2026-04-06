@@ -25,6 +25,11 @@
     "rotation": "Rotations/r-condi-alac-tempest-scepter.json"
   },
   {
+    "label": "Inferno Alac Tempest",
+    "build": "Builds/b-inferno-alac-tempest.json",
+    "rotation": "Rotations/r-inferno-alac-tempest.json"
+  },
+  {
     "label": "Power Catalyst (Spear)",
     "build": "Builds/b-power-catalyst-spear.json",
     "rotation": "Rotations/r-power-catalyst-spear.json"

@@ -16,6 +16,19 @@ import { effectStacksAt } from '../shared/sim-state-queries.js';
 import { pushReportingLog } from '../state/sim-reporting-state.js';
 import { reduceSkillCooldownRemaining } from '../state/sim-cooldown-state.js';
 
+const DURATION_STACKING_BOONS = new Set([
+    'Alacrity',
+    'Fury',
+    'Protection',
+    'Quickness',
+    'Regeneration',
+    'Resistance',
+    'Resolution',
+    'Superspeed',
+    'Swiftness',
+    'Vigor',
+]);
+
 export function refreshEffect(ctx, effectName, durSec, time) {
     const { S } = ctx;
     expireActiveTimedStacks(S, effectName, time);
@@ -169,6 +182,17 @@ export function trackEffect(engine, S, effect, stacks, durSec, time, {
     }
 
     const adjMs = Math.round(durSec * 1000 * (1 + Math.min(bonus / 100, 1) + uncapped / 100));
+    if (boons.has(effect) && DURATION_STACKING_BOONS.has(effect)) {
+        const active = getActiveTimedStacks(S, effect, time, { includePerma: false });
+        const carryoverMs = active.reduce((sum, stack) => sum + Math.max(0, stack.expiresAt - time), 0);
+        for (const stack of active) stack.expiresAt = time;
+
+        const expiresAt = time + carryoverMs + (adjMs * stacks);
+        pushCondStack({ t: time, cond: effect, expiresAt });
+        recordEffectWindow(S, effect, expiresAt);
+        return;
+    }
+
     for (let i = 0; i < stacks; i++) {
         pushCondStack({ t: time, cond: effect, expiresAt: time + adjMs });
     }
