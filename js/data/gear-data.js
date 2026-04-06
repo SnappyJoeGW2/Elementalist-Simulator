@@ -268,7 +268,7 @@ export const FOOD_DATA = {
     'Bowl of Curry Butternut Squash Soup': { isConverted: true, stats: { Ferocity: 70, Precision: 100 }, durations: {} },
     'Soul Pastry': { isConverted: true, stats: { Power: 70, Concentration: 100 }, durations: {} },
     'Plate of Eggs Benedict': { isConverted: true, stats: { Expertise: 70, Concentration: 100 }, durations: {} },
-    'Bowl of Truffle Risotto': { isConverted: true, stats: { Ferocity: 70, 'Condition Damage': 100 }, durations: {} },
+    'Bowl of Truffle Risotto': { isConverted: true, stats: { Precision: 70, 'Condition Damage': 100 }, durations: {} },
     'Plate of Beef Rendang': { isConverted: true, stats: { 'Condition Damage': 100, Expertise: 70 }, durations: {} },
     'Bowl of Sweet and Spicy Beans': { isConverted: true, stats: { Power: 70, 'Condition Damage': 100 }, durations: {} },
     'Rare Veggie Pizza': { isConverted: true, stats: { 'Condition Damage': 70, Expertise: 100 }, durations: {} },
