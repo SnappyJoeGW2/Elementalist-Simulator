@@ -8,6 +8,7 @@ import {
     buildCastWindow,
     runConcurrentSteps,
 } from './sim-cast-window.js';
+import { updateSpearEtchingProgression } from './sim-cast-followups.js';
 import { getSkillCooldownReadyAt } from '../state/sim-cooldown-state.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
 
@@ -81,6 +82,7 @@ export function handleJadeSphere(ctx, sk, concurrents, {
     ctx.log({ t: state.t, type: 'jade_sphere', skill: sk.name, att: sk.attunement, energy: catalystState.energy, durMs });
     ctx.recordSkillCast(sk.name, 0);
     ctx.addStep({ skill: sk.name, start: state.t, end: state.t, att: state.att, type: 'jade_sphere', ri: state._ri });
+    updateSpearEtchingProgression(ctx, sk, sk.name, state.t);
 
     if (state._hasSpectacularSphere) {
         const durMul = state._hasSphereSpecialist ? 1.5 : 1;
@@ -214,6 +216,7 @@ export function handleFamiliar(ctx, sk, concurrents, {
 
     ctx.recordSkillCast(sk.name, castMs);
     ctx.addStep({ skill: sk.name, start, end, att: state.att, type: 'familiar', ri: state._ri });
+    updateSpearEtchingProgression(ctx, sk, sk.name, end);
 
     if (state._hasPyroPuissance && state.att === 'Fire' && isCombatActiveAt(state, end)) {
         ctx.trackEffect('Might', 1, 15, end);

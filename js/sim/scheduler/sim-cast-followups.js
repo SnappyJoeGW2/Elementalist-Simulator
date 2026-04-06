@@ -63,7 +63,7 @@ function applyEnduranceProgression(ctx, sk, end) {
     ctx.gainEndurance(sk.endurance, end);
 }
 
-function updateSpearEtchingProgression(ctx, sk, name, end) {
+export function updateSpearEtchingProgression(ctx, sk, name, end) {
     const { S } = ctx;
     const etchCast = ctx.etchingLookup.get(name);
     if (etchCast && sk.weapon === 'Spear') {

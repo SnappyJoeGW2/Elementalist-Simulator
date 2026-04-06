@@ -2,6 +2,7 @@ import {
     buildCastWindow,
     runConcurrentSteps,
 } from './sim-cast-window.js';
+import { updateSpearEtchingProgression } from './sim-cast-followups.js';
 import {
     advanceSwapToReadyTime,
     applySharedSwapElementEffects,
@@ -342,6 +343,7 @@ export function handleOverload(ctx, sk, concurrents, {
     ctx.ensurePerSkill(sk.name);
     ctx.recordSkillCast(sk.name, castMs);
     ctx.addStep({ skill: sk.name, start, end, att: state.att, type: 'overload', ri: state._ri });
+    updateSpearEtchingProgression(ctx, sk, sk.name, end);
 
     if (state._hasUnstableConduit) {
         const auraMap = { Fire: 'Fire Aura', Water: 'Frost Aura', Air: 'Shocking Aura', Earth: 'Magnetic Aura' };
