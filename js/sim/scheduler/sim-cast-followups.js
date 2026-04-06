@@ -34,6 +34,10 @@ function applyEvokerChargeProgression(ctx, sk, time) {
     const slotNum = parseInt(sk.slot, 10);
     if (Number.isNaN(slotNum) || slotNum < 2 || slotNum > 5) return;
     if (ctx.conjureWeapons.has(sk.weapon) || ctx.evokerNoChargeSkills.has(sk.name)) return;
+    if (sk.weapon === 'Spear') {
+        const etchChain = ctx.etchingLookup.get(sk.name);
+        if (etchChain && sk.name !== etchChain.etching) return;
+    }
 
     const skillAtt = sk.attunement ? sk.attunement.split('+') : [];
     const bonus = skillAtt.includes(evokerState.element) ? 2 : 1;
