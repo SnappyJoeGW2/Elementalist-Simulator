@@ -114,7 +114,7 @@ const SIGIL_PROCS = {
     Severance: {
         trigger: 'cc', icd: 1000, effect: 'buff',
         precision: 250, ferocity: 250, dur: 4,
-        icon: null,
+        icon: 'https://wiki.guildwars2.com/images/c/c2/Superior_Sigil_of_Severance.png',
     },
 };
 
