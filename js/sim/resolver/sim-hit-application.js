@@ -2,8 +2,18 @@ import { strikeDamage } from '../../core/damage.js';
 import { anySphereActiveAt } from '../scheduler/sim-special-actions.js';
 import { addPerSkillStrike } from '../state/sim-reporting-state.js';
 
+function isFlatStrikeEvent(ev) {
+    return Number.isFinite(ev?.flatStrikeBase) || Number.isFinite(ev?.flatStrikePowerCoeff);
+}
+
 function applyStrikeDamage(ctx, ev, power, critMult, strikeMul) {
     const { S, catalystEnergyMax } = ctx;
+    if (isFlatStrikeEvent(ev)) {
+        const strike = (ev.flatStrikeBase || 0) + ((ev.flatStrikePowerCoeff || 0) * power);
+        S.totalStrike += strike;
+        return strike;
+    }
+
     if (!(ev.dmg > 0 && ev.ws > 0)) return 0;
 
     const strike = strikeDamage(ev.dmg, ev.ws, power) * critMult * strikeMul;
@@ -75,6 +85,7 @@ function logAppliedHit(ctx, ev, strike) {
         cc: ev.cc,
         finisher: ev.finType,
         att: ev.att,
+        flatStrike: isFlatStrikeEvent(ev),
     });
 }
 

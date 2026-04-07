@@ -1163,7 +1163,7 @@ export class SimulationEngine {
                         r(d.condMul), '', '', '',
                         '', '', '', '', '',
                         r(d.empFlame), r(d.powOvr), r(d.polyPow), r(d.polyFer),
-                        r(d.att), r(d.att2), ev.isField ? 'field' : '',
+                        r(d.att), r(d.att2), ev.flatStrike ? 'flat-strike' : (ev.isField ? 'field' : ''),
                     ];
                     break;
                 case 'cond_tick':

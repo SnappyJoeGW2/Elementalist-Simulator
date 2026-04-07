@@ -2060,7 +2060,9 @@ class App {
                 case 'hit': {
                     let detail = `HIT  ${ev.skill} #${ev.hit}.${ev.sub} → ${ev.strike} dmg (coeff ${ev.coeff?.toFixed(3) || 0})`;
                     if (ev.isField) detail += ' [field]';
-                    if (d.power) detail += ` | pwr:${d.power} ws:${d.ws} cc:${d.critCh?.toFixed(1)}% cd:${d.critDmg?.toFixed(1)}% cMul:${d.critMul?.toFixed(3)} sMul:${d.strikeMul?.toFixed(3)}`;
+                    if (ev.flatStrike) detail += ' [flat]';
+                    if (ev.flatStrike && d.power) detail += ` | pwr:${d.power}`;
+                    else if (d.power) detail += ` | pwr:${d.power} ws:${d.ws} cc:${d.critCh?.toFixed(1)}% cd:${d.critDmg?.toFixed(1)}% cMul:${d.critMul?.toFixed(3)} sMul:${d.strikeMul?.toFixed(3)}`;
                     desc = detail;
                     break;
                 }

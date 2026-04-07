@@ -59,7 +59,9 @@ export function isRuntimeActionEvent(event) {
 }
 
 export function isDamageWindowEvent(event) {
-    return (isHitEvent(event) && event.dmg > 0) || isConditionTickEvent(event);
+    return (isHitEvent(event)
+        && (event.dmg > 0 || Number.isFinite(event.flatStrikeBase) || Number.isFinite(event.flatStrikePowerCoeff)))
+        || isConditionTickEvent(event);
 }
 
 export function getQueuedEventValidationError(event) {

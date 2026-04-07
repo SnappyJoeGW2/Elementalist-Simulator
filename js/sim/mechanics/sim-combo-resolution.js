@@ -86,6 +86,54 @@ function applyComboEffect(ctx, fieldType, finType, time, skill) {
         } else {
             return;
         }
+    } else if (fieldType === 'Dark') {
+        if (finType === 'Blast') {
+            ctx.applyAura('Dark Aura', 3000, time, source);
+        } else if (finType === 'Leap') {
+            ctx.applyAura('Dark Aura', 5000, time, source);
+        } else if (finType === 'Projectile') {
+            ctx.queueHitEvent({
+                time,
+                skill: 'Life Stealing Projectile',
+                hitIdx: 1,
+                sub: 1,
+                totalSubs: 1,
+                dmg: 0,
+                ws: 0,
+                isField: false,
+                cc: false,
+                conds: null,
+                noCrit: true,
+                att: ctx.attAt(time),
+                att2: ctx.att2At(time),
+                castStart: time,
+                isTraitProc: true,
+                flatStrikeBase: 202,
+                flatStrikePowerCoeff: 0.03,
+            });
+        } else if (finType === 'Whirl') {
+            ctx.queueHitEvent({
+                time,
+                skill: 'Leeching Bolt',
+                hitIdx: 1,
+                sub: 1,
+                totalSubs: 1,
+                dmg: 0,
+                ws: 0,
+                isField: false,
+                cc: false,
+                conds: null,
+                noCrit: true,
+                att: ctx.attAt(time),
+                att2: ctx.att2At(time),
+                castStart: time,
+                isTraitProc: true,
+                flatStrikeBase: 170,
+                flatStrikePowerCoeff: 0.03,
+            });
+        } else {
+            return;
+        }
     } else {
         return;
     }
