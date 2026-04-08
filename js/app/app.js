@@ -188,6 +188,12 @@ const HAMMER_DUAL_ORB_SKILLS_UI = {
 const HAMMER_ALL_ORB_NAMES_UI = new Set([...HAMMER_ORB_SKILLS_UI, ...Object.keys(HAMMER_DUAL_ORB_SKILLS_UI)]);
 const HAMMER_ORB_DURATION_MS_UI = 15000;
 const HAMMER_ORB_ICD_MS_UI = 480;
+const EVASIVE_ARCANA_SKILL_BY_ATTUNEMENT_UI = Object.freeze({
+    Fire: 'Flame Burst (trait)',
+    Water: 'Cleansing Wave (trait)',
+    Air: 'Blinding Flash (trait)',
+    Earth: 'Shock Wave (trait)',
+});
 
 const INTENSITY_EFFECTS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
@@ -1926,7 +1932,19 @@ class App {
             const cd = Math.max(skillCd, dwellCd);
             return cd > 0 ? cd : null;
         }
-        if (skill.type === 'Dodge' || skill.slot === 'Dodge') return null;
+        if (skill.type === 'Dodge' || skill.slot === 'Dodge') {
+            const activeTraits = this.data?.attributes?.activeTraits || [];
+            const hasEvasiveArcana = activeTraits.some(trait => trait.name === 'Evasive Arcana');
+            if (!hasEvasiveArcana) return null;
+
+            const att = es.att || this.activeAttunement;
+            const evasiveArcanaSkill = EVASIVE_ARCANA_SKILL_BY_ATTUNEMENT_UI[att];
+            if (!evasiveArcanaSkill) return null;
+
+            const icdKey = `EvasiveArcana:${evasiveArcanaSkill}`;
+            const cd = ((es.traitICD?.[icdKey] || 0) - t) / 1000;
+            return cd > 0 ? cd : null;
+        }
 
         const cdKey = this._cdKey(skill);
 

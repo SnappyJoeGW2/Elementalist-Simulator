@@ -763,6 +763,7 @@ export class SimulationEngine {
             attCDMeta: S.attCDMeta ? JSON.parse(JSON.stringify(S.attCDMeta)) : {},
             skillCD: { ...S.skillCD },
             skillCDMeta: S.skillCDMeta ? JSON.parse(JSON.stringify(S.skillCDMeta)) : {},
+            traitICD: { ...S.traitICD },
             charges: JSON.parse(JSON.stringify(S.charges)),
             chainState: { ...S.chainState },
             chainExpiry: { ...S.chainExpiry },
