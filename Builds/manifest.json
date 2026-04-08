@@ -20,7 +20,7 @@
     "rotation": "Rotations/r-power-tempest-sword.json"
   },
   {
-    "label": "Condi Alac Tempest (Scepter)",
+    "label": "Condi Tempest (Scepter)",
     "build": "Builds/b-condi-tempest-scepter.json",
     "rotation": "Rotations/r-condi-tempest-scepter.json"
   },
