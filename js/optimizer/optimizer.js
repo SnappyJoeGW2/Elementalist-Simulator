@@ -6,7 +6,7 @@
 // unordered distributions — C(N+K-1, K-1) — instead of K^N ordered tuples.
 // This reduces a 3-prefix / 14-slot search from 4.8M to ~525K combinations.
 //
-// Each non-gear combo (rune × relic × sigil pair × food × utility × infusions)
+// Each non-gear combo (rune × relic × slot-specific sigils × food × utility × infusions)
 // is sent to a Web Worker for parallel exhaustive evaluation.
 
 import { SimulationEngine } from '../simulation.js?v=46';
@@ -44,6 +44,7 @@ export class GearOptimizer {
         const activeSlots = getActiveGearSlots(build.weapons, WEAPON_DATA);
 
         const nonGearCombos = this._nonGearCombos(space);
+        if (!nonGearCombos.length) throw new Error('No valid non-gear combinations to evaluate.');
 
         const numCores = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
         const numWorkers = Math.max(1, Math.min(numCores, nonGearCombos.length));
@@ -230,17 +231,8 @@ export class GearOptimizer {
         const infStats = space.infusionStats || [];
         const infTotal = space.infusionTotal ?? 0;
         const infusions = infStats.length === 0 ? [null]
-            : this._infusionDistributions(infStats, infTotal);
-
-        const sigilPairs = [];
-        const ss = space.sigils;
-        if (ss.length < 2) {
-            sigilPairs.push([null, null]);
-        } else {
-            for (let i = 0; i < ss.length; i++)
-                for (let j = i + 1; j < ss.length; j++)
-                    sigilPairs.push([ss[i], ss[j]]);
-        }
+            : this._infusionDistributions(infStats, infTotal, space.infusionRanges || []);
+        const sigilPairs = this._sigilPairs(space.sigils1 || [], space.sigils2 || []);
 
         const out = [];
         for (const rune of runes)
@@ -253,21 +245,66 @@ export class GearOptimizer {
         return out;
     }
 
-    _infusionDistributions(stats, total) {
-        if (total === 0) return [[]];
+    _sigilPairs(slot1, slot2) {
+        if (!slot1.length && !slot2.length) return [[null, null]];
+        if (!slot1.length || !slot2.length) return [];
+
+        const seen = new Set();
+        const out = [];
+        for (const sigil1 of slot1) {
+            for (const sigil2 of slot2) {
+                if (sigil1 === sigil2) continue;
+                const key = [sigil1, sigil2].sort().join('\u0000');
+                if (seen.has(key)) continue;
+                seen.add(key);
+                out.push([sigil1, sigil2]);
+            }
+        }
+        return out;
+    }
+
+    _infusionDistributions(stats, total, rawRanges = []) {
+        if (stats.length === 0) return [[]];
+
+        const rangeMap = new Map(rawRanges.map(range => [range.stat, range]));
+        const ranges = stats.map(stat => {
+            const raw = rangeMap.get(stat) || {};
+            const min = Math.max(0, Math.min(total, parseInt(raw.min, 10) || 0));
+            const max = Math.max(min, Math.min(total, parseInt(raw.max, 10) || total));
+            return { stat, min, max };
+        });
+
+        const minSum = ranges.reduce((sum, range) => sum + range.min, 0);
+        const maxSum = ranges.reduce((sum, range) => sum + range.max, 0);
+        if (total < minSum || total > maxSum) return [];
+
+        const suffixMin = new Array(ranges.length + 1).fill(0);
+        const suffixMax = new Array(ranges.length + 1).fill(0);
+        for (let i = ranges.length - 1; i >= 0; i--) {
+            suffixMin[i] = suffixMin[i + 1] + ranges[i].min;
+            suffixMax[i] = suffixMax[i + 1] + ranges[i].max;
+        }
+
         const results = [];
         const counts = new Array(stats.length).fill(0);
         const recurse = (idx, remaining) => {
+            const range = ranges[idx];
             if (idx === stats.length - 1) {
+                if (remaining < range.min || remaining > range.max) return;
                 counts[idx] = remaining;
                 results.push(
                     stats.map((s, i) => ({ stat: s, count: counts[i] })).filter(x => x.count > 0)
                 );
                 return;
             }
-            for (let i = 0; i <= remaining; i++) {
-                counts[idx] = i;
-                recurse(idx + 1, remaining - i);
+
+            const nextMin = suffixMin[idx + 1];
+            const nextMax = suffixMax[idx + 1];
+            const low = Math.max(range.min, remaining - nextMax);
+            const high = Math.min(range.max, remaining - nextMin);
+            for (let count = low; count <= high; count++) {
+                counts[idx] = count;
+                recurse(idx + 1, remaining - count);
             }
         };
         recurse(0, total);

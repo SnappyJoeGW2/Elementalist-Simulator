@@ -14,7 +14,14 @@ import { getEvokerState } from '../state/sim-specialization-state.js';
 import { isTraitIcdReady, armTraitIcd } from '../state/sim-icd-state.js';
 import { effectStacksAt } from '../shared/sim-state-queries.js';
 import { pushReportingLog } from '../state/sim-reporting-state.js';
-import { reduceSkillCooldownRemaining } from '../state/sim-cooldown-state.js';
+import {
+    adjustChargeCount,
+    getChargeState,
+    getSkillCooldownMeta,
+    getSkillCooldownReadyAt,
+    setChargeReadyAt,
+    setSkillCooldownReadyAt,
+} from '../state/sim-cooldown-state.js';
 
 const DURATION_STACKING_BOONS = new Set([
     'Alacrity',
@@ -45,12 +52,74 @@ export function grantFamiliarProwess(ctx, time) {
     }
 }
 
+function getDisplayedCooldownRemainingMs(meta, time, actualRemainingMs) {
+    if (!meta || !Number.isFinite(meta.startedAt) || !Number.isFinite(meta.displayDurationMs)) {
+        return actualRemainingMs;
+    }
+
+    const startedAt = meta.startedAt;
+    const displayDurationMs = meta.displayDurationMs;
+    const alaUntil = meta.alacrityUntil || 0;
+    const elapsedMs = Math.max(0, time - startedAt);
+    const alaElapsedMs = alaUntil > startedAt
+        ? Math.max(0, Math.min(time, alaUntil) - startedAt)
+        : 0;
+    const displayElapsedMs = elapsedMs + (alaElapsedMs * 0.25);
+    return Math.max(0, displayDurationMs - displayElapsedMs);
+}
+
 export function rechargeWeaponSkills(ctx, pct, time) {
     const { S, skills } = ctx;
     for (const sk of skills) {
         if (sk.type !== 'Weapon skill') continue;
         const key = ctx.cdKey(sk);
-        reduceSkillCooldownRemaining(S, key, time, pct);
+
+        if (sk.recharge > 0) {
+            const readyAt = getSkillCooldownReadyAt(S, key);
+            if (readyAt > time) {
+                const baseCdMs = ctx.weaponRechargeMs(sk, Math.round(sk.recharge * 1000));
+                const adjustedCdMs = ctx.alacrityAdjustedCooldown(baseCdMs, time);
+                const reducedByMs = Math.round(adjustedCdMs * pct);
+                const displayReducedByMs = Math.round(baseCdMs * pct);
+                const nextReadyAt = Math.max(time, readyAt - reducedByMs);
+                const meta = getSkillCooldownMeta(S, key);
+                const actualRemainingMs = Math.max(0, readyAt - time);
+                const displayedRemainingMs = getDisplayedCooldownRemainingMs(meta, time, actualRemainingMs);
+                const nextDisplayedRemainingMs = Math.max(0, displayedRemainingMs - displayReducedByMs);
+                setSkillCooldownReadyAt(
+                    S,
+                    key,
+                    nextReadyAt,
+                    nextReadyAt > time ? {
+                        startedAt: time,
+                        displayDurationMs: nextDisplayedRemainingMs,
+                        alacrityUntil: S.alacrityUntil || 0,
+                    } : null,
+                );
+            }
+        }
+
+        if (sk.maximumCount > 0 && sk.countRecharge > 0) {
+            const chargeState = getChargeState(S, key);
+            if (!chargeState || chargeState.count >= sk.maximumCount || chargeState.nextChargeAt <= time) continue;
+
+            const baseChargeMs = ctx.weaponRechargeMs(sk, Math.round(sk.countRecharge * 1000));
+            const adjustedChargeMs = ctx.alacrityAdjustedCooldown(baseChargeMs, time);
+            const reducedByMs = Math.round(adjustedChargeMs * pct);
+            const nextChargeAt = Math.max(time, chargeState.nextChargeAt - reducedByMs);
+
+            if (nextChargeAt > time) {
+                setChargeReadyAt(S, key, nextChargeAt);
+                continue;
+            }
+
+            adjustChargeCount(S, key, 1);
+            if (chargeState.count < sk.maximumCount) {
+                setChargeReadyAt(S, key, time + ctx.alacrityAdjustedCooldown(baseChargeMs, time));
+            } else {
+                setChargeReadyAt(S, key, Infinity);
+            }
+        }
     }
 }
 

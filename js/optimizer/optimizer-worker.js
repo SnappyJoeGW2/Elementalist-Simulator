@@ -139,7 +139,7 @@ function _enumerateGearCombos(groups, prefixes) {
     const K = prefixes.length;
     const groupDistributions = groups.map(g => {
         if (g.locked !== null) {
-            return [new Array(g.slots.length).fill(prefixes.indexOf(g.locked))];
+            return [new Array(g.slots.length).fill(g.locked)];
         }
         return _distributions(g.slots.length, K);
     });
@@ -179,7 +179,7 @@ function _expandToGear(gearAssign, groups, prefixes) {
         for (let si = 0; si < g.slots.length; si++) {
             const effectiveSlot = g.slots[si];
             const gearSlot = effectiveSlot === 'Weapon2H' ? 'Weapon1' : effectiveSlot;
-            gear[gearSlot] = prefixes[dist[si]];
+            gear[gearSlot] = g.locked !== null ? dist[si] : prefixes[dist[si]];
         }
     }
     return gear;

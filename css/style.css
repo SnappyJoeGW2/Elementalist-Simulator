@@ -2347,6 +2347,22 @@ header .accent {
     gap: 6px;
 }
 
+.opt-subspace + .opt-subspace {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.opt-subspace-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+
 .opt-max-note {
     font-weight: 400;
     color: var(--accent);
@@ -2382,6 +2398,59 @@ header .accent {
 
 .opt-inf-hint {
     font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.opt-infusion-ranges {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.opt-infusion-range-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 54px 54px;
+    gap: 8px;
+    align-items: end;
+}
+
+.opt-infusion-range-name {
+    min-width: 0;
+    font-size: 0.78rem;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.opt-infusion-range-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+.opt-infusion-range-input {
+    width: 100%;
+    padding: 3px 5px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.opt-infusion-range-input:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+.opt-infusion-ranges-empty {
+    font-size: 0.74rem;
     color: var(--text-muted);
     font-style: italic;
 }

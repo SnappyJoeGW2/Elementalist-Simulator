@@ -238,13 +238,28 @@
                 <!-- Sigils -->
                 <div class="opt-space-block">
                     <div class="opt-space-label">
-                        <span>Sigils <span class="opt-max-note">(pool for both slots)</span></span>
-                        <span class="opt-space-actions">
-                            <button class="opt-selall" data-group="sigil">All</button>
-                            <button class="opt-deselall" data-group="sigil">None</button>
-                        </span>
+                        <span>Sigils <span class="opt-max-note">(slot-specific pools)</span></span>
                     </div>
-                    <div class="opt-check-grid" id="opt-sigils"></div>
+                    <div class="opt-subspace">
+                        <div class="opt-subspace-label">
+                            <span>Sigil 1</span>
+                            <span class="opt-space-actions">
+                                <button class="opt-selall" data-group="sigil1">All</button>
+                                <button class="opt-deselall" data-group="sigil1">None</button>
+                            </span>
+                        </div>
+                        <div class="opt-check-grid" id="opt-sigils-1"></div>
+                    </div>
+                    <div class="opt-subspace">
+                        <div class="opt-subspace-label">
+                            <span>Sigil 2</span>
+                            <span class="opt-space-actions">
+                                <button class="opt-selall" data-group="sigil2">All</button>
+                                <button class="opt-deselall" data-group="sigil2">None</button>
+                            </span>
+                        </div>
+                        <div class="opt-check-grid" id="opt-sigils-2"></div>
+                    </div>
                 </div>
                 <!-- Relics -->
                 <div class="opt-space-block">
@@ -293,9 +308,10 @@
                             Total:
                             <input type="number" id="opt-inf-total" min="0" max="18" value="18" class="opt-inf-count">
                         </label>
-                        <span class="opt-inf-hint">Select stat types to mix</span>
+                        <span class="opt-inf-hint">Selected infusion stats are treated as totals, not slot assignments</span>
                     </div>
                     <div class="opt-check-grid" id="opt-infusions"></div>
+                    <div class="opt-infusion-ranges" id="opt-infusion-ranges"></div>
                 </div>
             </div>
 

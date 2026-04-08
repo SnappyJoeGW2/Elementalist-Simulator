@@ -9,6 +9,94 @@ function esc(s) {
     return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function clampInt(value, min, max, fallback) {
+    const parsed = parseInt(value, 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.max(min, Math.min(max, parsed));
+}
+
+function readInfusionRangeInputs() {
+    const out = {};
+    document.querySelectorAll('#opt-infusion-ranges .opt-infusion-range-row').forEach(row => {
+        const stat = row.dataset.stat;
+        if (!stat) return;
+        const minInput = row.querySelector('input[data-kind="min"]');
+        const maxInput = row.querySelector('input[data-kind="max"]');
+        out[stat] = {
+            min: minInput?.value ?? '',
+            max: maxInput?.value ?? '',
+        };
+    });
+    return out;
+}
+
+function enumerateSigilPairs(slot1, slot2) {
+    if (!slot1.length && !slot2.length) return [[null, null]];
+    if (!slot1.length || !slot2.length) return [];
+
+    const seen = new Set();
+    const out = [];
+    for (const sigil1 of slot1) {
+        for (const sigil2 of slot2) {
+            if (sigil1 === sigil2) continue;
+            const key = [sigil1, sigil2].sort().join('\u0000');
+            if (seen.has(key)) continue;
+            seen.add(key);
+            out.push([sigil1, sigil2]);
+        }
+    }
+    return out;
+}
+
+function enumerateInfusionDistributions(ranges, total) {
+    if (!ranges.length) return [[]];
+
+    const normalized = ranges.map(({ stat, min, max }) => {
+        const clampedMin = clampInt(min, 0, total, 0);
+        const clampedMax = clampInt(max, clampedMin, total, total);
+        return { stat, min: clampedMin, max: clampedMax };
+    });
+
+    const minSum = normalized.reduce((sum, range) => sum + range.min, 0);
+    const maxSum = normalized.reduce((sum, range) => sum + range.max, 0);
+    if (total < minSum || total > maxSum) return [];
+
+    const suffixMin = new Array(normalized.length + 1).fill(0);
+    const suffixMax = new Array(normalized.length + 1).fill(0);
+    for (let i = normalized.length - 1; i >= 0; i--) {
+        suffixMin[i] = suffixMin[i + 1] + normalized[i].min;
+        suffixMax[i] = suffixMax[i + 1] + normalized[i].max;
+    }
+
+    const counts = new Array(normalized.length).fill(0);
+    const out = [];
+    const recurse = (idx, remaining) => {
+        const range = normalized[idx];
+        if (idx === normalized.length - 1) {
+            if (remaining < range.min || remaining > range.max) return;
+            counts[idx] = remaining;
+            out.push(
+                normalized
+                    .map((entry, i) => ({ stat: entry.stat, count: counts[i] }))
+                    .filter(entry => entry.count > 0)
+            );
+            return;
+        }
+
+        const nextMin = suffixMin[idx + 1];
+        const nextMax = suffixMax[idx + 1];
+        const low = Math.max(range.min, remaining - nextMax);
+        const high = Math.min(range.max, remaining - nextMin);
+        for (let count = low; count <= high; count++) {
+            counts[idx] = count;
+            recurse(idx + 1, remaining - count);
+        }
+    };
+
+    recurse(0, total);
+    return out;
+}
+
 export function initOptimizer(app) {
     app._optimizer = new GearOptimizer({
         skills: app.data.skills,
@@ -56,7 +144,8 @@ export function populateOptimizerCheckboxes(app, { foodDesc, utilityDesc }) {
     const curPrefix = Object.values(b.gear || {})[0] || PREFIXES[0];
     makeGrid('opt-prefixes', PREFIXES, 'prefix', [curPrefix, "Assassin's"].filter(p => PREFIXES.includes(p)));
     makeGrid('opt-runes', RUNE_NAMES, 'rune', [b.rune].filter(Boolean));
-    makeGrid('opt-sigils', SIGIL_NAMES, 'sigil', (b.sigils || []).filter(Boolean));
+    makeGrid('opt-sigils-1', SIGIL_NAMES, 'sigil1', b.sigils?.[0] ? [b.sigils[0]] : []);
+    makeGrid('opt-sigils-2', SIGIL_NAMES, 'sigil2', b.sigils?.[1] ? [b.sigils[1]] : []);
     makeGrid('opt-relics', RELIC_NAMES, 'relic', [b.relic].filter(Boolean));
     makeConsumableGrid('opt-food', FOOD_NAMES, 'food', [b.food].filter(Boolean), foodDesc);
     makeConsumableGrid('opt-utility', UTILITY_NAMES, 'utility', [b.utility].filter(Boolean), utilityDesc);
@@ -78,12 +167,14 @@ export function populateOptimizerCheckboxes(app, { foodDesc, utilityDesc }) {
     if (infTotalEl && curInfTotal > 0) infTotalEl.value = curInfTotal;
 
     enforcePrefixMax();
+    renderInfusionRanges(app);
     populateSlotConstraints(app);
 }
 
 export function populateSlotConstraints(app) {
     const container = document.getElementById('opt-slot-constraints');
     if (!container) return;
+    const current = readSlotConstraints();
     const SLOT_LABELS = {
         Helm: 'Helm', Shoulders: 'Shld', Chest: 'Coat', Gloves: 'Glov',
         Leggins: 'Legs', Boots: 'Boot', Amulet: 'Amul', Ring1: 'Rng1',
@@ -91,10 +182,12 @@ export function populateSlotConstraints(app) {
         Weapon1: 'Wep1', Weapon2: 'Wep2', Weapon2H: 'Wep(2H)',
     };
     const activeSlots = getActiveGearSlots(app.build.weapons, WEAPON_DATA);
-    const checked = getChecked('opt-prefixes');
     container.innerHTML = activeSlots.map(slot => {
         const label = SLOT_LABELS[slot] || slot;
-        const opts = checked.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+        const opts = PREFIXES.map(p => {
+            const selected = current[slot] === p ? ' selected' : '';
+            return `<option value="${esc(p)}"${selected}>${esc(p)}</option>`;
+        }).join('');
         return `<div class="opt-slot-constraint">
             <label>${esc(label)}</label>
             <select data-slot="${esc(slot)}">
@@ -117,9 +210,66 @@ export function getActiveSlots(app) {
     return getActiveGearSlots(app.build.weapons, WEAPON_DATA);
 }
 
+export function renderInfusionRanges(app) {
+    const container = document.getElementById('opt-infusion-ranges');
+    if (!container) return;
+
+    const selectedStats = getChecked('opt-infusions');
+    const total = clampInt(document.getElementById('opt-inf-total')?.value ?? '18', 0, 18, 18);
+    const existing = readInfusionRangeInputs();
+    const buildInfusions = new Map((app.build.infusions || []).map(entry => [entry.stat, entry.count || 0]));
+
+    if (!selectedStats.length) {
+        container.innerHTML = '<div class="opt-infusion-ranges-empty">No infusion stat types selected.</div>';
+        return;
+    }
+
+    container.innerHTML = selectedStats.map(stat => {
+        const prev = existing[stat] || {};
+        const defaultMax = Math.max(buildInfusions.get(stat) || 0, total);
+        const min = clampInt(prev.min, 0, total, 0);
+        const max = clampInt(prev.max, min, total, Math.min(defaultMax, total));
+        return `<div class="opt-infusion-range-row" data-stat="${esc(stat)}">
+            <div class="opt-infusion-range-name" title="${esc(stat)}">${esc(stat)}</div>
+            <label class="opt-infusion-range-field">
+                <span>Min #</span>
+                <input
+                    type="number"
+                    min="0"
+                    max="${total}"
+                    value="${min}"
+                    class="opt-infusion-range-input"
+                    data-kind="min"
+                >
+            </label>
+            <label class="opt-infusion-range-field">
+                <span>Max #</span>
+                <input
+                    type="number"
+                    min="0"
+                    max="${total}"
+                    value="${max}"
+                    class="opt-infusion-range-input"
+                    data-kind="max"
+                >
+            </label>
+        </div>`;
+    }).join('');
+}
+
+export function readInfusionRanges(stats, total) {
+    const current = readInfusionRangeInputs();
+    return stats.map(stat => {
+        const range = current[stat] || {};
+        const min = clampInt(range.min, 0, total, 0);
+        const max = clampInt(range.max, min, total, total);
+        return { stat, min, max };
+    });
+}
+
 export function bindOptimizerEvents(app) {
     const groupContainerId = g => ({
-        prefix: 'opt-prefixes', rune: 'opt-runes', sigil: 'opt-sigils',
+        prefix: 'opt-prefixes', rune: 'opt-runes', sigil1: 'opt-sigils-1', sigil2: 'opt-sigils-2',
         relic: 'opt-relics', food: 'opt-food', utility: 'opt-utility',
         infusion: 'opt-infusions',
     }[g]);
@@ -129,12 +279,19 @@ export function bindOptimizerEvents(app) {
             const id = groupContainerId(btn.dataset.group);
             if (id) document.querySelectorAll(`#${id} input`).forEach(cb => { cb.checked = true; });
             if (btn.dataset.group === 'prefix') enforcePrefixMax();
+            if (btn.dataset.group === 'prefix') populateSlotConstraints(app);
+            if (btn.dataset.group === 'infusion') renderInfusionRanges(app);
         });
     });
     document.querySelectorAll('.opt-deselall').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = groupContainerId(btn.dataset.group);
             if (id) document.querySelectorAll(`#${id} input`).forEach(cb => { cb.checked = false; });
+            if (btn.dataset.group === 'prefix') {
+                enforcePrefixMax();
+                populateSlotConstraints(app);
+            }
+            if (btn.dataset.group === 'infusion') renderInfusionRanges(app);
         });
     });
 
@@ -142,6 +299,8 @@ export function bindOptimizerEvents(app) {
         enforcePrefixMax();
         populateSlotConstraints(app);
     });
+    document.getElementById('opt-infusions')?.addEventListener('change', () => renderInfusionRanges(app));
+    document.getElementById('opt-inf-total')?.addEventListener('input', () => renderInfusionRanges(app));
 
     document.getElementById('btn-opt-run')?.addEventListener('click', () => app._runOptimizer());
     document.getElementById('btn-opt-cancel')?.addEventListener('click', () => {
@@ -193,18 +352,20 @@ export async function runOptimizer(app) {
     if (app._optRunning) return;
 
     const infusionStats = getChecked('opt-infusions');
-    const infusionTotal = Math.max(0, Math.min(18,
-        parseInt(document.getElementById('opt-inf-total')?.value ?? '18') || 0));
+    const infusionTotal = clampInt(document.getElementById('opt-inf-total')?.value ?? '18', 0, 18, 18);
+    const infusionRanges = readInfusionRanges(infusionStats, infusionTotal);
 
     const space = {
         prefixes: getChecked('opt-prefixes'),
         runes: getChecked('opt-runes'),
-        sigils: getChecked('opt-sigils'),
+        sigils1: getChecked('opt-sigils-1'),
+        sigils2: getChecked('opt-sigils-2'),
         relics: getChecked('opt-relics'),
         foods: getChecked('opt-food'),
         utilities: getChecked('opt-utility'),
         infusionStats,
         infusionTotal,
+        infusionRanges,
     };
 
     const parseConstraint = id => {
@@ -225,10 +386,18 @@ export async function runOptimizer(app) {
         return;
     }
 
-    const n = space.sigils.length;
-    const sigilPairs = n < 2 ? 1 : (n * (n - 1)) / 2;
-    const k = infusionStats.length;
-    const infCombos = k === 0 ? 1 : infusionComboCount(k, infusionTotal);
+    const sigilPairs = enumerateSigilPairs(space.sigils1, space.sigils2).length;
+    if (!sigilPairs) {
+        alert('No valid sigil pairs remain. Select at least one candidate for each slot, and duplicate sigils are skipped.');
+        return;
+    }
+
+    const infCombos = infusionStats.length === 0 ? 1 : enumerateInfusionDistributions(infusionRanges, infusionTotal).length;
+    if (!infCombos) {
+        alert('Infusion min/max ranges do not allow any distribution matching the selected total.');
+        return;
+    }
+
     const combos = Math.max(space.runes.length, 1) * Math.max(space.relics.length, 1)
         * sigilPairs * Math.max(space.foods.length, 1) * Math.max(space.utilities.length, 1)
         * infCombos;
