@@ -1,0 +1,388 @@
+{
+  "build": {
+    "gear": {
+      "Helm": "Berserker's",
+      "Shoulders": "Berserker's",
+      "Chest": "Berserker's",
+      "Gloves": "Berserker's",
+      "Leggins": "Berserker's",
+      "Boots": "Berserker's",
+      "Amulet": "Berserker's",
+      "Ring1": "Berserker's",
+      "Ring2": "Berserker's",
+      "Accessory1": "Berserker's",
+      "Accessory2": "Berserker's",
+      "Back": "Berserker's",
+      "Weapon1": "Berserker's",
+      "Weapon2": "Berserker's"
+    },
+    "weapons": [
+      "Sword",
+      "Dagger"
+    ],
+    "rune": "Dragonhunter",
+    "sigils": [
+      "Force",
+      "Impact"
+    ],
+    "relic": "Claw",
+    "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
+    "utility": "Superior Sharpening Stone",
+    "jadeBotCore": true,
+    "specializations": [
+      {
+        "name": "Fire",
+        "traits": "1-3-1"
+      },
+      {
+        "name": "Air",
+        "traits": "3-3-1"
+      },
+      {
+        "name": "Catalyst",
+        "traits": "2-1-2"
+      }
+    ],
+    "infusions": [
+      {
+        "stat": "Power",
+        "count": 16
+      },
+      {
+        "stat": "Precision",
+        "count": 2
+      },
+      {
+        "stat": "Ferocity",
+        "count": 0
+      }
+    ]
+  },
+  "selectedSkills": {
+    "heal": "Signet of Restoration",
+    "util1": "Relentless Fire",
+    "util2": "Glyph of Storms (Fire)",
+    "util3": "Arcane Blast",
+    "elite": "Elemental Celerity"
+  },
+  "activeAttunement": "Air",
+  "secondaryAttunement": "Air",
+  "evokerElement": null,
+  "evokerStartCharges": 6,
+  "evokerStartEmpowered": 0,
+  "permaBoons": {
+    "Might": 25,
+    "Fury": true,
+    "Protection": true,
+    "Resolution": true,
+    "Alacrity": true,
+    "Quickness": true,
+    "Regeneration": true,
+    "Vigor": true,
+    "Swiftness": true,
+    "Bleeding": true,
+    "Burning": true,
+    "Torment": true,
+    "Confusion": true,
+    "Poisoned": true,
+    "Chilled": true,
+    "Cripple": true,
+    "Slow": true,
+    "Weakness": true,
+    "Vulnerability": 25
+  },
+  "rotation": [
+    "Glyph of Storms (Air)",
+    "Deploy Jade Sphere (Air)",
+    "Polaric Leap",
+    "Ride the Lightning",
+    "Quantum Strike",
+    {
+      "name": "Earth Attunement",
+      "offset": 100
+    },
+    "Earthquake",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 100
+    },
+    "Deploy Jade Sphere (Fire)",
+    "Relentless Fire",
+    "Flame Uprising",
+    {
+      "name": "Arcane Blast",
+      "offset": 100
+    },
+    "Cauterizing Strike",
+    {
+      "name": "Arcane Blast",
+      "offset": 100
+    },
+    "Ring of Fire",
+    "Fire Grab",
+    "Elemental Celerity",
+    {
+      "name": "Arcane Blast",
+      "offset": 100
+    },
+    "Fire Grab",
+    "Ring of Fire",
+    "Cauterizing Strike",
+    "Flame Uprising",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    {
+      "name": "Air Attunement",
+      "offset": 100
+    },
+    "Ride the Lightning",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Polaric Leap",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Quantum Strike",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    {
+      "name": "Deploy Jade Sphere (Air)",
+      "offset": 100
+    },
+    "Earth Attunement",
+    "Deploy Jade Sphere (Earth)",
+    "Earthquake",
+    "Rust Frenzy",
+    {
+      "name": "Fire Attunement",
+      "offset": 100
+    },
+    "Deploy Jade Sphere (Fire)",
+    "Flame Uprising",
+    "Cauterizing Strike",
+    "Ring of Fire",
+    "Relentless Fire",
+    "Fire Grab",
+    "Arcane Blast",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Flame Uprising",
+    {
+      "name": "Air Attunement",
+      "offset": 100
+    },
+    "Ride the Lightning",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Polaric Leap",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Quantum Strike",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    {
+      "name": "Deploy Jade Sphere (Air)",
+      "offset": 100
+    },
+    "Earth Attunement",
+    "Deploy Jade Sphere (Earth)",
+    "Earthquake",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 100
+    },
+    "Deploy Jade Sphere (Fire)",
+    "Flame Uprising",
+    "Cauterizing Strike",
+    "Ring of Fire",
+    "Fire Grab",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Fire Strike",
+    "Flame Uprising",
+    {
+      "name": "Air Attunement",
+      "offset": 100
+    },
+    "Ride the Lightning",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Polaric Leap",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Quantum Strike",
+    "Charged Strike",
+    "Polaric Slash",
+    "Deploy Jade Sphere (Air)",
+    "Call Lightning",
+    "Earth Attunement",
+    "Deploy Jade Sphere (Earth)",
+    "Earthquake",
+    "Rust Frenzy",
+    {
+      "name": "Fire Attunement",
+      "offset": 100
+    },
+    "Deploy Jade Sphere (Fire)",
+    "Relentless Fire",
+    "Flame Uprising",
+    "Arcane Blast",
+    "Ring of Fire",
+    "Glyph of Storms (Fire)",
+    "Cauterizing Strike",
+    "Fire Grab",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    {
+      "name": "Arcane Blast",
+      "offset": 100
+    },
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Flame Uprising",
+    {
+      "name": "Air Attunement",
+      "offset": 100
+    },
+    "Ride the Lightning",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Polaric Leap",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Quantum Strike",
+    "Deploy Jade Sphere (Air)",
+    "Earth Attunement",
+    "Earthquake",
+    "Churning Earth",
+    "Rust Frenzy",
+    {
+      "name": "Fire Attunement",
+      "offset": 100
+    },
+    "Deploy Jade Sphere (Fire)",
+    "Flame Uprising",
+    "Ring of Fire",
+    "Relentless Fire",
+    "Cauterizing Strike",
+    "Fire Grab",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    {
+      "name": "Arcane Blast",
+      "offset": 100
+    },
+    "Flame Uprising",
+    {
+      "name": "Air Attunement",
+      "offset": 100
+    },
+    "Ride the Lightning",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Polaric Leap",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Quantum Strike",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Glyph of Storms (Air)",
+    "Ride the Lightning",
+    {
+      "name": "Deploy Jade Sphere (Air)",
+      "offset": 100
+    },
+    "Earth Attunement",
+    "Deploy Jade Sphere (Earth)",
+    "Earthquake",
+    "Rust Frenzy",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 100
+    },
+    "Deploy Jade Sphere (Fire)",
+    "Flame Uprising",
+    "Relentless Fire",
+    "Cauterizing Strike",
+    "Ring of Fire",
+    "Fire Grab",
+    "Elemental Celerity",
+    "Fire Grab",
+    "Ring of Fire",
+    "Cauterizing Strike",
+    "Flame Uprising",
+    {
+      "name": "Arcane Blast",
+      "offset": 100
+    },
+    "Air Attunement",
+    "Ride the Lightning",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Polaric Leap",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Quantum Strike",
+    "Charged Strike",
+    "Polaric Slash",
+    "Call Lightning",
+    "Deploy Jade Sphere (Air)",
+    "Earth Attunement",
+    "Deploy Jade Sphere (Earth)",
+    "Earthquake",
+    "Rust Frenzy",
+    {
+      "name": "Fire Attunement",
+      "offset": 100
+    },
+    "Deploy Jade Sphere (Fire)",
+    "Flame Uprising",
+    "Cauterizing Strike",
+    "Ring of Fire",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Fire Grab",
+    "Relentless Fire",
+    "Fire Strike",
+    "Fire Swipe",
+    "Searing Slash",
+    "Fire Strike",
+    "Flame Uprising",
+    "Air Attunement",
+    "Ride the Lightning",
+    "Polaric Leap"
+  ]
+}

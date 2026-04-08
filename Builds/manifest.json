@@ -35,6 +35,11 @@
     "rotation": "Rotations/r-power-catalyst-spear.json"
   },
   {
+    "label": "Power Catalyst (Sword)",
+    "build": "Builds/b-power-catalyst-sword.json",
+    "rotation": "Rotations/r-power-catalyst-sword.json"
+  },
+  {
     "label": "Condi Catalyst (Pistol)",
     "build": "Builds/b-condi-catalyst-pistol.json",
     "rotation": "Rotations/r-condi-catalyst-pistol.json"
