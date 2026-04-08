@@ -143,9 +143,16 @@ export function trackEffect(engine, S, effect, stacks, durSec, time, {
     log = entry => pushReportingLog(S, entry),
     pushCondStack = entry => pushTimedStack(S, entry),
     gainEndurance = null,
+    applyCondition = null,
 }) {
     const relicState = getRelicState(S);
     const attrs = engine.attributes.attributes;
+    const applyConditionFn = typeof applyCondition === 'function'
+        ? applyCondition
+        : (typeof engine._applyCondition === 'function'
+            ? (cond, nextStacks, nextDur, at, skillName, castStart = null, extraCondDurPct = 0) =>
+                engine._applyCondition(S, cond, nextStacks, nextDur, at, skillName, castStart, extraCondDurPct)
+            : null);
     let bonus;
     let uncapped = 0;
 
@@ -202,6 +209,16 @@ export function trackEffect(engine, S, effect, stacks, durSec, time, {
     }
 
     recordEffectWindow(S, effect, time + adjMs);
+
+    if (S._hasStrengthOfStone
+        && effect === 'Immobilize'
+        && isCombatActiveAt(S, time)
+        && isTraitIcdReady(S, 'StrengthOfStone', time)
+        && applyConditionFn) {
+        armTraitIcd(S, 'StrengthOfStone', time, 3000);
+        applyConditionFn('Bleeding', 3, 10, time, 'Strength of Stone');
+        log({ t: time, type: 'trait_proc', trait: 'Strength of Stone', skill: 'Strength of Stone' });
+    }
 
     if (S._hasElementalPursuit
         && (effect === 'Immobilize' || effect === 'Chilled' || effect === 'Crippled')

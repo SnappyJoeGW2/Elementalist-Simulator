@@ -149,14 +149,6 @@ export function handleCritAndCcTriggers(ctx, ev, hitCtx, triggerCtx) {
         ctx.procOnCcSigils(ev.time);
     }
 
-    if (S._hasStrengthOfStone && triggerCtx.playerHit
-        && ctx.effectStacksAt('Immobilize', ev.time) > 0
-        && ctx.traitIcdReady('StrengthOfStone', ev.time)) {
-        ctx.armTraitIcd('StrengthOfStone', ev.time, 3000);
-        ctx.applyCondition('Bleeding', 3, 10, ev.time, 'Strength of Stone');
-        pushReportingLog(S, { t: ev.time, type: 'trait_proc', trait: 'Strength of Stone', skill: 'Strength of Stone' });
-    }
-
     if (S._hasViciousEmpowerment && triggerCtx.ccPlayerHit
         && ctx.traitIcdReady('ViciousEmp', ev.time)) {
         ctx.armTraitIcd('ViciousEmp', ev.time, 250);
