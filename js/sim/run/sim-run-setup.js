@@ -4,7 +4,7 @@ import { createRelicState } from '../state/sim-relic-state.js';
 import { createCatalystState, createEvokerState, getEvokerState } from '../state/sim-specialization-state.js';
 import { createRuntimeWindowState } from '../state/sim-timing-window-state.js';
 import { createHammerOrbState } from '../mechanics/sim-hammer.js';
-import { pushTimedStack } from '../state/sim-runtime-state.js';
+import { pushTimedStack, ensureConditionState } from '../state/sim-runtime-state.js';
 import { ENDURANCE_MAX } from '../state/sim-endurance-state.js';
 
 export function applyDisabledStatAdjustments(engine, attributes, disabled, sigilStatMap) {
@@ -274,12 +274,22 @@ export function applyDisabledTraitFlags(S, disTrait) {
     if (flag) S[flag] = false;
 }
 
+const PERMA_DAMAGING_CONDITIONS = new Set([
+    'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
+]);
+
 export function applyPermanentBoons(engine, S, permaBoons, permaExpiry) {
     for (const [effect, val] of Object.entries(permaBoons)) {
         if (!val) continue;
         const count = typeof val === 'number' ? val : 1;
         for (let i = 0; i < count; i++) {
             pushTimedStack(S, { t: 0, cond: effect, expiresAt: permaExpiry, perma: true });
+        }
+        if (PERMA_DAMAGING_CONDITIONS.has(effect)) {
+            const cs = ensureConditionState(S, effect);
+            for (let i = 0; i < count; i++) {
+                cs.stacks.push({ t: 0, expiresAt: permaExpiry, appliedBy: null, perma: true });
+            }
         }
     }
     if (permaBoons.Quickness) S.quicknessUntil = permaExpiry;

@@ -263,7 +263,8 @@ export function procConditionTick(ctx, ev, condDmg, condMul, infernoPower = 0, d
     if (!cs) return;
 
     const time = ev.time;
-    const active = getActiveConditionStacks(S, cond, time);
+    const allActive = getActiveConditionStacks(S, cond, time);
+    const active = allActive.filter(s => !s.perma);
 
     if (active.length > 0) {
         const baseTick = (infernoPower > 0 && cond === 'Burning')
@@ -294,7 +295,7 @@ export function procConditionTick(ctx, ev, condDmg, condMul, infernoPower = 0, d
     }
 
     const remaining = pruneConditionStacks(S, cond, time);
-    if (remaining.length > 0) {
+    if (remaining.some(s => !s.perma)) {
         const queueConditionTick = typeof ctx.queueConditionTickEvent === 'function'
             ? event => ctx.queueConditionTickEvent(event)
             : null;

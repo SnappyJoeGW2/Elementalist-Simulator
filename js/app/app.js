@@ -1512,7 +1512,7 @@ class App {
             'Chilled', 'Cripple', 'Immobilize',
             'Burning', 'Bleeding', 'Torment', 'Confusion', 'Poisoned',
         ];
-        const STACK_EFFECTS = { Might: 25, Stability: 25, Vulnerability: 25 };
+        const STACK_EFFECTS = { Might: 25, Stability: 25, Vulnerability: 25, Bleeding: 25 };
 
         const renderGroup = (title, list) => {
             let h = `<div class="perma-group"><span class="perma-group-label">${title}</span>`;
