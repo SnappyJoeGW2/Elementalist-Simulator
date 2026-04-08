@@ -12,6 +12,10 @@ export const PROC_STATE_KEYS = new Set([
     'dazingDischargeUntil',
     'shatteringStoneHits',
     'shatteringStoneUntil',
+    'familiarCastSeq',
+    'familiarCanceledCastIds',
+    'familiarCanceledLoggedCastIds',
+    'lastEmpoweredFamiliarByBasic',
 ]);
 
 export function createProcState() {
@@ -29,6 +33,10 @@ export function createProcState() {
         dazingDischargeUntil: 0,
         shatteringStoneHits: 0,
         shatteringStoneUntil: 0,
+        familiarCastSeq: 0,
+        familiarCanceledCastIds: {},
+        familiarCanceledLoggedCastIds: {},
+        lastEmpoweredFamiliarByBasic: {},
     };
 }
 

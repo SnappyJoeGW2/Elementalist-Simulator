@@ -4,6 +4,7 @@ import {
     getCatalystState,
     getEvokerState,
 } from '../state/sim-specialization-state.js';
+import { getProcState } from '../state/sim-proc-state.js';
 import {
     buildCastWindow,
     runConcurrentSteps,
@@ -13,6 +14,37 @@ import { getSkillCooldownReadyAt } from '../state/sim-cooldown-state.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
 
 const ELECTRIC_ENCHANTMENT_ICON = 'https://wiki.guildwars2.com/images/7/7b/Hare%27s_Agility.png';
+const FAMILIAR_INTERRUPT_WINDOWS = Object.freeze({
+    Ignite: { empowered: 'Conflagration', windowMs: 2500 },
+    Zap: { empowered: 'Lightning Blitz', windowMs: 2400 },
+    Splash: { empowered: 'Buoyant Deluge', windowMs: 2500 },
+    Calcify: { empowered: 'Seismic Impact', windowMs: 2300 },
+});
+const FAMILIAR_FLIP_DELAYS = Object.freeze({
+    Ignite: { empowered: 'Conflagration', delayMs: 960 },
+    Zap: { empowered: 'Lightning Blitz', delayMs: 680 },
+    Splash: { empowered: 'Buoyant Deluge', delayMs: 840 },
+    Calcify: { empowered: 'Seismic Impact', delayMs: 280 },
+});
+const FAMILIAR_BASIC_BY_EMPOWERED = Object.freeze(Object.fromEntries(
+    Object.entries(FAMILIAR_INTERRUPT_WINDOWS).map(([basic, value]) => [value.empowered, basic]),
+));
+
+function removeFutureFamiliarFieldRecords(state, skillName, fromTime) {
+    const combatState = state.schedulerCombatState || state;
+    const reportingState = state.schedulerReportingState || state;
+
+    if (Array.isArray(combatState.fields)) {
+        combatState.fields = combatState.fields.filter(field =>
+            !(field.skill === skillName && field.start >= fromTime)
+        );
+    }
+    if (Array.isArray(reportingState.log)) {
+        reportingState.log = reportingState.log.filter(entry =>
+            !(entry.type === 'field' && entry.skill === skillName && entry.t >= fromTime)
+        );
+    }
+}
 
 export function anySphereActiveAt(S, time) {
     const catalystState = getCatalystState(S);
@@ -110,6 +142,7 @@ export function handleFamiliar(ctx, sk, concurrents, {
 }) {
     const state = ctx.S;
     const evokerState = getEvokerState(state);
+    const procState = getProcState(state);
 
     if (state.eliteSpec !== 'Evoker') {
         ctx.log({ t: state.t, type: 'err', msg: `Familiar skills require Evoker specialization` });
@@ -146,13 +179,20 @@ export function handleFamiliar(ctx, sk, concurrents, {
     ctx.advanceTimeTo(cdReady);
 
     const { castMs, scaleOff, start, end } = buildCastWindow(ctx, sk, state.t);
+    const familiarCastId = ++procState.familiarCastSeq;
+    const interruptRule = isBasic ? FAMILIAR_INTERRUPT_WINDOWS[sk.name] : null;
+    const recentEmpowered = interruptRule ? procState.lastEmpoweredFamiliarByBasic?.[sk.name] : null;
+    const interruptedByRecentEmpowered = !!(interruptRule
+        && recentEmpowered
+        && recentEmpowered.skill === interruptRule.empowered
+        && (start - recentEmpowered.start) < interruptRule.windowMs);
 
     if (castMs > 0) {
         ctx.beginCast(sk.name, start, castMs);
         ctx.setCastUntil(end);
     }
 
-    if (sk.name === 'Ignite') {
+    if (!interruptedByRecentEmpowered && sk.name === 'Ignite') {
         const igniteDurations = [2, 0.5, 1, 1.5];
         const igniteTier = ctx.consumeEvokerIgniteTier(start, { staleAfterMs: 15000, maxTier: 3 });
         const burnDur = igniteDurations[igniteTier];
@@ -173,9 +213,10 @@ export function handleFamiliar(ctx, sk, concurrents, {
             att2: state.att2,
             castStart: start,
             conjure: state.conjureEquipped || null,
+            familiarCastId,
         });
-    } else {
-        ctx.scheduleHits(sk, start, scaleOff);
+    } else if (!interruptedByRecentEmpowered) {
+        ctx.scheduleHits(sk, start, scaleOff, null, { familiarCastId });
     }
 
     if (castMs > 0) ctx.finishCast(sk.name, end);
@@ -187,11 +228,41 @@ export function handleFamiliar(ctx, sk, concurrents, {
             start + ((ctx.skillHits?.[sk.name]?.find(hit => (hit.hit || 0) === 1)?.startOffsetMs) || 0),
         )
         : end;
-    ctx.trackField(sk, fieldSpawnTime);
+    if (!interruptedByRecentEmpowered) {
+        ctx.trackField(sk, fieldSpawnTime);
+    } else if (recentEmpowered) {
+        procState.familiarCanceledCastIds[recentEmpowered.castId] = sk.name;
+        delete procState.lastEmpoweredFamiliarByBasic[sk.name];
+        removeFutureFamiliarFieldRecords(state, recentEmpowered.skill, start);
+        ctx.log({
+            t: end,
+            type: 'skip',
+            skill: recentEmpowered.skill,
+            reason: `interrupted by ${sk.name}`,
+        });
+        ctx.log({
+            t: end,
+            type: 'skip',
+            skill: sk.name,
+            reason: `canceled by recent ${recentEmpowered.skill}`,
+        });
+    }
 
     if (isBasic) {
         ctx.setEvokerCharges(0);
         ctx.addEvokerEmpowered(1, 3);
+        const flipDelay = FAMILIAR_FLIP_DELAYS[sk.name];
+        if (flipDelay) {
+            const flipReadyAt = end + flipDelay.delayMs;
+            const currentCD = getSkillCooldownReadyAt(state, flipDelay.empowered);
+            if (flipReadyAt > currentCD) {
+                ctx.setSkillCooldown(flipDelay.empowered, flipReadyAt, {
+                    startedAt: end,
+                    displayDurationMs: flipDelay.delayMs,
+                    alacrityUntil: 0,
+                });
+            }
+        }
         ctx.log({
             t: end,
             type: 'familiar_basic',
@@ -217,6 +288,17 @@ export function handleFamiliar(ctx, sk, concurrents, {
     ctx.recordSkillCast(sk.name, castMs);
     ctx.addStep({ skill: sk.name, start, end, att: state.att, type: 'familiar', ri: state._ri });
     updateSpearEtchingProgression(ctx, sk, sk.name, end);
+
+    if (!isBasic) {
+        const basicSkill = FAMILIAR_BASIC_BY_EMPOWERED[sk.name];
+        if (basicSkill) {
+            procState.lastEmpoweredFamiliarByBasic[basicSkill] = {
+                castId: familiarCastId,
+                skill: sk.name,
+                start,
+            };
+        }
+    }
 
     if (state._hasPyroPuissance && state.att === 'Fire' && isCombatActiveAt(state, end)) {
         ctx.trackEffect('Might', 1, 15, end);

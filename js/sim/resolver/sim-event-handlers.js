@@ -118,8 +118,25 @@ export function enqueueTriggeredHit(ctx, queuedHit, { logEntry = null, stepEntry
 
 export function runPreHitRules(ctx, ev) {
     const { S } = ctx;
+    const procState = getProcState(S);
     if (ctx.canTriggerShatteringIceProc(ev)) {
         ctx.queueShatteringIceProc(ev);
+    }
+
+    if (ev.familiarCastId) {
+        const canceledBySkill = procState.familiarCanceledCastIds?.[ev.familiarCastId];
+        if (canceledBySkill) {
+            if (!procState.familiarCanceledLoggedCastIds?.[ev.familiarCastId]) {
+                procState.familiarCanceledLoggedCastIds[ev.familiarCastId] = true;
+                pushReportingLog(S, {
+                    t: ev.time,
+                    type: 'skip',
+                    skill: ev.skill,
+                    reason: `interrupted by ${canceledBySkill}`,
+                });
+            }
+            return false;
+        }
     }
 
     if (ctx.shouldSkipHammerOrbHit(ev)) {

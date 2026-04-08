@@ -191,10 +191,18 @@ export function renderPalette(app, {
             h += `</div>`;
             h += `</div>`;
             if (empowered >= 3) {
+                const basicSkill = skills.find(s =>
+                    s.type === 'Familiar' && EVOKER_SELECTORS.has(s.name) && s.attunement === curEl
+                );
                 const empSkill = skills.find(s =>
                     s.type === 'Familiar' && !EVOKER_SELECTORS.has(s.name) && s.attunement === curEl
                 );
-                if (empSkill) h += app._palIcon(empSkill, app._isSkillAvailable(empSkill.name));
+                if (empSkill) {
+                    h += app._palIcon(empSkill, app._isSkillAvailable(empSkill.name), basicSkill ? {
+                        cooldownSkill: basicSkill,
+                        title: `${empSkill.name} (basic cooldown: ${basicSkill.name})`,
+                    } : {});
+                }
             } else {
                 const basicSkill = skills.find(s =>
                     s.type === 'Familiar' && EVOKER_SELECTORS.has(s.name) && s.attunement === curEl

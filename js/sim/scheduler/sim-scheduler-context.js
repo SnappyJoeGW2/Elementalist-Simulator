@@ -271,8 +271,8 @@ export function createSchedulerContext(engine, S, config = {}) {
             return getAdjustedWeaponRechargeMs(engine, sk, baseMs);
         },
 
-        scheduleHits(sk, castStart, scaleOff, interruptAt = null) {
-            return scheduleSkillHits(this, sk, castStart, scaleOff, interruptAt);
+        scheduleHits(sk, castStart, scaleOff, interruptAt = null, extraEventProps = null) {
+            return scheduleSkillHits(this, sk, castStart, scaleOff, interruptAt, extraEventProps);
         },
 
         trackField(sk, castEnd) {

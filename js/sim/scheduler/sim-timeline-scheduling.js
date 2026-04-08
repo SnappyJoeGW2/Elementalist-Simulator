@@ -38,7 +38,7 @@ export function findFreshAirResetTimeInRange(ctx, fromTime, upTo) {
     return null;
 }
 
-export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, interruptAt = null) {
+export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, interruptAt = null, extraEventProps = null) {
     const { engine, S } = ctx;
     const hammerOrbSkills = ctx.hammerOrbSkills || {};
     const hammerDualOrbSkills = ctx.hammerDualOrbSkills || {};
@@ -121,6 +121,7 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
                     ? [buildPrimordialStanceAction({ time: t })]
                     : undefined,
             };
+            if (extraEventProps) Object.assign(event, extraEventProps);
             ctx.queueHitEvent(event);
         }
     }

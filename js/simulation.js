@@ -777,6 +777,7 @@ export class SimulationEngine {
             evokerCharges: evokerState.charges,
             evokerEmpowered: evokerState.empowered,
             evokerMaxCharges: S._hasSpecializedElements ? 4 : 6,
+            evokerFamiliarLockouts: JSON.parse(JSON.stringify(getProcState(S).lastEmpoweredFamiliarByBasic || {})),
             aaCarryover: S.aaCarryover ? { ...S.aaCarryover } : null,
             quicknessUntil: S.quicknessUntil,
             alacrityUntil: S.alacrityUntil,

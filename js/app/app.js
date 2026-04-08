@@ -194,6 +194,12 @@ const EVASIVE_ARCANA_SKILL_BY_ATTUNEMENT_UI = Object.freeze({
     Air: 'Blinding Flash (trait)',
     Earth: 'Shock Wave (trait)',
 });
+const EVOKER_FAMILIAR_INTERRUPT_WINDOWS_UI = Object.freeze({
+    Ignite: 2500,
+    Splash: 2500,
+    Zap: 2400,
+    Calcify: 2300,
+});
 
 const INTENSITY_EFFECTS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
@@ -1946,6 +1952,15 @@ class App {
             return cd > 0 ? cd : null;
         }
 
+        if (skill.type === 'Familiar' && EVOKER_FAMILIAR_INTERRUPT_WINDOWS_UI[skill.name]) {
+            const lockout = es.evokerFamiliarLockouts?.[skill.name];
+            if (lockout?.start !== undefined) {
+                const remainingMs = (lockout.start + EVOKER_FAMILIAR_INTERRUPT_WINDOWS_UI[skill.name]) - t;
+                const remaining = remainingMs / 1000;
+                if (remaining > 0) return remaining;
+            }
+        }
+
         const cdKey = this._cdKey(skill);
 
         // Charge-based skills: show time until next charge only when fully depleted
@@ -1990,7 +2005,7 @@ class App {
         return count;
     }
 
-    _palIcon(skill, available = true) {
+    _palIcon(skill, available = true, opts = {}) {
         const icon = (skill.type === 'Dodge' || skill.slot === 'Dodge')
             ? DODGE_ICON
             : this.api.getSkillIcon(skill.name);
@@ -1998,9 +2013,14 @@ class App {
         const cls = available ? '' : ' pal-disabled';
         const charges = this._getChargeCount(skill);
         const chargeBadge = charges !== null ? `<span class="pal-charges">${charges}</span>` : '';
-        const cdSecs = this._getSkillCD(skill);
+        let cdSecs = this._getSkillCD(opts.cooldownSkill || skill);
+        if (opts.cooldownSkill) {
+            const ownCd = this._getSkillCD(skill);
+            if (ownCd !== null) cdSecs = cdSecs !== null ? Math.max(cdSecs, ownCd) : ownCd;
+        }
         const cdBadge = cdSecs !== null ? `<span class="pal-cd">${cdSecs.toFixed(1)}</span>` : '';
-        return `<div class="pal-skill${cls}" data-skill="${esc(skill.name)}" title="${esc(skill.name)}" style="--att-border:${c}">
+        const title = opts.title || skill.name;
+        return `<div class="pal-skill${cls}" data-skill="${esc(skill.name)}" title="${esc(title)}" style="--att-border:${c}">
             <img src="${icon || PLACEHOLDER_ICON}" />${chargeBadge}${cdBadge}</div>`;
     }
 
@@ -2110,6 +2130,7 @@ class App {
                     break;
                 }
                 case 'skill_proc': desc = `PROC  ${ev.skill}${ev.detail ? ` (${ev.detail})` : ''}`; break;
+                case 'skip': desc = `SKIP  ${ev.skill}${ev.reason ? ` (${ev.reason})` : ''}`; break;
                 case 'drop': desc = `DROP ${ev.weapon}`; break;
                 case 'pickup': desc = `PICKUP ${ev.weapon}`; break;
                 case 'wait': desc = `WAIT ${ev.durMs}ms`; break;
