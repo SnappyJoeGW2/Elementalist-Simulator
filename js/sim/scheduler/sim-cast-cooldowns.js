@@ -147,6 +147,7 @@ export function finalizeStandardSkillBookkeeping(ctx, sk, name, {
     updateStandardSkillChainProgress(ctx, sk, end);
     if (name === 'Hurl') {
         const rootSkill = ctx.skill('Rock Barrier');
+        ctx.expireChainProgress('Rock Barrier');
         if (rootSkill) {
             const rootKey = ctx.cdKey(rootSkill);
             const baseCdMs = ctx.weaponRechargeMs(rootSkill, Math.round(rootSkill.recharge * 1000));
