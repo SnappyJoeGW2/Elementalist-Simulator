@@ -55,6 +55,11 @@
     "rotation": "Rotations/r-inferno-evoker-se.json"
   },
   {
+    "label": "Condi Evoker SE (Arcane)",
+    "build": "Builds/b-condi-arcane-se-evoker.json",
+    "rotation": "Rotations/r-condi-arcane-se-evoker.json"
+  },
+  {
     "label": "Power Evoker Hare",
     "build": "Builds/b-power-evoker-hare.json",
     "rotation": "Rotations/r-power-evoker-hare.json"
