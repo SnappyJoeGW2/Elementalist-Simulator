@@ -43,6 +43,7 @@ export function buildSnapshot(app) {
         evokerElement: app.evokerElement,
         evokerStartCharges: app.evokerStartCharges,
         evokerStartEmpowered: app.evokerStartEmpowered,
+        conditions: app.conditions,
         permaBoons: app.permaBoons,
         rotation: serializeRotation(app),
     });
@@ -56,6 +57,7 @@ export function applySnapshot(app, state) {
         evokerElement: app.evokerElement,
         evokerStartCharges: app.evokerStartCharges,
         evokerStartEmpowered: app.evokerStartEmpowered,
+        conditions: app.conditions,
         permaBoons: app.permaBoons,
         selectedSkills: app.selectedSkills,
     }, state, app.data?.skills);
@@ -66,6 +68,7 @@ export function applySnapshot(app, state) {
     app.evokerElement = merged.evokerElement;
     app.evokerStartCharges = merged.evokerStartCharges;
     app.evokerStartEmpowered = merged.evokerStartEmpowered;
+    app.conditions = merged.conditions;
     app.permaBoons = merged.permaBoons;
     app.selectedSkills = merged.selectedSkills;
 
@@ -135,6 +138,9 @@ export function autoRun(app) {
         permaBoons: app.permaBoons,
         targetHP: app._getTargetHP(),
         startPistolBullets: getStartPistolBullets(app),
+        runtimeOptions: {
+            fractalTestBleedBonus: app.conditions?.fractalTestBleed5 ? 5 : 0,
+        },
     });
 
     app._renderPalette();

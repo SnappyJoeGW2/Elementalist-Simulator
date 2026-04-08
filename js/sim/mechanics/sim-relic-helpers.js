@@ -215,6 +215,23 @@ export function trackBlightbringerPoison(S, time, skillName, castStart, {
     }
 }
 
+export function trackFractalBleeding(S, time, activeBleedingStacks, {
+    relicProcs,
+    applyCondition,
+} = {}) {
+    if (S.activeRelic !== 'Fractal' || !isRelicIcdReady(S, 'Fractal', time)) return;
+    if (activeBleedingStacks < 6) return;
+
+    const proc = relicProcs?.Fractal || S.relicProc;
+    if (!proc?.conditions) return;
+
+    armRelicIcd(S, 'Fractal', time, proc.icd);
+    for (const [cond, value] of Object.entries(proc.conditions)) {
+        applyCondition(cond, value.stacks, value.dur, time, 'Relic of Fractal');
+    }
+    logRelicProc(S, 'Fractal', time, proc.icon);
+}
+
 export function checkBloodstoneBlast(ctx, time) {
     const { S } = ctx;
     const relicState = getRelicState(S);

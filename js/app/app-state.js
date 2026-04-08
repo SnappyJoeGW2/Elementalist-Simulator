@@ -56,6 +56,7 @@ export function buildSnapshotFromState({
     evokerElement,
     evokerStartCharges,
     evokerStartEmpowered,
+    conditions,
     permaBoons,
     rotation,
 }) {
@@ -67,6 +68,7 @@ export function buildSnapshotFromState({
         evokerElement,
         evokerStartCharges,
         evokerStartEmpowered,
+        conditions: JSON.parse(JSON.stringify(conditions || {})),
         permaBoons: JSON.parse(JSON.stringify(permaBoons)),
         rotation: cloneRotationItems(rotation),
     };
@@ -80,6 +82,7 @@ export function mergeSnapshotIntoState(currentState, snapshot, skillDefs = null)
         evokerElement: currentState.evokerElement,
         evokerStartCharges: currentState.evokerStartCharges,
         evokerStartEmpowered: currentState.evokerStartEmpowered,
+        conditions: currentState.conditions,
         permaBoons: currentState.permaBoons,
         selectedSkills: currentState.selectedSkills,
         rotation: null,
@@ -91,6 +94,9 @@ export function mergeSnapshotIntoState(currentState, snapshot, skillDefs = null)
     if ('evokerElement' in snapshot) nextState.evokerElement = snapshot.evokerElement;
     if ('evokerStartCharges' in snapshot) nextState.evokerStartCharges = snapshot.evokerStartCharges;
     if ('evokerStartEmpowered' in snapshot) nextState.evokerStartEmpowered = snapshot.evokerStartEmpowered;
+    if (snapshot.conditions && Object.keys(snapshot.conditions).length > 0) {
+        nextState.conditions = { ...currentState.conditions, ...JSON.parse(JSON.stringify(snapshot.conditions)) };
+    }
     if (snapshot.permaBoons && Object.keys(snapshot.permaBoons).length > 0) {
         nextState.permaBoons = JSON.parse(JSON.stringify(snapshot.permaBoons));
     }

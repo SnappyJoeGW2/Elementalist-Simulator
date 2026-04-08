@@ -63,6 +63,7 @@ export function createRunState(engine, {
     activeRelic,
     relicProc,
     startPistolBullets,
+    runtimeOptions,
     catalystEnergyMax,
     noopArray,
 }) {
@@ -220,6 +221,7 @@ export function createRunState(engine, {
         spearNextCCHit: false,
         _mightCondDmgBonus: 30,
         _furyCritBonus: 25,
+        _fractalTestBleedBonus: Math.max(0, runtimeOptions?.fractalTestBleedBonus || 0),
     };
 
     initializeRunPhaseState(S);

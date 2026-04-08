@@ -1,7 +1,7 @@
 import { conditionTickDamage, getConditionDurationBonus } from '../../core/damage.js';
 import { grantPersistingFlames } from '../mechanics/sim-elemental-traits.js';
 import { getEmpowermentMultiplier, trackEffect } from '../mechanics/sim-effect-state.js';
-import { trackBlightbringerPoison } from '../mechanics/sim-relic-helpers.js';
+import { trackBlightbringerPoison, trackFractalBleeding } from '../mechanics/sim-relic-helpers.js';
 import {
     addConditionStack,
     activateConditionTicks,
@@ -15,13 +15,12 @@ import {
 import { peekConditionState } from '../state/sim-condition-state.js';
 import { getRelicState } from '../state/sim-relic-state.js';
 import { getEvokerState } from '../state/sim-specialization-state.js';
-import { isTraitIcdReady, armTraitIcd, isRelicIcdReady, armRelicIcd } from '../state/sim-icd-state.js';
+import { isTraitIcdReady, armTraitIcd } from '../state/sim-icd-state.js';
 import { effectStacksAt } from '../shared/sim-state-queries.js';
 import { isPrecombatAt } from '../run/sim-run-phase-state.js';
 import {
     addPerSkillCondition,
     pushReportingLog,
-    pushReportingStep,
 } from '../state/sim-reporting-state.js';
 
 function buildConditionTickEffectSnapshot(ctx, ev) {
@@ -237,22 +236,22 @@ export function applyCondition(engine, S, cond, stacks, durSec, time, skillName,
         trackEffect(engine, S, 'Might', 1, 6, time, { boons, relicProcs });
     }
 
-    if (S.activeRelic === 'Fractal' && cond === 'Bleeding' && isRelicIcdReady(S, 'Fractal', time)) {
-        const activeStacks = cs.stacks.filter(s => s.t <= time && s.expiresAt > time).length;
-        if (activeStacks >= 6) {
-            armRelicIcd(S, 'Fractal', time, relicProcs.Fractal.icd);
-            const proc = relicProcs.Fractal;
-            for (const [fc, fv] of Object.entries(proc.conditions)) {
-                applyCondition(engine, S, fc, fv.stacks, fv.dur, time, 'Relic of Fractal', null, 0, {
-                    relicProcs,
-                    boons,
-                    damagingConditions,
-                    queueConditionTick,
-                });
-            }
-            pushReportingLog(S, { t: time, type: 'relic_proc', relic: 'Fractal', skill: 'Relic of Fractal' });
-            pushReportingStep(S, { skill: 'Relic of Fractal', start: time, end: time, att: S.att, type: 'relic_proc', ri: -1, icon: proc.icon });
-        }
+    if (cond === 'Bleeding') {
+        trackFractalBleeding(S, time, countActiveConditionStacks(S, cond, time) + Math.max(0, S._fractalTestBleedBonus || 0), {
+            relicProcs,
+            applyCondition: (nextCond, nextStacks, nextDur, nextTime, source) => applyCondition(
+                engine,
+                S,
+                nextCond,
+                nextStacks,
+                nextDur,
+                nextTime,
+                source,
+                null,
+                0,
+                { relicProcs, boons, damagingConditions, queueConditionTick }
+            ),
+        });
     }
 }
 

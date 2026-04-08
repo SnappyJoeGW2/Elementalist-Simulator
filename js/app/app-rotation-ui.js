@@ -139,12 +139,12 @@ export function renderPalette(app, {
     }
 
     h += `<div class="pal-group"><div class="pal-label" style="color:#d66d2f">Cmb</div><div class="pal-row">`;
-    h += `<div class="pal-skill${app._isVirtualAvailable('__combat_start') ? '' : ' pal-disabled'}" data-skill="__combat_start" title="Combat Start" style="--att-border:#d66d2f">
+    h += `<div class="pal-skill${app._isVirtualAvailable('__combat_start') ? '' : ' pal-disabled'}${app._skillMatchesRotationSearch('Combat Start') ? ' search-match' : ''}" data-skill="__combat_start" title="Combat Start" style="--att-border:#d66d2f">
         <img src="${COMBAT_START_ICON}" /></div>`;
     h += '</div></div>';
 
     h += `<div class="pal-group"><div class="pal-label" style="color:#8d7a57">W8</div><div class="pal-row">`;
-    h += `<div class="pal-skill" data-skill="__wait" title="Wait" style="--att-border:#8d7a57">
+    h += `<div class="pal-skill${app._skillMatchesRotationSearch('Wait') ? ' search-match' : ''}" data-skill="__wait" title="Wait" style="--att-border:#8d7a57">
         <img src="${WAIT_ICON}" /></div>`;
     h += '</div></div>';
 
@@ -244,7 +244,7 @@ export function renderPalette(app, {
             h += '</div></div>';
         }
         h += `<div class="pal-group"><div class="pal-label" style="color:#ffcc44">Act</div><div class="pal-row">`;
-        h += `<div class="pal-skill" data-skill="__drop_bundle" title="Drop ${esc(wielding)}" style="--att-border:#ffcc44">
+        h += `<div class="pal-skill${app._skillMatchesRotationSearch(`Drop ${wielding}`) ? ' search-match' : ''}" data-skill="__drop_bundle" title="Drop ${esc(wielding)}" style="--att-border:#ffcc44">
             <img src="${DROP_BUNDLE_ICON}" /></div>`;
         h += '</div></div>';
     } else if (elite === 'Weaver') {
@@ -409,7 +409,7 @@ export function renderPalette(app, {
             const conjSkillName = Object.entries(CONJURE_MAP).find(([, v]) => v === pw)?.[0];
             const pickupIcon = conjSkillName ? app.api.getSkillIcon(conjSkillName) : null;
             const remaining = ((pickup.expiresAt - es.time) / 1000).toFixed(1);
-            h += `<div class="pal-skill" data-skill="${esc(pickupName)}" title="Pick up ${esc(pw)} (${remaining}s left)" style="--att-border:#ffcc44; box-shadow: 0 0 6px #ffcc44">
+            h += `<div class="pal-skill${app._skillMatchesRotationSearch(`Pick up ${pw}`) ? ' search-match' : ''}" data-skill="${esc(pickupName)}" title="Pick up ${esc(pw)} (${remaining}s left)" style="--att-border:#ffcc44; box-shadow: 0 0 6px #ffcc44">
                 <img src="${pickupIcon || PLACEHOLDER_ICON}" /></div>`;
         }
         h += '</div></div>';
@@ -418,6 +418,9 @@ export function renderPalette(app, {
     el.innerHTML = h;
     el.querySelectorAll('.pal-skill').forEach(p => {
         const skillName = p.dataset.skill;
+        if (app._skillMatchesRotationSearch(p.getAttribute('title'))) {
+            p.classList.add('search-match');
+        }
         const draggable = !!skillName && !p.classList.contains('pal-disabled');
         p.setAttribute('draggable', draggable ? 'true' : 'false');
         p.addEventListener('click', (e) => {
@@ -735,6 +738,11 @@ export function renderTimeline(app, {
 
     el.innerHTML = tlHtml;
     clearTimelineDropIndicators(el);
+    el.querySelectorAll('.rot-skill, .proc-icon').forEach(item => {
+        if (app._skillMatchesRotationSearch(item.getAttribute('title'))) {
+            item.classList.add('search-match');
+        }
+    });
 
     el.querySelectorAll('.rot-offset-badge').forEach(badge => {
         badge.addEventListener('click', (e) => {

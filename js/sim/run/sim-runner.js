@@ -40,6 +40,7 @@ export function runSimulationContributions({
     permaBoons,
     targetHP = 0,
     startPistolBullets = null,
+    runtimeOptions = null,
 }) {
     sim.computeContributions(
         activeAttunement,
@@ -50,6 +51,7 @@ export function runSimulationContributions({
         startPistolBullets,
         startEvokerCharges,
         startEvokerEmpowered,
+        runtimeOptions,
     );
     return sim.results;
 }

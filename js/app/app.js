@@ -264,6 +264,8 @@ class App {
         this.openDropdown = null;
         this.sim = null;
         this.dragState = null;
+        this.rotationSearchQuery = '';
+        this.rotationSearchCursor = 0;
         this.conditions = {
             might: 0, fury: false,
             primaryAtt: 'None', secondaryAtt: 'None',
@@ -278,6 +280,7 @@ class App {
             conjureFrostBow: false,
             conjureLightningHammer: false,
             conjureFieryGreatsword: false,
+            fractalTestBleed5: false,
         };
     }
 
@@ -336,6 +339,27 @@ class App {
         });
         document.getElementById('target-hp').addEventListener('change', () => {
             if (this.sim?.rotation.length > 0) this._autoRun();
+        });
+        document.getElementById('rotation-search').addEventListener('input', (e) => {
+            this._setRotationSearchQuery(e.target.value);
+        });
+        document.getElementById('rotation-search').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this._moveRotationSearchCursor(e.shiftKey ? -1 : 1);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this._clearRotationSearch();
+            }
+        });
+        document.getElementById('btn-rotation-search-clear').addEventListener('click', () => {
+            this._clearRotationSearch();
+        });
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                this._focusRotationSearch();
+            }
         });
 
         document.addEventListener('click', (e) => {
@@ -763,6 +787,16 @@ class App {
                 </div>` : ''}
             </div>` : ''}
 
+            ${this.build?.relic === 'Fractal' ? `
+            <div class="cond-section">Relic Testing</div>
+            <div class="cond-grid">
+                <label class="cond-label">Fractal Bleed Test</label>
+                <div class="cond-ctrl">
+                    <input type="checkbox" id="cond-fractal-bleed-5"${c.fractalTestBleed5 ? ' checked' : ''} />
+                    <span class="cond-unit">Simulate +5 Bleeding stacks on target</span>
+                </div>
+            </div>` : ''}
+
             ${hasCatalyst ? `
             <div class="cond-section">Elemental Empowerment</div>
             <div class="cond-grid">
@@ -794,6 +828,10 @@ class App {
         bind('cond-conjure-frost-bow', e => { c.conjureFrostBow = e.target.checked; this.renderAttributes(); });
         bind('cond-conjure-lightning-hammer', e => { c.conjureLightningHammer = e.target.checked; this.renderAttributes(); });
         bind('cond-conjure-fiery-greatsword', e => { c.conjureFieryGreatsword = e.target.checked; this.renderAttributes(); });
+        bind('cond-fractal-bleed-5', e => {
+            c.fractalTestBleed5 = e.target.checked;
+            this._autoRun();
+        });
     }
 
     // ─── Compute attributes with conditions applied ───
@@ -2005,12 +2043,101 @@ class App {
         return count;
     }
 
+    _normalizeRotationSearchQuery(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    _skillMatchesRotationSearch(name) {
+        const query = this._normalizeRotationSearchQuery(this.rotationSearchQuery);
+        if (!query) return false;
+        return String(name || '').toLowerCase().includes(query);
+    }
+
+    _focusRotationSearch() {
+        const input = document.getElementById('rotation-search');
+        if (!input) return;
+        input.focus();
+        input.select();
+    }
+
+    _clearRotationSearch() {
+        this._setRotationSearchQuery('', { focusInput: true });
+    }
+
+    _setRotationSearchQuery(value, { focusInput = false } = {}) {
+        const next = String(value || '');
+        const normalizedPrev = this._normalizeRotationSearchQuery(this.rotationSearchQuery);
+        const normalizedNext = this._normalizeRotationSearchQuery(next);
+        this.rotationSearchQuery = next;
+        if (normalizedPrev !== normalizedNext) this.rotationSearchCursor = 0;
+        this._renderPalette();
+        this._renderTimeline();
+        if (focusInput) this._focusRotationSearch();
+    }
+
+    _moveRotationSearchCursor(delta) {
+        const query = this._normalizeRotationSearchQuery(this.rotationSearchQuery);
+        if (!query) {
+            this._focusRotationSearch();
+            return;
+        }
+
+        const matches = Array.from(document.querySelectorAll('#rotation-timeline .rot-skill.search-match, #rotation-timeline .proc-icon.search-match'));
+        if (matches.length === 0) {
+            this._syncRotationSearchUi();
+            return;
+        }
+
+        if (matches.length === 1) {
+            this.rotationSearchCursor = 0;
+            this._syncRotationSearchUi();
+            return;
+        }
+
+        const nextIndex = ((this.rotationSearchCursor + delta) % matches.length + matches.length) % matches.length;
+        this.rotationSearchCursor = nextIndex;
+        this._syncRotationSearchUi();
+    }
+
+    _syncRotationSearchUi() {
+        const input = document.getElementById('rotation-search');
+        const status = document.getElementById('rotation-search-status');
+        const query = this._normalizeRotationSearchQuery(this.rotationSearchQuery);
+        const matches = Array.from(document.querySelectorAll('#rotation-timeline .rot-skill.search-match, #rotation-timeline .proc-icon.search-match'));
+
+        if (input) {
+            input.value = this.rotationSearchQuery;
+            input.classList.toggle('has-query', !!query);
+        }
+
+        matches.forEach(el => el.classList.remove('search-current'));
+
+        if (!query) {
+            if (status) status.textContent = '';
+            this.rotationSearchCursor = 0;
+            return;
+        }
+
+        if (matches.length === 0) {
+            if (status) status.textContent = '0 matches';
+            this.rotationSearchCursor = 0;
+            return;
+        }
+
+        if (this.rotationSearchCursor >= matches.length) this.rotationSearchCursor = 0;
+        const current = matches[this.rotationSearchCursor];
+        current.classList.add('search-current');
+        current.scrollIntoView({ block: 'center', inline: 'nearest' });
+        if (status) status.textContent = `${this.rotationSearchCursor + 1}/${matches.length}`;
+    }
+
     _palIcon(skill, available = true, opts = {}) {
         const icon = (skill.type === 'Dodge' || skill.slot === 'Dodge')
             ? DODGE_ICON
             : this.api.getSkillIcon(skill.name);
         const c = this._skillColor(skill, skill.name);
         const cls = available ? '' : ' pal-disabled';
+        const searchCls = this._skillMatchesRotationSearch(skill.name) ? ' search-match' : '';
         const charges = this._getChargeCount(skill);
         const chargeBadge = charges !== null ? `<span class="pal-charges">${charges}</span>` : '';
         let cdSecs = this._getSkillCD(opts.cooldownSkill || skill);
@@ -2020,7 +2147,7 @@ class App {
         }
         const cdBadge = cdSecs !== null ? `<span class="pal-cd">${cdSecs.toFixed(1)}</span>` : '';
         const title = opts.title || skill.name;
-        return `<div class="pal-skill${cls}" data-skill="${esc(skill.name)}" title="${esc(title)}" style="--att-border:${c}">
+        return `<div class="pal-skill${cls}${searchCls}" data-skill="${esc(skill.name)}" title="${esc(title)}" style="--att-border:${c}">
             <img src="${icon || PLACEHOLDER_ICON}" />${chargeBadge}${cdBadge}</div>`;
     }
 
@@ -2040,6 +2167,7 @@ class App {
             PISTOL_BULLET_ICONS,
             PISTOL_BULLET_LABELS,
         });
+        this._syncRotationSearchUi();
     }
 
     _renderTimeline() {
@@ -2052,6 +2180,7 @@ class App {
             CONJURE_MAP,
             TH_WEAPONS,
         });
+        this._syncRotationSearchUi();
     }
 
     _renderResults() {

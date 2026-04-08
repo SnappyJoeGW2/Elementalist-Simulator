@@ -84,6 +84,7 @@ export function prepareRunContext(engine, attributes, {
     permaBoons,
     disabled,
     startPistolBullets,
+    runtimeOptions,
     fireFieldSkills,
     catalystEnergyMax,
     conjureWeapons,
@@ -127,6 +128,7 @@ export function prepareRunContext(engine, attributes, {
         activeRelic,
         relicProc,
         startPistolBullets,
+        runtimeOptions,
     });
     engine._applyRunSetupState(S, {
         disTrait,
@@ -145,6 +147,7 @@ export function prepareRunContext(engine, attributes, {
         permaBoons,
         disabled,
         startPistolBullets,
+        runtimeOptions,
         disSigil,
         disRelic,
         disTrait,
@@ -168,6 +171,7 @@ export function prepareRunContext(engine, attributes, {
         damagingConditions,
         sigilProcs,
         hammerDualOrbSkills,
+        runtimeOptions,
         skipMight: disabled === 'Might',
         skipFury: disabled === 'Fury',
         skipVuln: disabled === 'Vulnerability',

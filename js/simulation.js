@@ -548,6 +548,7 @@ export class SimulationEngine {
         startPistolBullets = null,
         startEvokerCharges = 6,
         startEvokerEmpowered = 0,
+        runtimeOptions = null,
     ) {
         const a = this.attributes.attributes;
         const runCtx = this._prepareRunContext(a, {
@@ -559,6 +560,7 @@ export class SimulationEngine {
             permaBoons,
             disabled,
             startPistolBullets,
+            runtimeOptions,
         });
 
         try {
@@ -584,6 +586,7 @@ export class SimulationEngine {
         permaBoons,
         disabled,
         startPistolBullets,
+        runtimeOptions,
     }) {
         return prepareRunContext(this, a, {
             startAtt,
@@ -594,6 +597,7 @@ export class SimulationEngine {
             permaBoons,
             disabled,
             startPistolBullets,
+            runtimeOptions,
             fireFieldSkills: FIRE_FIELD_SKILLS,
             catalystEnergyMax: CATALYST_ENERGY_MAX,
             conjureWeapons: CONJURE_WEAPONS,
@@ -644,6 +648,7 @@ export class SimulationEngine {
         activeRelic,
         relicProc,
         startPistolBullets,
+        runtimeOptions,
     }) {
         return createRunState(this, {
             eliteSpec,
@@ -655,6 +660,7 @@ export class SimulationEngine {
             activeRelic,
             relicProc,
             startPistolBullets,
+            runtimeOptions,
             catalystEnergyMax: CATALYST_ENERGY_MAX,
             noopArray: NOOP_ARRAY,
         });
@@ -852,6 +858,7 @@ export class SimulationEngine {
         startPistolBullets = null,
         startEvokerCharges = 6,
         startEvokerEmpowered = 0,
+        runtimeOptions = null,
     ) {
         // Full run WITH target HP — used for the displayed DPS/kill-time results.
         this.run(
@@ -865,6 +872,7 @@ export class SimulationEngine {
             startPistolBullets,
             startEvokerCharges,
             startEvokerEmpowered,
+            runtimeOptions,
         );
         const fullResults = this.results;
 
@@ -892,6 +900,7 @@ export class SimulationEngine {
                 startPistolBullets,
                 startEvokerCharges,
                 startEvokerEmpowered,
+                runtimeOptions,
             );
             fullDps = this.results.dps;
             fullResultsForContrib = this.results;
@@ -985,6 +994,7 @@ export class SimulationEngine {
                 startPistolBullets,
                 startEvokerCharges,
                 startEvokerEmpowered,
+                runtimeOptions,
             );
             fullDpsForContrib = this.results.dps;
             fullResultsForContrib = this.results;
@@ -1007,6 +1017,7 @@ export class SimulationEngine {
                     startPistolBullets,
                     startEvokerCharges,
                     startEvokerEmpowered,
+                    runtimeOptions,
                 );
                 const withoutDps = this.results.totalDamage / baselineWindowSec;
                 const increase = fullDps - withoutDps;
@@ -1030,6 +1041,7 @@ export class SimulationEngine {
                     startPistolBullets,
                     startEvokerCharges,
                     startEvokerEmpowered,
+                    runtimeOptions,
                 );
                 const withoutDps = this.results.dps;
                 const increase = fullDpsForContrib - withoutDps;

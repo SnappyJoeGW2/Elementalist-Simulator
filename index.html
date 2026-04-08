@@ -192,6 +192,11 @@
                         <button id="btn-export-rotation" class="btn btn-io">↓ Save Rotation</button>
                         <button id="btn-import-rotation" class="btn btn-io">↑ Load Rotation</button>
                         <input type="file" id="rotation-file-input" accept=".json" style="display:none" />
+                        <div class="rotation-search-wrap">
+                            <input type="search" id="rotation-search" class="rotation-search-input" placeholder="Search rotation skill" autocomplete="off" spellcheck="false" />
+                            <button id="btn-rotation-search-clear" class="btn btn-io rotation-search-clear" title="Clear rotation search">Clear</button>
+                            <span id="rotation-search-status" class="rotation-search-status"></span>
+                        </div>
                         <div class="target-hp-wrap">
                             <label for="target-hp">Target HP</label>
                             <input type="number" id="target-hp" value="4000000" min="0" step="100000" />
