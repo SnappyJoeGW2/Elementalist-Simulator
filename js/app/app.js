@@ -2061,13 +2061,15 @@ class App {
 
         window._exportLogCSV = () => {
             if (!r?.log) return;
-            const csv = SimulationEngine.exportLogCSV(r.log);
+            const csv = this.sim.constructor.exportLogCSV(r.log);
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'event_log.csv';
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
         };
         const dur = (r.rotationMs / 1000).toFixed(2);
