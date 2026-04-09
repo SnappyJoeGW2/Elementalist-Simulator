@@ -2,6 +2,7 @@
 // hand scheduled output to the resolver, and finalize results.
 import { resolveScheduledStream } from '../resolver/sim-resolver.js';
 import { enterSetupPhase, exitSetupPhase } from './sim-run-phase-state.js';
+import { cloneScheduledEventStream } from '../shared/sim-scheduled-event-stream.js';
 
 export const PREPARED_RUN_MODEL_KIND = 'prepared_run_model';
 export const PREPARED_RUN_MODEL_VERSION = 1;
@@ -196,6 +197,40 @@ export function executeRunPhases(engine, runCtx, { stopAtTime, targetHP }) {
     });
 
     return { S, rotEnd, deathTime, scheduledStream };
+}
+
+export function executeRunPhasesCapture(engine, runCtx, { stopAtTime, targetHP }) {
+    const preparedRun = assertPreparedRunModel(runCtx);
+    const { S } = getPreparedRunStateModel(preparedRun);
+    const resolverConfig = getPreparedRunResolverConfig(preparedRun);
+
+    enterSetupPhase(S);
+    const scheduledStream = engine._scheduleRotation(S);
+    exitSetupPhase(S);
+
+    const capturedStream = cloneScheduledEventStream(scheduledStream);
+
+    const { deathTime, rotationEndTime: rotEnd } = resolveScheduledStream(engine, S, scheduledStream, resolverConfig, {
+        stopAtTime,
+        targetHP,
+    });
+
+    return { S, rotEnd, deathTime, capturedStream };
+}
+
+export function executeRunPhasesWithCache(engine, runCtx, cachedStream, { stopAtTime, targetHP }) {
+    const preparedRun = assertPreparedRunModel(runCtx);
+    const { S } = getPreparedRunStateModel(preparedRun);
+    const resolverConfig = getPreparedRunResolverConfig(preparedRun);
+
+    const clonedStream = cloneScheduledEventStream(cachedStream);
+
+    const { deathTime, rotationEndTime: rotEnd } = resolveScheduledStream(engine, S, clonedStream, resolverConfig, {
+        stopAtTime,
+        targetHP,
+    });
+
+    return { S, rotEnd, deathTime };
 }
 
 export function buildRunDamageWindow(S, rotEnd, deathTime) {

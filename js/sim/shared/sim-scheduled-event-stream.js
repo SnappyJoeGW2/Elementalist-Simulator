@@ -85,3 +85,8 @@ export function applyScheduledStreamPostResolveState(S, stream) {
     applyResolverPostResolveState(S, getScheduledStreamResolverHandoff(stream));
     return S;
 }
+
+export function cloneScheduledEventStream(stream) {
+    const validated = assertScheduledEventStream(stream);
+    return structuredClone(validated);
+}

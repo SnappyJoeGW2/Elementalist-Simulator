@@ -9,6 +9,8 @@ import {
 import {
     prepareRunContext,
     executeRunPhases,
+    executeRunPhasesCapture,
+    executeRunPhasesWithCache,
     buildRunDamageWindow,
     finalizeRunResults,
     getPreparedRunCleanupModel,
@@ -565,6 +567,71 @@ export class SimulationEngine {
             const { S, rotEnd, deathTime } = this._executeRunPhases(runCtx, {
                 stopAtTime,
                 targetHP,
+            });
+            const dpsCtx = this._buildRunDamageWindow(S, rotEnd, deathTime);
+            this.results = this._finalizeRunResults(S, rotEnd, deathTime, targetHP, dpsCtx);
+            return this.results;
+        } finally {
+            const { statAdj } = getPreparedRunCleanupModel(runCtx);
+            this._restoreAdjustedStats(a, statAdj);
+        }
+    }
+
+    runCaptureSchedule(
+        startAtt = 'Fire',
+        startAtt2 = null,
+        startEvokerElement = null,
+        permaBoons = {},
+        targetHP = 0,
+        startPistolBullets = null,
+        startEvokerCharges = 6,
+        startEvokerEmpowered = 0,
+    ) {
+        const a = this.attributes.attributes;
+        const runCtx = this._prepareRunContext(a, {
+            startAtt, startAtt2, startEvokerElement,
+            startEvokerCharges, startEvokerEmpowered,
+            permaBoons, disabled: null, startPistolBullets,
+        });
+
+        try {
+            const { S, rotEnd, deathTime, capturedStream } = executeRunPhasesCapture(this, runCtx, {
+                stopAtTime: null, targetHP,
+            });
+            const dpsCtx = this._buildRunDamageWindow(S, rotEnd, deathTime);
+            this.results = this._finalizeRunResults(S, rotEnd, deathTime, targetHP, dpsCtx);
+            this._cachedScheduledStream = capturedStream;
+            return this.results;
+        } finally {
+            const { statAdj } = getPreparedRunCleanupModel(runCtx);
+            this._restoreAdjustedStats(a, statAdj);
+        }
+    }
+
+    runWithCachedSchedule(
+        startAtt = 'Fire',
+        startAtt2 = null,
+        startEvokerElement = null,
+        permaBoons = {},
+        cachedStream = null,
+        targetHP = 0,
+        startPistolBullets = null,
+        startEvokerCharges = 6,
+        startEvokerEmpowered = 0,
+    ) {
+        const stream = cachedStream || this._cachedScheduledStream;
+        if (!stream) throw new Error('No cached scheduled stream available');
+
+        const a = this.attributes.attributes;
+        const runCtx = this._prepareRunContext(a, {
+            startAtt, startAtt2, startEvokerElement,
+            startEvokerCharges, startEvokerEmpowered,
+            permaBoons, disabled: null, startPistolBullets,
+        });
+
+        try {
+            const { S, rotEnd, deathTime } = executeRunPhasesWithCache(this, runCtx, stream, {
+                stopAtTime: null, targetHP,
             });
             const dpsCtx = this._buildRunDamageWindow(S, rotEnd, deathTime);
             this.results = this._finalizeRunResults(S, rotEnd, deathTime, targetHP, dpsCtx);

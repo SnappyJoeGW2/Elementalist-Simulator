@@ -41,14 +41,28 @@ self.onmessage = ({ data }) => {
         const TOP_N = 20;
         const localTop = [];
         let topDirty = false;
+        const useSchedulerCache = _canCacheScheduler(permaBoons, prefixes, activeSlots);
 
         for (const combo of combos) {
             let unreported = 0;
+            let cachedStream = null;
 
-            for (const gearAssign of gearCombos) {
-                const gear = _expandToGear(gearAssign, groups, prefixes);
-                const dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
-                    startAtt, startAtt2, evokerElement, permaBoons, constraints);
+            for (let gi = 0; gi < gearCombos.length; gi++) {
+                const gear = _expandToGear(gearCombos[gi], groups, prefixes);
+                let dps;
+
+                if (useSchedulerCache && cachedStream) {
+                    dps = _evalCached(sim, baseBuild, selectedSkills, combo, gear,
+                        startAtt, startAtt2, evokerElement, permaBoons, constraints, cachedStream);
+                } else if (useSchedulerCache && !cachedStream) {
+                    const result = _evalCapture(sim, baseBuild, selectedSkills, combo, gear,
+                        startAtt, startAtt2, evokerElement, permaBoons, constraints);
+                    dps = result.dps;
+                    if (result.stream) cachedStream = result.stream;
+                } else {
+                    dps = _eval(sim, baseBuild, selectedSkills, combo, gear,
+                        startAtt, startAtt2, evokerElement, permaBoons, constraints);
+                }
                 unreported++;
 
                 if (dps > 0 && (localTop.length < TOP_N || dps > localTop[localTop.length - 1].rawDps)) {
@@ -185,9 +199,8 @@ function _expandToGear(gearAssign, groups, prefixes) {
     return gear;
 }
 
-function _eval(sim, baseBuild, selectedSkills, combo, gear,
-    startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
-    const testBuild = {
+function _buildTestBuild(baseBuild, combo, gear) {
+    return {
         ...baseBuild,
         gear: { ...gear },
         rune: combo.rune || baseBuild.rune,
@@ -199,12 +212,52 @@ function _eval(sim, baseBuild, selectedSkills, combo, gear,
         utility: combo.utility || baseBuild.utility,
         infusions: combo.infusions != null ? combo.infusions : (baseBuild.infusions || []),
     };
+}
 
+function _eval(sim, baseBuild, selectedSkills, combo, gear,
+    startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
+    const testBuild = _buildTestBuild(baseBuild, combo, gear);
     const attrs = calcAttributes(testBuild, selectedSkills);
     if (!_meetsConstraints(attrs.attributes, constraints)) return -1;
     sim.attributes = attrs;
     sim.run(startAtt, startAtt2, evokerElement, permaBoons, null, 0);
     return sim.results?.dps ?? 0;
+}
+
+function _evalCapture(sim, baseBuild, selectedSkills, combo, gear,
+    startAtt, startAtt2, evokerElement, permaBoons, constraints = {}) {
+    const testBuild = _buildTestBuild(baseBuild, combo, gear);
+    const attrs = calcAttributes(testBuild, selectedSkills);
+    if (!_meetsConstraints(attrs.attributes, constraints)) return { dps: -1, stream: null };
+    sim.attributes = attrs;
+    sim.runCaptureSchedule(startAtt, startAtt2, evokerElement, permaBoons, 0);
+    return { dps: sim.results?.dps ?? 0, stream: sim._cachedScheduledStream };
+}
+
+function _evalCached(sim, baseBuild, selectedSkills, combo, gear,
+    startAtt, startAtt2, evokerElement, permaBoons, constraints = {}, cachedStream = null) {
+    const testBuild = _buildTestBuild(baseBuild, combo, gear);
+    const attrs = calcAttributes(testBuild, selectedSkills);
+    if (!_meetsConstraints(attrs.attributes, constraints)) return -1;
+    sim.attributes = attrs;
+    sim.runWithCachedSchedule(startAtt, startAtt2, evokerElement, permaBoons, cachedStream, 0);
+    return sim.results?.dps ?? 0;
+}
+
+function _canCacheScheduler(permaBoons, prefixes, activeSlots) {
+    if (!permaBoons?.Quickness || !permaBoons?.Alacrity) return false;
+    if (prefixes.length <= 1) return true;
+    for (const slot of activeSlots) {
+        const ref = GEAR_STATS[prefixes[0]]?.[slot] || {};
+        const refExp = ref.Expertise ?? 0;
+        const refCon = ref.Concentration ?? 0;
+        for (let i = 1; i < prefixes.length; i++) {
+            const stats = GEAR_STATS[prefixes[i]]?.[slot] || {};
+            if ((stats.Expertise ?? 0) !== refExp) return false;
+            if ((stats.Concentration ?? 0) !== refCon) return false;
+        }
+    }
+    return true;
 }
 
 function _meetsConstraints(attrs, constraints) {
