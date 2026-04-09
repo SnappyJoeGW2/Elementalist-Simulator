@@ -63,13 +63,19 @@ function applyEnduranceProgression(ctx, sk, end) {
     ctx.gainEndurance(sk.endurance, end);
 }
 
+export function armSpearEtchingOnCastStart(ctx, sk, name, start) {
+    const etchCast = ctx.etchingLookup.get(name);
+    if (!etchCast || sk.weapon !== 'Spear' || name !== etchCast.etching) return;
+    ctx.setEtchingProgress(etchCast.etching, 'lesser');
+    ctx.log({ t: start, type: 'skill_proc', skill: name, detail: `armed ${etchCast.lesser}` });
+}
+
 export function updateSpearEtchingProgression(ctx, sk, name, end) {
     const { S } = ctx;
     const etchCast = ctx.etchingLookup.get(name);
     if (etchCast && sk.weapon === 'Spear') {
         if (name === etchCast.etching) {
-            ctx.setEtchingProgress(etchCast.etching, 'lesser');
-            ctx.log({ t: end, type: 'skill_proc', skill: name, detail: `armed ${etchCast.lesser}` });
+            // Already armed at cast start; nothing left to do here.
         } else {
             ctx.setEtchingProgress(etchCast.etching, null);
         }

@@ -17,7 +17,7 @@ import {
     finishStandardHitScheduling,
     finalizeStandardSkillBookkeeping,
 } from './sim-cast-cooldowns.js';
-import { applyStandardCastProgression } from './sim-cast-followups.js';
+import { applyStandardCastProgression, armSpearEtchingOnCastStart } from './sim-cast-followups.js';
 
 export const STEP_ACTIONS = Object.freeze({
     SWAP: 'swap',
@@ -145,6 +145,8 @@ export function executeStandardSkillCast(ctx, sk, name, {
         ctx.trackField(sk, end);
         ctx.trackAura(sk, end);
     }
+
+    armSpearEtchingOnCastStart(ctx, sk, name, start);
 
     runConcurrentSteps(ctx, concurrents, {
         anchorTime: start,
