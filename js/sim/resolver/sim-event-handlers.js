@@ -90,17 +90,17 @@ export function isPlayerHitEvent(ev) {
 }
 
 export function isDirectStrikeHit(ev) {
-    return isPlayerHitEvent(ev) && !ev.isField && ev.dmg > 0 && ev.ws > 0;
+    return isPlayerHitEvent(ev) && ev.dmg > 0 && ev.ws > 0;
 }
 
 export function isDamagingHit(ev) {
-    return isPlayerHitEvent(ev) && !ev.isField && ev.dmg > 0;
+    return isPlayerHitEvent(ev) && ev.dmg > 0;
 }
 
 export function buildHitTriggerContext(ev) {
     const playerHit = isPlayerHitEvent(ev);
-    const directStrike = playerHit && !ev.isField && ev.dmg > 0 && ev.ws > 0;
-    const damagingHit = playerHit && !ev.isField && ev.dmg > 0;
+    const directStrike = playerHit && ev.dmg > 0 && ev.ws > 0;
+    const damagingHit = playerHit && ev.dmg > 0;
     return {
         playerHit,
         directStrike,
