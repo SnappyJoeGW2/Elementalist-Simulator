@@ -112,7 +112,7 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
             state,
             prev,
             nextPrevReadyAt,
-            buildCooldownDisplayMeta(state, state.t, rawPrevBaseCd),
+            buildCooldownDisplayMeta(state, state.t, prevBaseCd),
         ),
     );
 
@@ -143,7 +143,7 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
                 defaultReadyAt,
                 preserveShortCooldown
                     ? buildCooldownDisplayMeta(state, state.t, preservedRemainingMs, { applyAlacrity: false })
-                    : buildCooldownDisplayMeta(state, state.t, offAttCd),
+                    : buildCooldownDisplayMeta(state, state.t, ctx.attunementCooldownMs(offAttCd)),
             ),
         );
     }
@@ -239,7 +239,7 @@ export function handleWeaverSwap(ctx, target, sk, isConcurrent, concurrents, {
         ctx.setAttunementCooldown(
             a,
             newCD,
-            buildCooldownDisplayMeta(S, S.t, weaveSelfWasActive ? 2000 : weaverSwapCd),
+            buildCooldownDisplayMeta(S, S.t, weaveSelfSwapCD),
         );
     }
 
@@ -330,12 +330,12 @@ export function handleOverload(ctx, sk, concurrents, {
     ctx.setAttunementCooldown(
         olAtt,
         end + olEffCd,
-        buildCooldownDisplayMeta(state, end, Math.round(sk.recharge * 1000)),
+        buildCooldownDisplayMeta(state, end, olBaseCd),
     );
     ctx.setSkillCooldown(
         sk.name,
         end + olEffCd,
-        buildCooldownDisplayMeta(state, end, Math.round(sk.recharge * 1000)),
+        buildCooldownDisplayMeta(state, end, olBaseCd),
     );
 
     ctx.resetChainsOnCast(sk);

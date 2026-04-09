@@ -106,7 +106,7 @@ export function handleJadeSphere(ctx, sk, concurrents, {
         const baseCdMs = ctx.attunementCooldownMs(Math.round(sk.recharge * 1000));
         ctx.setSkillCooldown(cdKey, state.t + ctx.alacrityAdjustedCooldown(baseCdMs, state.t), {
             startedAt: state.t,
-            displayDurationMs: Math.round(sk.recharge * 1000),
+            displayDurationMs: baseCdMs,
             alacrityUntil: state.alacrityUntil || 0,
         });
     }
