@@ -157,23 +157,35 @@ header .accent {
 .presets-bar {
     max-width: 860px;
     margin: 0 auto 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
 }
 
-.presets-label {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    white-space: nowrap;
+#presets-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.presets-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.presets-group-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    min-width: 58px;
+    text-align: right;
     flex-shrink: 0;
 }
 
-.presets-btns {
+.presets-group-btns {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
 }
 
 .preset-btn {

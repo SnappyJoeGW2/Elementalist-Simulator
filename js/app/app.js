@@ -2784,22 +2784,41 @@ class App {
 
     async _loadPresets() {
         try {
-            const presets = await fetchJsonAsset('Builds/manifest.json', { optional: true });
-            if (!Array.isArray(presets) || presets.length === 0) return;
+            const manifest = await fetchJsonAsset('Builds/manifest.json', { optional: true });
+            if (!Array.isArray(manifest) || manifest.length === 0) return;
 
-            const bar = document.getElementById('presets-bar');
-            const btns = document.getElementById('presets-btns');
-            btns.innerHTML = presets.map((p, i) =>
-                `<button class="btn preset-btn" data-idx="${i}">${esc(p.label)}</button>`
-            ).join('');
+            // Support both the old flat-array format and the new sectioned format.
+            // Flat array: each entry is a preset object ({ label, build, rotation? }).
+            // Sectioned: each entry is { section, presets: [...] }.
+            const isSectioned = manifest[0]?.presets !== undefined;
+            const sections = isSectioned
+                ? manifest
+                : [{ section: null, presets: manifest }];
 
-            btns.addEventListener('click', e => {
+            // Build a flat list for indexed click handling.
+            const allPresets = [];
+
+            const container = document.getElementById('presets-groups');
+            container.innerHTML = sections.map(sec => {
+                const btns = (sec.presets || []).map(p => {
+                    const idx = allPresets.length;
+                    allPresets.push(p);
+                    return `<button class="btn preset-btn" data-idx="${idx}">${esc(p.label)}</button>`;
+                }).join('');
+
+                const labelHtml = sec.section
+                    ? `<span class="presets-group-label">${esc(sec.section)}</span>`
+                    : '';
+                return `<div class="presets-group">${labelHtml}<div class="presets-group-btns">${btns}</div></div>`;
+            }).join('');
+
+            container.addEventListener('click', e => {
                 const btn = e.target.closest('.preset-btn');
                 if (!btn) return;
-                this._loadPreset(presets[+btn.dataset.idx], btn);
+                this._loadPreset(allPresets[+btn.dataset.idx], btn);
             });
 
-            bar.style.display = '';
+            document.getElementById('presets-bar').style.display = '';
         } catch (_) { /* silently skip if no manifest */ }
     }
 
