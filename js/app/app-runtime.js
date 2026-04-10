@@ -34,6 +34,12 @@ export function deserializeRotation(app, items) {
     for (const item of items) app.sim.addSkill(item);
 }
 
+/** Append items to the existing rotation without clearing it first. */
+export function appendToRotation(app, items) {
+    if (!app.sim || !Array.isArray(items)) return;
+    for (const item of items) app.sim.addSkill(item);
+}
+
 export function buildSnapshot(app) {
     return buildSnapshotFromState({
         build: app.build,
@@ -208,6 +214,7 @@ export function clearRotation(app) {
     app._renderPalette();
     app._renderTimeline();
     document.getElementById('rotation-results').innerHTML = '';
+    persistBuild(app); // persist the empty rotation so a page refresh doesn't restore the old one
 }
 
 export function refreshAfterBuildStateChange(app) {

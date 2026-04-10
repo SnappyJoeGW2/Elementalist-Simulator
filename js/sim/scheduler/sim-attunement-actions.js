@@ -185,6 +185,7 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
 
     ctx.log({ t: state.t, type: 'swap', from: prev, to: target });
     ctx.addStep({ skill: sk.name, start: state.t, end: state.t, att: target, type: 'swap', ri: state._ri, icon: swapIcon });
+    updateSpearEtchingProgression(ctx, sk, sk.name, state.t);
 
     runConcurrentSteps(ctx, concurrents, {
         anchorTime: state.t,
@@ -270,6 +271,7 @@ export function handleWeaverSwap(ctx, target, sk, isConcurrent, concurrents, {
     const toLabel = unravelActive ? target : `${target}/${prevPrimary}`;
     ctx.log({ t: S.t, type: 'swap', from: `${prevPrimary}/${prevSecondary}`, to: toLabel });
     ctx.addStep({ skill: sk.name, start: S.t, end: S.t, att: target, type: 'swap', ri: S._ri });
+    updateSpearEtchingProgression(ctx, sk, sk.name, S.t);
 
     runConcurrentSteps(ctx, concurrents, {
         anchorTime: S.t,

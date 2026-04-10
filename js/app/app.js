@@ -24,9 +24,16 @@ import {
     readJsonFile,
 } from './app-io.js';
 import {
+    convertEIRotation,
+    extractLogId,
+    fetchEIJson,
+    findElementalistPlayers,
+} from './app-dpsreport.js';
+import {
     addToRotation,
     applyLoadedBuildState,
     applySnapshot,
+    appendToRotation,
     autoRun,
     buildSnapshot,
     clearRotation,
@@ -326,6 +333,17 @@ class App {
             const file = e.target.files[0];
             if (file) { this._importRotation(file); e.target.value = ''; }
         });
+
+        document.getElementById('btn-dpsreport-import').addEventListener('click', () => {
+            this._importFromDpsReport();
+        });
+        document.getElementById('dpsreport-url').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this._importFromDpsReport();
+        });
+        document.getElementById('dpsreport-player-select').addEventListener('change', () => {
+            this._runDpsReportConversion();
+        });
+
         document.getElementById('btn-export-build').addEventListener('click', () => this._exportBuild());
         document.getElementById('btn-import-build').addEventListener('click', () => {
             document.getElementById('import-file-input').click();
@@ -2821,6 +2839,82 @@ class App {
         } catch (err) {
             alert('Failed to load rotation file: ' + err.message);
         }
+    }
+
+    // ─── dps.report import ────────────────────────────────────────────────────
+
+    _dpsReportStatus(msg, isError = false) {
+        const el = document.getElementById('dpsreport-status');
+        if (!el) return;
+        el.textContent = msg;
+        el.style.color = isError ? 'var(--condi)' : 'var(--text-dim)';
+    }
+
+    async _importFromDpsReport() {
+        const url = document.getElementById('dpsreport-url').value.trim();
+        if (!url) return;
+
+        const logId = extractLogId(url);
+        if (!logId) {
+            this._dpsReportStatus('Invalid dps.report URL.', true);
+            return;
+        }
+
+        const btn = document.getElementById('btn-dpsreport-import');
+        btn.disabled = true;
+        this._dpsReportStatus('Fetching log…');
+
+        try {
+            this._eiJson = await fetchEIJson(logId);
+            const players = findElementalistPlayers(this._eiJson);
+
+            if (players.length === 0) {
+                this._dpsReportStatus('No Elementalist player found in this log.', true);
+                return;
+            }
+
+            const sel = document.getElementById('dpsreport-player-select');
+            if (players.length === 1) {
+                sel.style.display = 'none';
+                this._eiPlayerIndex = 0;
+            } else {
+                sel.innerHTML = players.map((p, i) =>
+                    `<option value="${i}">${p.name} (${p.profession})</option>`
+                ).join('');
+                sel.value = '0';
+                sel.style.display = '';
+                this._eiPlayerIndex = 0;
+            }
+
+            this._runDpsReportConversion();
+        } catch (err) {
+            this._dpsReportStatus(err.message, true);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    _runDpsReportConversion() {
+        if (!this._eiJson) return;
+        const sel = document.getElementById('dpsreport-player-select');
+        const playerIdx = parseInt(sel.value || '0', 10);
+        const players = findElementalistPlayers(this._eiJson);
+        const player = players[playerIdx];
+        if (!player) return;
+
+        const toolSkillNames = new Set(this.data.skills.map(s => s.name));
+        const skillAttunements = new Map(this.data.skills.map(s => [s.name, s.attunement || '']));
+        const items = convertEIRotation(this._eiJson, player, toolSkillNames, skillAttunements);
+
+        const waits = items.filter(i => i?.name === '__wait').length;
+        const total  = items.length;
+
+        appendToRotation(this, items);
+        this._autoRun();
+        this.render();
+
+        const waitsNote = waits > 0 ? ` (${waits} unknown skill${waits > 1 ? 's' : ''} → __wait)` : '';
+        this._dpsReportStatus(`Appended ${total} steps from "${player.name}"${waitsNote}.`);
     }
 
     // ─── Gear Optimizer ──────────────────────────────────────────────────────

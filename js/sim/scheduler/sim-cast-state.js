@@ -32,9 +32,17 @@ export function getChainRoot(ctx, sk) {
     return root ? root.name : candidates[0].name;
 }
 
+// Skills that should not reset the AA chain when cast, even though they have
+// a non-zero cast time.  These are mobility or utility skills whose animation
+// runs in parallel with the chain window in the actual game.
+const CHAIN_PRESERVING_SKILLS = new Set([
+    'Ride the Lightning',
+]);
+
 export function resetChainsOnCast(ctx, sk) {
     const { S } = ctx;
     if (Math.round((sk.castTime || 0) * 1000) === 0) return;
+    if (CHAIN_PRESERVING_SKILLS.has(sk.name)) return;
     const ownRoot = sk.chainSkill ? getChainRoot(ctx, sk) : null;
     const carryRoot = S.aaCarryover?.root || null;
     for (const key of listChainRoots(S)) {

@@ -1497,6 +1497,73 @@ header .accent {
     background: rgba(102, 170, 255, 0.15);
 }
 
+/* ─── dps.report import bar ─── */
+
+.dpsreport-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 5px 8px;
+    background: var(--bg-panel-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.dpsreport-label {
+    font-size: 11px;
+    color: var(--accent);
+    white-space: nowrap;
+    font-weight: 600;
+    flex: 0 0 auto;
+}
+
+.dpsreport-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 12px;
+    padding: 3px 7px;
+    outline: none;
+}
+
+.dpsreport-input:focus {
+    border-color: var(--accent-dim);
+}
+
+.dpsreport-input::placeholder {
+    color: var(--text-dim);
+}
+
+.dpsreport-select {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 12px;
+    padding: 3px 6px;
+    outline: none;
+    max-width: 180px;
+}
+
+.btn-dpsreport {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.dpsreport-status {
+    font-size: 11px;
+    color: var(--text-dim);
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* .rotation-timeline {
     display: flex;
     flex-direction: column;
