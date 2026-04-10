@@ -104,8 +104,9 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
     });
 }
 
-function updateStandardSkillChainProgress(ctx, sk, end) {
+function updateStandardSkillChainProgress(ctx, sk, end, { interrupted = false } = {}) {
     if (!sk.chainSkill) return;
+    if (interrupted) return; // interrupted cast did not complete — do not advance the chain
 
     const chainRoot = ctx.getChainRoot(sk);
     const expiryAt = name => {
@@ -144,7 +145,7 @@ export function finalizeStandardSkillBookkeeping(ctx, sk, name, {
     fullCastMs = castMs,
 }) {
     resolveStandardSkillCooldown(ctx, sk, name, key, end);
-    updateStandardSkillChainProgress(ctx, sk, end);
+    updateStandardSkillChainProgress(ctx, sk, end, { interrupted });
     if (name === 'Hurl') {
         const rootSkill = ctx.skill('Rock Barrier');
         ctx.expireChainProgress('Rock Barrier');
