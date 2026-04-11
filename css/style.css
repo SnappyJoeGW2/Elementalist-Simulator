@@ -171,6 +171,11 @@ header .accent {
     gap: 8px;
 }
 
+.presets-group + .presets-group {
+    border-top: 1px solid rgba(197, 153, 50, 0.4);
+    padding-top: 4px;
+}
+
 .presets-group-label {
     font-size: 0.72rem;
     font-weight: 600;

@@ -23,7 +23,7 @@
     "rune": "Dragonhunter",
     "sigils": [
       "Force",
-      "Impact"
+      "Severance"
     ],
     "relic": "Bloodstone",
     "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
@@ -36,11 +36,11 @@
       },
       {
         "name": "Air",
-        "traits": "3-3-1"
+        "traits": "3-3-3"
       },
       {
         "name": "Evoker",
-        "traits": "1-1-1"
+        "traits": "1-2-1"
       }
     ],
     "infusions": [
@@ -67,7 +67,7 @@
   },
   "activeAttunement": "Earth",
   "secondaryAttunement": "Air",
-  "evokerElement": "Air",
+  "evokerElement": "Earth",
   "evokerStartCharges": 6,
   "evokerStartEmpowered": 0,
   "permaBoons": {

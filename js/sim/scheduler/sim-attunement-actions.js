@@ -368,7 +368,7 @@ export function handleOverload(ctx, sk, concurrents, {
         ctx.queueHitEvent({
             time: end,
             skill: 'Lightning Jolt', hitIdx: 1, sub: 1, totalSubs: 1,
-            dmg: 1.32, ws: 690.5,
+            dmg: 2.64, ws: 690.5,
             isField: false, cc: false, conds: null,
             noCrit: true, att: state.att, isTraitProc: true,
         });

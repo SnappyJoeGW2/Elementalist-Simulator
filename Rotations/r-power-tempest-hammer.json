@@ -4,43 +4,42 @@
     "Overload Air",
     {
       "name": "__combat_start",
-      "offset": 3100
+      "offset": 3080
     },
     {
       "name": "Crescent Wind",
-      "offset": 3110
+      "offset": 3100
     },
     "Shock Blast",
     {
       "name": "Fire Attunement",
-      "offset": 100
-    },
-    {
-      "name": "Flame Wheel",
-      "offset": 100
+      "offset": 41
     },
     "Triple Sear",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 245
     },
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 362
     },
     "Glyph of Storms (Air)",
     "Hurricane of Pain",
     "Overload Air",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 3162
+    },
     "Ground Pound",
     {
       "name": "Rocky Loop",
-      "offset": 100
+      "offset": 146
     },
     "Whirling Stones",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 124
     },
     "Wind Slam",
     "Wind Slam",
@@ -49,52 +48,62 @@
     "Hurricane of Pain",
     {
       "name": "Water Attunement",
-      "offset": 100
+      "offset": 84
     },
     {
       "name": "Icy Coil",
-      "offset": 200
+      "offset": 201
     },
     {
       "name": "Air Attunement",
-      "offset": 300
+      "offset": 403
     },
     "Shock Blast",
     "Wind Slam",
     "Grand Finale",
+    {
+      "name": "Wind Slam",
+      "interruptMs": 83
+    },
     "Overload Air",
     {
       "name": "Crescent Wind",
-      "offset": 1
+      "offset": 1091
     },
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3124
+    },
     "Triple Sear",
     {
       "name": "Flame Wheel",
-      "offset": 50
+      "offset": 40
     },
     "Molten End",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 162
     },
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 325
     },
     "Wind Slam",
     "Hurricane of Pain",
     "Overload Air",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 3120
+    },
     "Ground Pound",
     {
       "name": "Rocky Loop",
-      "offset": 50
+      "offset": 78
     },
     "Whirling Stones",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 123
     },
     "Wind Slam",
     "Wind Slam",
@@ -103,15 +112,15 @@
     "Hurricane of Pain",
     {
       "name": "Water Attunement",
-      "offset": 100
+      "offset": 46
     },
     {
       "name": "Icy Coil",
-      "offset": 200
+      "offset": 204
     },
     {
       "name": "Air Attunement",
-      "offset": 300
+      "offset": 361
     },
     "Shock Blast",
     "Wind Slam",
@@ -119,52 +128,62 @@
     "Overload Air",
     {
       "name": "Crescent Wind",
-      "offset": 1
+      "offset": 1186
     },
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3125
+    },
     "Triple Sear",
     {
       "name": "Flame Wheel",
-      "offset": 50
+      "offset": 41
     },
     "Molten End",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 205
     },
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 325
     },
     "Wind Slam",
     "Hurricane of Pain",
     "Overload Air",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 3121
+    },
     "Ground Pound",
     {
       "name": "Rocky Loop",
-      "offset": 50
+      "offset": 119
     },
     "Whirling Stones",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 84
     },
     "Glyph of Storms (Air)",
     "Wind Slam",
+    {
+      "name": "Wind Slam",
+      "interruptMs": 42
+    },
     "Overload Air",
     "Hurricane of Pain",
     {
       "name": "Water Attunement",
-      "offset": 100
+      "offset": 118
     },
     {
       "name": "Icy Coil",
-      "offset": 200
+      "offset": 237
     },
     {
       "name": "Air Attunement",
-      "offset": 300
+      "offset": 397
     },
     "Shock Blast",
     "Wind Slam",
@@ -172,36 +191,42 @@
     "Overload Air",
     {
       "name": "Crescent Wind",
-      "offset": 1
+      "offset": 1200
     },
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3126
+    },
     "Triple Sear",
     {
       "name": "Flame Wheel",
-      "offset": 50
+      "offset": 36
     },
     "Molten End",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 208
     },
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 281
     },
     "Wind Slam",
     "Hurricane of Pain",
     "Overload Air",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 3126
+    },
     "Ground Pound",
     {
       "name": "Rocky Loop",
-      "offset": 50
+      "offset": 80
     },
     "Whirling Stones",
     {
       "name": "Air Attunement",
-      "offset": 50
+      "offset": 168
     },
     "Wind Slam",
     "Wind Slam",
@@ -210,15 +235,15 @@
     "Hurricane of Pain",
     {
       "name": "Water Attunement",
-      "offset": 100
+      "offset": 82
     },
     {
       "name": "Icy Coil",
-      "offset": 200
+      "offset": 240
     },
     {
       "name": "Air Attunement",
-      "offset": 300
+      "offset": 398
     },
     "Shock Blast",
     "Wind Slam",
@@ -226,22 +251,25 @@
     "Overload Air",
     {
       "name": "Crescent Wind",
-      "offset": 1
+      "offset": 1203
     },
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3201
+    },
     "Triple Sear",
     {
       "name": "Flame Wheel",
-      "offset": 50
+      "offset": 81
     },
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 447
     },
     "Molten End",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 254
     }
   ]
 }

@@ -100,6 +100,7 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
                 totalSubs: count,
                 dmg: perHit,
                 ws,
+                ...(h.flatDamage > 0 ? { flatStrikeBase: h.flatDamage, flatStrikePowerCoeff: 0 } : {}),
                 isField: h.isFieldTick,
                 cc: h.cc,
                 conds: h.conditions,

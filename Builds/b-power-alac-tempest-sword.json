@@ -2,30 +2,30 @@
   "build": {
     "gear": {
       "Helm": "Berserker's",
-      "Shoulders": "Berserker's",
+      "Shoulders": "Assassin's",
       "Chest": "Berserker's",
-      "Gloves": "Berserker's",
+      "Gloves": "Diviner's",
       "Leggins": "Berserker's",
       "Boots": "Berserker's",
       "Amulet": "Berserker's",
       "Ring1": "Berserker's",
       "Ring2": "Berserker's",
-      "Accessory1": "Berserker's",
-      "Accessory2": "Berserker's",
-      "Back": "Berserker's",
+      "Accessory1": "Diviner's",
+      "Accessory2": "Diviner's",
+      "Back": "Diviner's",
       "Weapon1": "Berserker's",
       "Weapon2": "Berserker's"
     },
     "weapons": [
-      "Scepter",
+      "Sword",
       "Dagger"
     ],
-    "rune": "Dragonhunter",
+    "rune": "Deadeye",
     "sigils": [
       "Force",
-      "Impact"
+      "Accuracy"
     ],
-    "relic": "Bloodstone",
+    "relic": "Fireworks",
     "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
     "utility": "Superior Sharpening Stone",
     "jadeBotCore": true,
@@ -36,21 +36,21 @@
       },
       {
         "name": "Air",
-        "traits": "3-3-1"
+        "traits": "3-3-2"
       },
       {
-        "name": "Evoker",
-        "traits": "1-1-1"
+        "name": "Tempest",
+        "traits": "3-1-2"
       }
     ],
     "infusions": [
       {
         "stat": "Power",
-        "count": 18
+        "count": 15
       },
       {
         "stat": "Precision",
-        "count": 0
+        "count": 3
       },
       {
         "stat": "Ferocity",
@@ -59,15 +59,15 @@
     ]
   },
   "selectedSkills": {
-    "heal": "Rejuvenate",
-    "util1": "Fox's Fury",
+    "heal": "Signet of Restoration",
+    "util1": "Feel the Burn!",
     "util2": "Glyph of Storms (Fire)",
     "util3": "Signet of Fire",
-    "elite": "Elemental Procession"
+    "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Earth",
+  "activeAttunement": "Fire",
   "secondaryAttunement": "Air",
-  "evokerElement": "Air",
+  "evokerElement": null,
   "evokerStartCharges": 6,
   "evokerStartEmpowered": 0,
   "permaBoons": {

@@ -1,0 +1,325 @@
+{
+  "rotation": [
+    "Raging Ricochet",
+    "Water Attunement",
+    "Frigid Flurry",
+    "Earth Attunement",
+    "Shattering Stone",
+    {
+      "name": "__wait",
+      "waitMs": 5000
+    },
+    "Glyph of Elementals",
+    "Overload Earth",
+    {
+      "name": "__combat_start",
+      "offset": 2700
+    },
+    "Dust Storm",
+    "Sand Squall",
+    "Signet of Fire",
+    "Shattering Stone",
+    "Boulder Blast",
+    {
+      "name": "Water Attunement",
+      "offset": 119
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 524
+    },
+    "Raging Ricochet",
+    "Searing Salvo",
+    "Signet of Earth",
+    "Wildfire",
+    "Heat Sync",
+    "Glyph of Elemental Power (Fire)",
+    "Scorching Shot",
+    "Overload Fire",
+    "Signet of Fire",
+    "Raging Ricochet",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 202
+    },
+    "Searing Salvo",
+    {
+      "name": "Air Attunement",
+      "offset": 200
+    },
+    "Dazing Discharge",
+    "Lightning Orb",
+    {
+      "name": "Water Attunement",
+      "offset": 162
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Earth Attunement",
+      "offset": 520
+    },
+    "Shattering Stone",
+    "Boulder Blast",
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 202
+    },
+    "Signet of Earth",
+    "Piercing Pebble",
+    "Piercing Pebble",
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 78
+    },
+    "Dust Storm",
+    "Sand Squall",
+    "Piercing Pebble",
+    "Shattering Stone",
+    "Overload Earth",
+    "Signet of Fire",
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 117
+    },
+    "Boulder Blast",
+    "Shattering Stone",
+    {
+      "name": "Water Attunement",
+      "offset": 323
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 685
+    },
+    "Raging Ricochet",
+    "Searing Salvo",
+    "Wildfire",
+    "Heat Sync",
+    "Signet of Earth",
+    "Glyph of Elemental Power (Fire)",
+    "Scorching Shot",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 120
+    },
+    "Overload Fire",
+    "Signet of Fire",
+    "Raging Ricochet",
+    "Searing Salvo",
+    {
+      "name": "Air Attunement",
+      "offset": 363
+    },
+    "Dazing Discharge",
+    "Lightning Orb",
+    {
+      "name": "Water Attunement",
+      "offset": 280
+    },
+    {
+      "name": "Soothing Splash",
+      "interruptMs": 40
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Earth Attunement",
+      "offset": 1002
+    },
+    "Shattering Stone",
+    "Boulder Blast",
+    "Dust Storm",
+    "Sand Squall",
+    "Piercing Pebble",
+    "Signet of Earth",
+    "Piercing Pebble",
+    "Piercing Pebble",
+    "Shattering Stone",
+    "Overload Earth",
+    "Signet of Fire",
+    "Piercing Pebble",
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 161
+    },
+    "Shattering Stone",
+    "Boulder Blast",
+    {
+      "name": "Water Attunement",
+      "offset": 205
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 725
+    },
+    "Raging Ricochet",
+    "Searing Salvo",
+    "Wildfire",
+    "Heat Sync",
+    "Glyph of Elemental Power (Fire)",
+    "Scorching Shot",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 84
+    },
+    "Signet of Earth",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 238
+    },
+    "Overload Fire",
+    "Signet of Fire",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 42
+    },
+    "Raging Ricochet",
+    "Searing Salvo",
+    {
+      "name": "Air Attunement",
+      "offset": 280
+    },
+    "Dazing Discharge",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 78
+    },
+    "Lightning Orb",
+    {
+      "name": "Water Attunement",
+      "offset": 201
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Earth Attunement",
+      "offset": 596
+    },
+    "Shattering Stone",
+    "Boulder Blast",
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 125
+    },
+    "Dust Storm",
+    "Sand Squall",
+    "Piercing Pebble",
+    "Piercing Pebble",
+    "Signet of Earth",
+    "Piercing Pebble",
+    "Shattering Stone",
+    "Overload Earth",
+    "Signet of Fire",
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 201
+    },
+    "Boulder Blast",
+    "Shattering Stone",
+    {
+      "name": "Water Attunement",
+      "offset": 362
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 802
+    },
+    "Raging Ricochet",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 39
+    },
+    "Searing Salvo",
+    "Wildfire",
+    "Heat Sync",
+    "Glyph of Elemental Power (Fire)",
+    "Scorching Shot",
+    "Scorching Shot",
+    "Scorching Shot",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 38
+    },
+    "Signet of Earth",
+    "Overload Fire",
+    "Signet of Fire",
+    "Raging Ricochet",
+    "Searing Salvo",
+    {
+      "name": "Air Attunement",
+      "offset": 203
+    },
+    "Dazing Discharge",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 41
+    },
+    "Lightning Orb",
+    {
+      "name": "Water Attunement",
+      "offset": 199
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Earth Attunement",
+      "offset": 641
+    },
+    "Shattering Stone",
+    "Boulder Blast",
+    "Dust Storm",
+    "Sand Squall",
+    "Piercing Pebble",
+    "Piercing Pebble",
+    "Piercing Pebble",
+    "Signet of Earth",
+    "Shattering Stone",
+    "Overload Earth",
+    "Signet of Fire",
+    "Piercing Pebble",
+    "Boulder Blast",
+    "Shattering Stone",
+    {
+      "name": "Water Attunement",
+      "offset": 242
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 925
+    },
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 118
+    },
+    "Raging Ricochet",
+    "Searing Salvo",
+    "Wildfire",
+    "Heat Sync",
+    "Glyph of Elemental Power (Fire)",
+    "Scorching Shot",
+    "Scorching Shot",
+    "Raging Ricochet",
+    "Overload Fire",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 80
+    },
+    "Signet of Fire",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 80
+    },
+    "Raging Ricochet"
+  ]
+}

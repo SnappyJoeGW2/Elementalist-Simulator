@@ -9,19 +9,23 @@
     "Quantum Strike",
     {
       "name": "Fire Attunement",
-      "offset": 100
+      "offset": 160
     },
     "Cauterizing Strike",
+    {
+      "name": "Fire Strike",
+      "interruptMs": 40
+    },
     "Ring of Fire",
     "Fire Grab",
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 203
     },
     {
       "name": "Feel the Burn!",
-      "offset": 150
+      "offset": 363
     },
     "Glyph of Storms (Air)",
     "Ride the Lightning",
@@ -29,27 +33,41 @@
     "Polaric Slash",
     "Call Lightning",
     "Overload Air",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 3160
+    },
+    {
+      "name": "Crystal Slash",
+      "interruptMs": 42
+    },
     "Earthquake",
     "Churning Earth",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 83
     },
     "Ride the Lightning",
     "Charged Strike",
     "Polaric Slash",
     "Call Lightning",
     "Quantum Strike",
+    {
+      "name": "Charged Strike",
+      "interruptMs": 161
+    },
     "Overload Air",
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3121
+    },
     "Cauterizing Strike",
     "Ring of Fire",
     "Fire Grab",
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 168
     },
     "Ride the Lightning",
     "Charged Strike",
@@ -57,32 +75,55 @@
     "Call Lightning",
     "Charged Strike",
     "Polaric Slash",
+    {
+      "name": "Call Lightning",
+      "interruptMs": 195
+    },
     "Overload Air",
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 1364
     },
     "Earth Attunement",
+    {
+      "name": "Crystal Slash",
+      "interruptMs": 117
+    },
     "Earthquake",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 439
+    },
+    {
+      "name": "Charged Strike",
+      "interruptMs": 154
     },
     "Quantum Strike",
+    {
+      "name": "Charged Strike",
+      "interruptMs": 44
+    },
     "Ride the Lightning",
     "Charged Strike",
     "Polaric Slash",
     "Call Lightning",
     "Charged Strike",
     "Overload Air",
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3161
+    },
+    {
+      "name": "Fire Strike",
+      "interruptMs": 44
+    },
     "Cauterizing Strike",
     "Ring of Fire",
     "Fire Grab",
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 238
     },
     "Ride the Lightning",
     "Charged Strike",
@@ -93,30 +134,41 @@
     "Call Lightning",
     "Overload Air",
     "Earth Attunement",
+    {
+      "name": "Crystal Slash",
+      "interruptMs": 161
+    },
     "Earthquake",
     "Churning Earth",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 159
     },
     "Ride the Lightning",
     "Quantum Strike",
     "Charged Strike",
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 292
     },
     "Polaric Slash",
     "Call Lightning",
     "Overload Air",
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3160
+    },
+    {
+      "name": "Fire Strike",
+      "interruptMs": 39
+    },
     "Cauterizing Strike",
     "Ring of Fire",
     "Fire Grab",
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 240
     },
     "Ride the Lightning",
     "Charged Strike",
@@ -126,11 +178,22 @@
     "Polaric Slash",
     "Call Lightning",
     "Overload Air",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 3156
+    },
+    {
+      "name": "Crystal Slash",
+      "interruptMs": 116
+    },
     "Earthquake",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 408
+    },
+    {
+      "name": "Charged Strike",
+      "interruptMs": 79
     },
     "Quantum Strike",
     "Glyph of Storms (Air)",
@@ -140,30 +203,45 @@
     "Call Lightning",
     "Overload Air",
     "Fire Attunement",
+    {
+      "name": "Fire Strike",
+      "interruptMs": 153
+    },
     "Cauterizing Strike",
+    {
+      "name": "Fire Strike",
+      "interruptMs": 43
+    },
     "Ring of Fire",
     "Fire Grab",
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 237
     },
-    "Ride the Lightning",
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 401
     },
+    "Ride the Lightning",
     "Charged Strike",
     "Polaric Slash",
     "Call Lightning",
     "Charged Strike",
     "Quantum Strike",
     "Overload Air",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 3164
+    },
+    {
+      "name": "Crystal Slash",
+      "interruptMs": 118
+    },
     "Earthquake",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 407
     },
     "Charged Strike",
     "Polaric Slash",
@@ -173,14 +251,21 @@
     "Polaric Slash",
     "Call Lightning",
     "Overload Air",
-    "Fire Attunement",
+    {
+      "name": "Fire Attunement",
+      "offset": 3163
+    },
+    {
+      "name": "Fire Strike",
+      "interruptMs": 38
+    },
     "Cauterizing Strike",
     "Ring of Fire",
     "Fire Grab",
     "Flame Uprising",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 204
     },
     "Ride the Lightning",
     "Charged Strike",
@@ -191,14 +276,18 @@
     "Overload Air",
     {
       "name": "Feel the Burn!",
-      "offset": 100
+      "offset": 1247
     },
     "Earth Attunement",
+    {
+      "name": "Crystal Slash",
+      "interruptMs": 157
+    },
     "Earthquake",
     "Churning Earth",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 240
     },
     "Ride the Lightning",
     "Charged Strike"

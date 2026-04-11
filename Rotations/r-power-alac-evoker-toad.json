@@ -16,43 +16,47 @@
     "Ring of Fire",
     "Phoenix",
     "Fire Grab",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 238
+    },
     "Earthquake",
     {
       "name": "Hurl",
-      "offset": 100
+      "offset": 201
     },
     "Dust Devil",
     "Churning Earth",
     {
-      "name": "Calcify",
-      "offset": 100
+      "name": "Air Attunement",
+      "offset": 80
     },
     {
-      "name": "Air Attunement",
-      "offset": 100
+      "name": "Calcify",
+      "offset": 277
     },
     {
       "name": "Lightning Strike",
-      "offset": 100
+      "offset": 479
     },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    "Ride the Lightning",
     "Blinding Flash",
-    "Calcify",
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 200
+    },
+    "Blinding Flash",
     "Glyph of Storms (Air)",
     {
+      "name": "Calcify",
+      "offset": 122
+    },
+    {
       "name": "Water Attunement",
-      "offset": 100
+      "offset": 281
     },
     "Water Trident",
-    {
-      "name": "Frost Aura",
-      "offset": 100
-    },
+    "Frost Aura",
     "Shatterstone",
     "Seismic Impact",
     "Fox's Fury",
@@ -63,13 +67,13 @@
     "Shatterstone",
     {
       "name": "Fire Attunement",
-      "offset": 100
+      "offset": 237
     },
     "Dragon's Tooth",
     "Ring of Fire",
     {
       "name": "Calcify",
-      "offset": 100
+      "offset": 242
     },
     "Flamestrike",
     "Flamestrike",
@@ -77,45 +81,52 @@
     "Flamestrike",
     "Flamestrike",
     "Phoenix",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 80
+    },
     "Fire Grab",
     "Dragon's Tooth",
     {
       "name": "Earth Attunement",
-      "offset": 100
+      "offset": 321
     },
     "Earthquake",
     "Rock Barrier",
     {
       "name": "Calcify",
-      "offset": 100
+      "offset": 124
     },
     "Dust Devil",
     {
       "name": "Hurl",
-      "offset": 100
+      "offset": 158
     },
     "Air Attunement",
     {
-      "name": "Lightning Strike",
-      "offset": 100
+      "name": "Arc Lightning",
+      "interruptMs": 442
     },
     {
-      "name": "Blinding Flash",
-      "offset": 100
+      "name": "Lightning Strike",
+      "offset": 238
     },
     "Ride the Lightning",
-    "Calcify",
     {
       "name": "Arc Lightning",
-      "interruptMs": 800
+      "interruptMs": 842
     },
-    "Water Attunement",
-    "Water Trident",
     {
-      "name": "Frost Aura",
-      "offset": 100
+      "name": "Calcify",
+      "offset": 521
     },
+    {
+      "name": "Water Attunement",
+      "offset": 679
+    },
+    "Water Trident",
     "Shatterstone",
+    "Frost Aura",
     "Seismic Impact",
     "Ice Shards",
     "Ice Shards",
@@ -125,71 +136,68 @@
     "Shatterstone",
     {
       "name": "Fire Attunement",
-      "offset": 100
+      "offset": 284
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 79
     },
     "Dragon's Tooth",
     "Ring of Fire",
     {
       "name": "Calcify",
-      "offset": 100
+      "offset": 280
     },
-    "Flamestrike",
     "Flamestrike",
     "Flamestrike",
     "Flamestrike",
     "Flamestrike",
     "Phoenix",
     "Fire Grab",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 42
+    },
     "Dragon's Tooth",
     {
       "name": "Earth Attunement",
-      "offset": 100
+      "offset": 279
     },
     "Earthquake",
     "Rock Barrier",
     {
       "name": "Calcify",
-      "offset": 100
+      "offset": 163
     },
     "Dust Devil",
-    {
-      "name": "Hurl",
-      "offset": 100
-    },
+    "Hurl",
     "Churning Earth",
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 243
     },
     {
       "name": "Lightning Strike",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    {
-      "name": "Calcify",
-      "offset": 100
+      "offset": 522
     },
     "Ride the Lightning",
     {
       "name": "Arc Lightning",
-      "interruptMs": 500
+      "interruptMs": 518
     },
     {
-      "name": "Blinding Flash",
-      "offset": 100
+      "name": "Calcify",
+      "offset": 159
     },
-    "Water Attunement",
+    {
+      "name": "Water Attunement",
+      "offset": 280
+    },
     "Water Trident",
-    {
-      "name": "Frost Aura",
-      "offset": 100
-    },
     "Shatterstone",
+    "Frost Aura",
     "Seismic Impact",
+    "Ice Shards",
     "Ice Shards",
     "Ice Shards",
     "Ice Shards",
@@ -197,16 +205,15 @@
     "Shatterstone",
     {
       "name": "Fire Attunement",
-      "offset": 100
+      "offset": 121
     },
     "Dragon's Tooth",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
     "Ring of Fire",
     "Fox's Fury",
-    "Flamestrike",
+    {
+      "name": "Calcify",
+      "offset": 42
+    },
     "Flamestrike",
     "Flamestrike",
     "Flamestrike",
@@ -215,390 +222,340 @@
     "Dragon's Tooth",
     {
       "name": "Earth Attunement",
-      "offset": 100
+      "offset": 321
     },
     "Earthquake",
     "Rock Barrier",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
     "Dust Devil",
     {
       "name": "Hurl",
-      "offset": 100
+      "offset": 163
     },
     "Air Attunement",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 400
+    },
+    "Calcify",
+    "Blinding Flash",
+    {
+      "name": "Lightning Strike",
+      "offset": 278
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 834
+    },
+    "Blinding Flash",
+    {
+      "name": "Water Attunement",
+      "offset": 559
+    },
+    "Frost Aura",
+    "Water Trident",
+    "Calcify",
+    "Shatterstone",
+    {
+      "name": "Ice Shards",
+      "interruptMs": 120
+    },
+    "Seismic Impact",
+    {
+      "name": "Ice Shards",
+      "interruptMs": 42
+    },
+    "Water Trident",
+    "Elemental Procession",
+    "Ice Shards",
+    "Ice Shards",
+    "Ice Shards",
+    "Shatterstone",
+    {
+      "name": "Fire Attunement",
+      "offset": 84
+    },
+    "Dragon's Tooth",
+    "Ring of Fire",
+    "Flamestrike",
+    "Flamestrike",
+    "Glyph of Storms (Fire)",
+    "Fox's Fury",
+    "Phoenix",
+    "Fire Grab",
+    {
+      "name": "Calcify",
+      "offset": 242
+    },
+    "Dragon's Tooth",
+    {
+      "name": "Earth Attunement",
+      "offset": 363
+    },
+    "Earthquake",
+    "Rock Barrier",
+    "Dust Devil",
+    {
+      "name": "Hurl",
+      "offset": 201
+    },
+    "Calcify",
+    "Churning Earth",
+    {
+      "name": "Air Attunement",
+      "offset": 84
+    },
+    "Blinding Flash",
+    {
+      "name": "Lightning Strike",
+      "offset": 401
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 556
+    },
+    "Blinding Flash",
+    {
+      "name": "Water Attunement",
+      "offset": 160
+    },
+    "Frost Aura",
+    {
+      "name": "Calcify",
+      "offset": 402
+    },
+    "Water Trident",
+    "Shatterstone",
+    "Seismic Impact",
+    "Ice Shards",
+    "Ice Shards",
+    "Ice Shards",
+    "Water Trident",
+    "Ice Shards",
+    "Shatterstone",
+    {
+      "name": "Fire Attunement",
+      "offset": 237
+    },
+    "Dragon's Tooth",
+    "Ring of Fire",
+    {
+      "name": "Calcify",
+      "offset": 363
+    },
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 42
+    },
+    "Phoenix",
+    "Fire Grab",
+    "Dragon's Tooth",
+    {
+      "name": "Earth Attunement",
+      "offset": 363
+    },
+    "Earthquake",
+    "Rock Barrier",
+    "Dust Devil",
+    {
+      "name": "Hurl",
+      "offset": 243
+    },
+    "Air Attunement",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 358
+    },
+    "Calcify",
+    "Blinding Flash",
     "Lightning Strike",
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 923
+    },
     "Blinding Flash",
-    "Ride the Lightning",
     {
-      "name": "Arc Lightning",
-      "interruptMs": 800
+      "name": "Water Attunement",
+      "offset": 725
+    },
+    "Water Trident",
+    "Frost Aura",
+    "Shatterstone",
+    {
+      "name": "Calcify",
+      "offset": 37
+    },
+    "Fox's Fury",
+    "Seismic Impact",
+    "Ice Shards",
+    "Ice Shards",
+    "Ice Shards",
+    "Ice Shards",
+    "Shatterstone",
+    {
+      "name": "Fire Attunement",
+      "offset": 163
+    },
+    "Dragon's Tooth",
+    "Ring of Fire",
+    "Glyph of Storms (Fire)",
+    "Flamestrike",
+    "Flamestrike",
+    "Phoenix",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 79
+    },
+    "Fire Grab",
+    "Dragon's Tooth",
+    {
+      "name": "Earth Attunement",
+      "offset": 442
     },
     {
       "name": "Calcify",
-      "offset": 100
+      "offset": 721
     },
-    "Water Attunement",
-    "Water Trident",
+    "Earthquake",
+    "Rock Barrier",
+    "Dust Devil",
+    "Churning Earth",
     {
-      "name": "Frost Aura",
-      "offset": 100
+      "name": "Hurl",
+      "offset": 42
     },
+    {
+      "name": "Air Attunement",
+      "offset": 201
+    },
+    {
+      "name": "Calcify",
+      "offset": 401
+    },
+    "Blinding Flash",
+    {
+      "name": "Lightning Strike",
+      "offset": 522
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 679
+    },
+    "Blinding Flash",
+    {
+      "name": "Water Attunement",
+      "offset": 279
+    },
+    "Frost Aura",
+    {
+      "name": "Calcify",
+      "offset": 516
+    },
+    "Water Trident",
     "Shatterstone",
     "Seismic Impact",
-    "Ice Shards",
+    {
+      "name": "Ice Shards",
+      "interruptMs": 162
+    },
     "Water Trident",
+    "Ice Shards",
+    "Fox's Fury",
+    "Ice Shards",
+    "Shatterstone",
+    {
+      "name": "Fire Attunement",
+      "offset": 325
+    },
+    "Dragon's Tooth",
+    "Ring of Fire",
+    {
+      "name": "Calcify",
+      "offset": 400
+    },
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Phoenix",
+    "Fire Grab",
+    "Dragon's Tooth",
+    {
+      "name": "Earth Attunement",
+      "offset": 400
+    },
+    "Earthquake",
     "Elemental Procession",
-    "Ice Shards",
-    "Ice Shards",
-    "Ice Shards",
-    "Shatterstone",
-    {
-      "name": "Fire Attunement",
-      "offset": 100
-    },
-    "Dragon's Tooth",
-    "Ring of Fire",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Flamestrike",
-    "Fox's Fury",
-    "Glyph of Storms (Fire)",
-    "Phoenix",
-    "Fire Grab",
-    "Dragon's Tooth",
-    {
-      "name": "Earth Attunement",
-      "offset": 100
-    },
-    "Earthquake",
-    "Rock Barrier",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Dust Devil",
-    "Churning Earth",
-    {
-      "name": "Hurl",
-      "offset": 100
-    },
-    {
-      "name": "Air Attunement",
-      "offset": 100
-    },
-    {
-      "name": "Lightning Strike",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Ride the Lightning",
-    {
-      "name": "Arc Lightning",
-      "interruptMs": 800
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    "Water Attunement",
-    "Shatterstone",
-    {
-      "name": "Frost Aura",
-      "offset": 100
-    },
-    "Seismic Impact",
-    "Water Trident",
-    "Ice Shards",
-    "Ice Shards",
-    "Water Trident",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Ice Shards",
-    "Shatterstone",
-    {
-      "name": "Fire Attunement",
-      "offset": 100
-    },
-    "Dragon's Tooth",
-    "Ring of Fire",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Phoenix",
-    "Fox's Fury",
-    "Fire Grab",
-    "Dragon's Tooth",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    {
-      "name": "Earth Attunement",
-      "offset": 100
-    },
-    "Earthquake",
     "Rock Barrier",
     "Dust Devil",
     {
       "name": "Hurl",
-      "offset": 100
-    },
-    "Calcify",
-    {
-      "name": "Air Attunement",
-      "offset": 100
-    },
-    {
-      "name": "Lightning Strike",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    "Ride the Lightning",
-    "Seismic Impact",
-    {
-      "name": "Arc Lightning",
-      "interruptMs": 800
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    "Water Attunement",
-    "Water Trident",
-    {
-      "name": "Frost Aura",
-      "offset": 100
-    },
-    "Shatterstone",
-    "Ice Shards",
-    "Ice Shards",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Ice Shards",
-    "Ice Shards",
-    "Ice Shards",
-    "Shatterstone",
-    {
-      "name": "Fire Attunement",
-      "offset": 100
-    },
-    "Dragon's Tooth",
-    "Ring of Fire",
-    "Glyph of Storms (Fire)",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Phoenix",
-    "Fire Grab",
-    "Dragon's Tooth",
-    {
-      "name": "Earth Attunement",
-      "offset": 100
-    },
-    "Earthquake",
-    "Rock Barrier",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Dust Devil",
-    "Churning Earth",
-    {
-      "name": "Hurl",
-      "offset": 100
+      "offset": 284
     },
     "Air Attunement",
     {
-      "name": "Lightning Strike",
-      "offset": 100
+      "name": "Arc Lightning",
+      "interruptMs": 359
     },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Ride the Lightning",
-    "Fox's Fury",
+    "Calcify",
     "Blinding Flash",
-    "Seismic Impact",
+    "Lightning Strike",
+    "Ride the Lightning",
     {
       "name": "Arc Lightning",
-      "interruptMs": 500
+      "interruptMs": 438
     },
-    "Water Attunement",
-    "Water Trident",
-    {
-      "name": "Frost Aura",
-      "offset": 100
-    },
-    "Shatterstone",
-    "Ice Shards",
-    "Water Trident",
-    "Ice Shards",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    "Ice Shards",
-    "Shatterstone",
-    {
-      "name": "Fire Attunement",
-      "offset": 100
-    },
-    "Dragon's Tooth",
-    "Ring of Fire",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Phoenix",
-    "Fire Grab",
-    "Dragon's Tooth",
-    {
-      "name": "Earth Attunement",
-      "offset": 100
-    },
-    "Earthquake",
-    "Calcify",
-    "Rock Barrier",
-    "Dust Devil",
-    "Elemental Procession",
-    {
-      "name": "Hurl",
-      "offset": 100
-    },
-    {
-      "name": "Air Attunement",
-      "offset": 100
-    },
-    {
-      "name": "Lightning Strike",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    "Ride the Lightning",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
+    "Blinding Flash",
     "Glyph of Storms (Air)",
     {
       "name": "Water Attunement",
-      "offset": 100
+      "offset": 403
     },
     "Water Trident",
-    {
-      "name": "Frost Aura",
-      "offset": 100
-    },
-    "Shatterstone",
-    "Seismic Impact",
-    "Fox's Fury",
-    "Ice Shards",
-    "Ice Shards",
-    "Water Trident",
+    "Frost Aura",
     "Shatterstone",
     {
       "name": "Calcify",
-      "offset": 100
+      "offset": 82
     },
+    "Ice Shards",
+    {
+      "name": "Ice Shards",
+      "interruptMs": 38
+    },
+    "Seismic Impact",
+    "Ice Shards",
+    "Ice Shards",
+    "Water Trident",
+    "Shatterstone",
     {
       "name": "Fire Attunement",
-      "offset": 100
+      "offset": 116
     },
     "Dragon's Tooth",
     "Ring of Fire",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
+    "Fox's Fury",
     "Phoenix",
+    "Flamestrike",
     "Fire Grab",
-    "Dragon's Tooth",
     {
-      "name": "Earth Attunement",
-      "offset": 100
-    },
-    "Earthquake",
-    "Calcify",
-    "Rock Barrier",
-    "Dust Devil",
-    "Churning Earth",
-    {
-      "name": "Hurl",
-      "offset": 100
+      "name": "Calcify",
+      "offset": 439
     },
     {
       "name": "Air Attunement",
-      "offset": 100
+      "offset": 163
     },
     {
       "name": "Lightning Strike",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    "Ride the Lightning",
-    {
-      "name": "Calcify",
-      "offset": 100
-    },
-    {
-      "name": "Blinding Flash",
-      "offset": 100
-    },
-    {
-      "name": "Arc Lightning",
-      "interruptMs": 600
-    },
-    "Water Attunement",
-    "Water Trident",
-    {
-      "name": "Frost Aura",
-      "offset": 100
-    },
-    "Shatterstone",
-    "Seismic Impact",
-    "Ice Shards",
-    "Ice Shards",
-    "Ice Shards",
-    "Fox's Fury",
-    {
-      "name": "Fire Attunement",
-      "offset": 100
-    },
-    "Phoenix",
-    "Ring of Fire"
+      "offset": 438
+    }
   ]
 }

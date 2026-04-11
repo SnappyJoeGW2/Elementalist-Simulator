@@ -132,6 +132,7 @@ export function loadSkillHits(text) {
             isFieldTick: row[colIndex['IsFieldTick']]?.trim() === '1',
             cc: row[colIndex['CC']]?.trim() === '1',
             damage: num(row[colIndex['Damage']]),
+            flatDamage: num(row[colIndex['Flat Damage']]),
             duration: num(row[colIndex['Duration']]),
             interval: num(row[colIndex['Interval']]),
             finisherType,

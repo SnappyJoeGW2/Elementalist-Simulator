@@ -12,18 +12,18 @@
       "Ring2": "Viper's",
       "Accessory1": "Viper's",
       "Accessory2": "Viper's",
-      "Back": "Sinister",
+      "Back": "Viper's",
       "Weapon1": "Viper's",
       "Weapon2": "Viper's"
     },
     "weapons": [
-      "Scepter",
+      "Pistol",
       "Warhorn"
     ],
     "rune": "Trapper",
     "sigils": [
       "Bursting",
-      "Earth"
+      "Malice"
     ],
     "relic": "Fractal",
     "food": "Plate of Beef Rendang",
@@ -32,25 +32,25 @@
     "specializations": [
       {
         "name": "Fire",
-        "traits": "1-1-2"
+        "traits": "1-1-1"
       },
       {
         "name": "Earth",
         "traits": "2-1-2"
       },
       {
-        "name": "Weaver",
-        "traits": "1-1-1"
+        "name": "Catalyst",
+        "traits": "2-3-3"
       }
     ],
     "infusions": [
       {
         "stat": "Condition Damage",
-        "count": 18
+        "count": 9
       },
       {
-        "stat": "Precision",
-        "count": 0
+        "stat": "Expertise",
+        "count": 9
       },
       {
         "stat": "Ferocity",
@@ -59,15 +59,17 @@
     ]
   },
   "selectedSkills": {
-    "heal": "Signet of Restoration",
-    "util1": "Primordial Stance (Fire)",
-    "util2": "Signet of Fire",
+    "heal": "Arcane Brilliance",
+    "util1": "Signet of Fire",
+    "util2": "Glyph of Storms (Fire)",
     "util3": "Signet of Earth",
-    "elite": "Weave Self"
+    "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Earth",
-  "secondaryAttunement": "Fire",
+  "activeAttunement": "Air",
+  "secondaryAttunement": "Air",
   "evokerElement": null,
+  "evokerStartCharges": 6,
+  "evokerStartEmpowered": 0,
   "permaBoons": {
     "Might": 25,
     "Fury": true,

@@ -94,7 +94,7 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
         for (const cast of se.skills) {
             const timeGained = cast.timeGained ?? 0;
             allCasts.push({
-                name:        info.name || '',
+                name:        (info.name || '').replace(/^"|"$/g, ''),
                 castTime:    cast.castTime,
                 duration:    cast.duration,
                 isInstant:   !!(info.isInstantCast || cast.duration === 0),
@@ -104,6 +104,9 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
         }
     }
     allCasts.sort((a, b) => a.castTime - b.castTime);
+
+    // Inject missing aura skill casts inferred from unattributed aura buff activations.
+    injectAuraCasts(allCasts, player, toolSkillNames);
 
     // 2. Walk chronologically and emit rotation items.
     const items = [];
@@ -162,6 +165,131 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
     }
 
     return items;
+}
+
+// ─── Aura injection ───────────────────────────────────────────────────────────
+
+const AURA_WINDOW_MS = 2000;
+
+// Configuration for each elemental aura skill that arcdps does not log.
+//
+//   buffId        — EI buff ID for the aura effect
+//   skillName     — tool skill name to inject when the aura is unattributed
+//   transmuteName — precondition: this Transmute skill must be in the rotation
+//                   (confirms the build uses the Aura → Transmute combo)
+//   attunement    — swapping TO this attunement counts as a known aura source
+//   sources       — other EI skill names (post-quote-strip) that also grant
+//                   this aura; any cast within ±AURA_WINDOW_MS means the
+//                   activation came from that skill, not the missing aura skill
+const AURA_CONFIG = [
+    {
+        buffId:        5677,
+        skillName:     'Fire Shield',
+        transmuteName: 'Transmute Fire',
+        attunement:    'Fire',
+        sources: new Set([
+            'Elemental Explosion', 'Searing Salvo', 'Frostfire Flurry',
+            'Frostfire Ward', 'Immutable Stone', 'Feel the Burn!',
+            'Signet of Fire', 'Signet of Earth', 'Overload Fire',
+            'Transmute Fire',
+        ]),
+    },
+    {
+        buffId:        5579,
+        skillName:     'Frost Aura',
+        transmuteName: 'Transmute Frost',
+        attunement:    'Water',
+        sources: new Set([
+            'Elemental Explosion', 'Frozen Ground', 'Flowing Finesse',
+            'Frostfire Ward', 'Immutable Stone',
+            'Signet of Fire', 'Signet of Earth', 'Overload Water',
+            'Transmute Frost',
+        ]),
+    },
+    {
+        buffId:        5684,
+        skillName:     'Magnetic Aura',
+        transmuteName: 'Transmute Earth',
+        attunement:    'Earth',
+        sources: new Set([
+            'Elemental Explosion', 'Sand Squall', 'Immutable Stone',
+            'Aftershock!',
+            'Signet of Fire', 'Signet of Earth', 'Overload Earth',
+            'Transmute Earth',
+        ]),
+    },
+    {
+        buffId:        5577,
+        skillName:     'Shocking Aura',
+        transmuteName: 'Transmute Lightning',
+        attunement:    'Air',
+        sources: new Set([
+            'Elemental Explosion', 'Immutable Stone',
+            'Signet of Fire', 'Signet of Earth', 'Overload Air',
+            'Transmute Lightning',
+        ]),
+    },
+];
+
+/**
+ * Splice missing aura skill casts (Fire Shield, Frost Aura, Magnetic Aura,
+ * Shocking Aura) into allCasts by detecting buff activations that have no
+ * other known aura-granting skill nearby.
+ *
+ * arcdps does not emit cast events for these instant aura skills, so they
+ * never appear in the EI rotation.  We detect them from the corresponding
+ * aura buff (buffUptimes.states): any 0→1 transition at t ≥ 0 that has no
+ * known source within ±AURA_WINDOW_MS is attributed to the missing skill.
+ *
+ * Precondition per aura: the matching Transmute skill must appear in allCasts,
+ * signalling the build intentionally uses the Aura → Transmute combo.
+ *
+ * Mutates allCasts in place; re-sorts only when at least one cast is injected.
+ */
+function injectAuraCasts(allCasts, player, toolSkillNames) {
+    const buffUptimes = player.buffUptimes || [];
+    let anyInjected = false;
+
+    for (const cfg of AURA_CONFIG) {
+        if (!toolSkillNames.has(cfg.skillName)) continue;
+        if (!allCasts.some(c => c.name === cfg.transmuteName)) continue;
+
+        const auraBuff = buffUptimes.find(b => b.id === cfg.buffId);
+        if (!auraBuff?.states) continue;
+
+        // Collect 0→1 transitions; skip t < 0 (pre-fight pre-casts).
+        const activations = [];
+        let prev = 0;
+        for (const [t, state] of auraBuff.states) {
+            if (prev === 0 && state === 1 && t >= 0) activations.push(t);
+            prev = state;
+        }
+
+        for (const t of activations) {
+            const winStart = t - AURA_WINDOW_MS;
+            const winEnd   = t + AURA_WINDOW_MS;
+
+            const hasKnownSource = allCasts.some(c => {
+                if (c.castTime < winStart || c.castTime > winEnd) return false;
+                if (c.isSwap && resolveAttunementSwap(c.name) === `${cfg.attunement} Attunement`) return true;
+                return cfg.sources.has(c.name);
+            });
+
+            if (!hasKnownSource) {
+                allCasts.push({
+                    name:          cfg.skillName,
+                    castTime:      t,
+                    duration:      0,
+                    isInstant:     true,
+                    isSwap:        false,
+                    isInterrupted: false,
+                });
+                anyInjected = true;
+            }
+        }
+    }
+
+    if (anyInjected) allCasts.sort((a, b) => a.castTime - b.castTime);
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────

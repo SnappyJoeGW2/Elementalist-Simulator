@@ -1,0 +1,385 @@
+{
+  "rotation": [
+    "Glyph of Elementals",
+    "Overload Air",
+    {
+      "name": "__combat_start",
+      "offset": 3100
+    },
+    "Fire Attunement",
+    "Phoenix",
+    "Ring of Fire",
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 85
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 201
+    },
+    "Ride the Lightning",
+    "Arc Lightning",
+    {
+      "name": "Feel the Burn!",
+      "offset": 37
+    },
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 121
+    },
+    {
+      "name": "Earth Attunement",
+      "offset": 3160
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 81
+    },
+    "Earthquake",
+    "Churning Earth",
+    {
+      "name": "Air Attunement",
+      "offset": 80
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 243
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 78
+    },
+    "Glyph of Storms (Air)",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 1079
+    },
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 319
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 3123
+    },
+    "Phoenix",
+    "Ring of Fire",
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 123
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 241
+    },
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 120
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 2598
+    },
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 198
+    },
+    {
+      "name": "Earth Attunement",
+      "offset": 3121
+    },
+    "Dust Devil",
+    "Earthquake",
+    {
+      "name": "Air Attunement",
+      "offset": 198
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 319
+    },
+    "Ride the Lightning",
+    "Arc Lightning",
+    {
+      "name": "Feel the Burn!",
+      "offset": 603
+    },
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 118
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 3158
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 40
+    },
+    "Phoenix",
+    "Ring of Fire",
+    "Dragon's Tooth",
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 201
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 357
+    },
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 79
+    },
+    "Ride the Lightning",
+    "Arc Lightning",
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 164
+    },
+    {
+      "name": "Earth Attunement",
+      "offset": 3126
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 78
+    },
+    "Earthquake",
+    "Churning Earth",
+    {
+      "name": "Air Attunement",
+      "offset": 122
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 595
+    },
+    "Ride the Lightning",
+    "Arc Lightning",
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 396
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 3159
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 42
+    },
+    "Phoenix",
+    "Ring of Fire",
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 162
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 279
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 2404
+    },
+    {
+      "name": "Feel the Burn!",
+      "offset": 39
+    },
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 115
+    },
+    "Earth Attunement",
+    {
+      "name": "Stone Shards",
+      "interruptMs": 118
+    },
+    "Dust Devil",
+    "Earthquake",
+    {
+      "name": "Air Attunement",
+      "offset": 283
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 402
+    },
+    "Ride the Lightning",
+    "Arc Lightning",
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 38
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 3165
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 43
+    },
+    "Phoenix",
+    "Ring of Fire",
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 119
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 282
+    },
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 41
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 44
+    },
+    "Glyph of Storms (Air)",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 1560
+    },
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 245
+    },
+    {
+      "name": "Earth Attunement",
+      "offset": 3162
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 83
+    },
+    "Earthquake",
+    "Churning Earth",
+    {
+      "name": "Air Attunement",
+      "offset": 124
+    },
+    {
+      "name": "Feel the Burn!",
+      "offset": 761
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 877
+    },
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 2362
+    },
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 762
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 3161
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 40
+    },
+    "Phoenix",
+    "Ring of Fire",
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 123
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 283
+    },
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 40
+    },
+    "Ride the Lightning",
+    "Arc Lightning",
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 283
+    },
+    {
+      "name": "Earth Attunement",
+      "offset": 3164
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 161
+    },
+    "Dust Devil",
+    "Earthquake",
+    {
+      "name": "Air Attunement",
+      "offset": 272
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 389
+    },
+    "Ride the Lightning",
+    "Arc Lightning",
+    "Overload Air",
+    {
+      "name": "Lightning Strike",
+      "offset": 118
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 3159
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 42
+    },
+    "Phoenix",
+    "Ring of Fire",
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 121
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 197
+    },
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 118
+    },
+    "Feel the Burn!",
+    "Ride the Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 1679
+    }
+  ]
+}

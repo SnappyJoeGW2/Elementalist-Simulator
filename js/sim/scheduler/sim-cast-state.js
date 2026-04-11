@@ -36,7 +36,7 @@ export function getChainRoot(ctx, sk) {
 // a non-zero cast time.  These are mobility or utility skills whose animation
 // runs in parallel with the chain window in the actual game.
 const CHAIN_PRESERVING_SKILLS = new Set([
-    'Ride the Lightning',
+    'Ride the Lightning', 'Relentless Fire',
 ]);
 
 export function resetChainsOnCast(ctx, sk) {

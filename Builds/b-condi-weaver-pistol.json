@@ -17,7 +17,7 @@
       "Weapon2": "Viper's"
     },
     "weapons": [
-      "Scepter",
+      "Pistol",
       "Warhorn"
     ],
     "rune": "Trapper",
@@ -65,9 +65,11 @@
     "util3": "Signet of Earth",
     "elite": "Weave Self"
   },
-  "activeAttunement": "Earth",
+  "activeAttunement": "Fire",
   "secondaryAttunement": "Fire",
   "evokerElement": null,
+  "evokerStartCharges": 6,
+  "evokerStartEmpowered": 0,
   "permaBoons": {
     "Might": 25,
     "Fury": true,

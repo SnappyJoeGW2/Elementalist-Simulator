@@ -1,0 +1,601 @@
+{
+  "rotation": [
+    "Shattering Stone",
+    "Water Attunement",
+    "Frigid Flurry",
+    "Air Attunement",
+    "Dazing Discharge",
+    "Fire Attunement",
+    {
+      "name": "__wait",
+      "waitMs": 4000
+    },
+    "Glyph of Elementals",
+    "__combat_start",
+    "Rejuvenate",
+    {
+      "name": "Ignite",
+      "offset": 400
+    },
+    "Fox's Fury",
+    "Signet of Earth",
+    "Signet of Fire",
+    {
+      "name": "Ignite",
+      "offset": 199
+    },
+    "Searing Salvo",
+    "Raging Ricochet",
+    "Ring of Fire",
+    {
+      "name": "Earth Attunement",
+      "offset": 161
+    },
+    "Earthquake",
+    {
+      "name": "Ignite",
+      "offset": 159
+    },
+    "Shattering Stone",
+    "Conflagration",
+    "Boulder Blast",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 161
+    },
+    "Fire Grab",
+    "Raging Ricochet",
+    {
+      "name": "Water Attunement",
+      "offset": 243
+    },
+    {
+      "name": "Ignite",
+      "offset": 440
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 366
+    },
+    "Elemental Explosion",
+    "Scorching Shot",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 37
+    },
+    "Searing Salvo",
+    {
+      "name": "Air Attunement",
+      "offset": 243
+    },
+    "Ride the Lightning",
+    "Ignite",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 83
+    },
+    "Dazing Discharge",
+    "Signet of Fire",
+    {
+      "name": "Fire Attunement",
+      "offset": 401
+    },
+    "Raging Ricochet",
+    "Scorching Shot",
+    "Ring of Fire",
+    "Signet of Earth",
+    {
+      "name": "Earth Attunement",
+      "offset": 1
+    },
+    "Boulder Blast",
+    "Shattering Stone",
+    {
+      "name": "Ignite",
+      "offset": 122
+    },
+    "Earthquake",
+    {
+      "name": "Fire Attunement",
+      "offset": 44
+    },
+    "Conflagration",
+    "Fox's Fury",
+    "Raging Ricochet",
+    {
+      "name": "Water Attunement",
+      "offset": 278
+    },
+    "Frost Aura",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 999
+    },
+    "Ignite",
+    "Searing Salvo",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 38
+    },
+    "Fire Grab",
+    {
+      "name": "Air Attunement",
+      "offset": 324
+    },
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 80
+    },
+    "Ride the Lightning",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 78
+    },
+    "Dazing Discharge",
+    "Ignite",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 240
+    },
+    "Rejuvenate",
+    {
+      "name": "Fire Attunement",
+      "offset": 205
+    },
+    "Scorching Shot",
+    {
+      "name": "Ignite",
+      "offset": 119
+    },
+    "Raging Ricochet",
+    "Signet of Fire",
+    "Conflagration",
+    "Ring of Fire",
+    {
+      "name": "Earth Attunement",
+      "offset": 244
+    },
+    "Boulder Blast",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 689
+    },
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 118
+    },
+    "Raging Ricochet",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 77
+    },
+    "Signet of Earth",
+    {
+      "name": "Water Attunement",
+      "offset": 364
+    },
+    "Soothing Splash",
+    {
+      "name": "Ignite",
+      "offset": 43
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 401
+    },
+    "Searing Salvo",
+    "Scorching Shot",
+    {
+      "name": "Air Attunement",
+      "offset": 283
+    },
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 83
+    },
+    "Ride the Lightning",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 160
+    },
+    "Dazing Discharge",
+    "Elemental Explosion",
+    {
+      "name": "Fire Attunement",
+      "offset": 362
+    },
+    {
+      "name": "Ignite",
+      "offset": 559
+    },
+    "Raging Ricochet",
+    "Fox's Fury",
+    "Scorching Shot",
+    "Scorching Shot",
+    "Signet of Fire",
+    "Fire Grab",
+    "Ring of Fire",
+    {
+      "name": "Earth Attunement",
+      "offset": 360
+    },
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 198
+    },
+    "Ignite",
+    "Boulder Blast",
+    "Shattering Stone",
+    "Earthquake",
+    {
+      "name": "Fire Attunement",
+      "offset": 201
+    },
+    "Conflagration",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 201
+    },
+    "Raging Ricochet",
+    "Water Attunement",
+    {
+      "name": "Soothing Splash",
+      "interruptMs": 203
+    },
+    "Frigid Flurry",
+    "Soothing Splash",
+    {
+      "name": "Fire Attunement",
+      "offset": 201
+    },
+    "Scorching Shot",
+    {
+      "name": "Ignite",
+      "offset": 85
+    },
+    "Searing Salvo",
+    "Signet of Earth",
+    {
+      "name": "Air Attunement",
+      "offset": 121
+    },
+    "Ride the Lightning",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 39
+    },
+    "Dazing Discharge",
+    "Electric Exposure",
+    {
+      "name": "Fire Attunement",
+      "offset": 481
+    },
+    "Raging Ricochet",
+    "Ignite",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 201
+    },
+    "Rejuvenate",
+    "Scorching Shot",
+    {
+      "name": "Ignite",
+      "offset": 202
+    },
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 38
+    },
+    "Signet of Fire",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 38
+    },
+    "Ring of Fire",
+    {
+      "name": "Earth Attunement",
+      "offset": 321
+    },
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 80
+    },
+    "Conflagration",
+    "Boulder Blast",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 444
+    },
+    "Raging Ricochet",
+    "Fire Grab",
+    {
+      "name": "Water Attunement",
+      "offset": 400
+    },
+    {
+      "name": "Ignite",
+      "offset": 717
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 244
+    },
+    "Elemental Explosion",
+    "Searing Salvo",
+    {
+      "name": "Air Attunement",
+      "offset": 366
+    },
+    "Ride the Lightning",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 124
+    },
+    "Dazing Discharge",
+    "Fox's Fury",
+    {
+      "name": "Fire Attunement",
+      "offset": 399
+    },
+    "Scorching Shot",
+    {
+      "name": "Ignite",
+      "offset": 235
+    },
+    "Raging Ricochet",
+    "Signet of Earth",
+    "Scorching Shot",
+    "Signet of Fire",
+    "Ring of Fire",
+    {
+      "name": "Earth Attunement",
+      "offset": 360
+    },
+    "Boulder Blast",
+    "Shattering Stone",
+    "Ignite",
+    "Earthquake",
+    {
+      "name": "Fire Attunement",
+      "offset": 161
+    },
+    "Raging Ricochet",
+    {
+      "name": "Water Attunement",
+      "offset": 320
+    },
+    "Conflagration",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 802
+    },
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 203
+    },
+    "Searing Salvo",
+    "Scorching Shot",
+    {
+      "name": "Air Attunement",
+      "offset": 80
+    },
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 37
+    },
+    "Ride the Lightning",
+    "Electric Exposure",
+    {
+      "name": "Ignite",
+      "offset": 43
+    },
+    "Dazing Discharge",
+    "Electric Exposure",
+    {
+      "name": "Fire Attunement",
+      "offset": 206
+    },
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 42
+    },
+    "Raging Ricochet",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 43
+    },
+    "Rejuvenate",
+    "Ignite",
+    "Fire Grab",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 84
+    },
+    "Signet of Fire",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 79
+    },
+    "Ring of Fire",
+    {
+      "name": "Earth Attunement",
+      "offset": 400
+    },
+    "Boulder Blast",
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 120
+    },
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 526
+    },
+    "Raging Ricochet",
+    {
+      "name": "Ignite",
+      "offset": 321
+    },
+    "Signet of Earth",
+    {
+      "name": "Water Attunement",
+      "offset": 201
+    },
+    {
+      "name": "Soothing Splash",
+      "interruptMs": 122
+    },
+    "Frozen Fusillade",
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 603
+    },
+    "Conflagration",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 123
+    },
+    "Searing Salvo",
+    {
+      "name": "Air Attunement",
+      "offset": 402
+    },
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 79
+    },
+    "Ride the Lightning",
+    "Electric Exposure",
+    "Dazing Discharge",
+    "Elemental Explosion",
+    {
+      "name": "Fire Attunement",
+      "offset": 280
+    },
+    "Scorching Shot",
+    {
+      "name": "Ignite",
+      "offset": 84
+    },
+    "Raging Ricochet",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 159
+    },
+    "Fox's Fury",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 157
+    },
+    "Signet of Fire",
+    "Scorching Shot",
+    "Ring of Fire",
+    {
+      "name": "Earth Attunement",
+      "offset": 283
+    },
+    {
+      "name": "Piercing Pebble",
+      "interruptMs": 43
+    },
+    "Boulder Blast",
+    "Shattering Stone",
+    "Earthquake",
+    {
+      "name": "Fire Attunement",
+      "offset": 238
+    },
+    {
+      "name": "Ignite",
+      "offset": 438
+    },
+    "Scorching Shot",
+    "Fire Grab",
+    "Raging Ricochet",
+    {
+      "name": "Water Attunement",
+      "offset": 403
+    },
+    "Soothing Splash",
+    {
+      "name": "Soothing Splash",
+      "interruptMs": 157
+    },
+    "Frigid Flurry",
+    {
+      "name": "Fire Attunement",
+      "offset": 683
+    },
+    "Scorching Shot",
+    {
+      "name": "Ignite",
+      "offset": 84
+    },
+    "Searing Salvo",
+    "Signet of Earth",
+    {
+      "name": "Air Attunement",
+      "offset": 123
+    },
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 38
+    },
+    "Ride the Lightning",
+    {
+      "name": "Electric Exposure",
+      "interruptMs": 121
+    },
+    "Dazing Discharge",
+    "Conflagration",
+    {
+      "name": "Fire Attunement",
+      "offset": 280
+    },
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 240
+    },
+    "Raging Ricochet",
+    "Scorching Shot",
+    "Scorching Shot",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 43
+    },
+    "Signet of Fire",
+    {
+      "name": "Scorching Shot",
+      "interruptMs": 237
+    },
+    "Ring of Fire",
+    {
+      "name": "Ignite",
+      "offset": 323
+    },
+    "Scorching Shot",
+    {
+      "name": "Earth Attunement",
+      "offset": 43
+    },
+    "Boulder Blast",
+    "Shattering Stone",
+    "Churning Earth",
+    {
+      "name": "Fire Attunement",
+      "offset": 320
+    }
+  ]
+}

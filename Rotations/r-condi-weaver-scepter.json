@@ -342,7 +342,10 @@
       "offset": 122
     },
     "Plasma Beam",
-    "Arc Lightning",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 1484
+    },
     {
       "name": "Lightning Strike",
       "offset": 721

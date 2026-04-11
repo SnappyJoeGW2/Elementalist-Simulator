@@ -42,6 +42,7 @@ export function handleBundleStepCommand(ctx, name, rotationMeta = {}) {
             ctx.log({ t: S.t, type: 'err', msg: 'Combat Start is already set' });
             return true;
         }
+        S.hasExplicitCombatStart = true;
         S.combatStartTime = S.t;
         activateCombatStartEffects(S, S.t);
         if (S.activeRelic === 'Nourys') {

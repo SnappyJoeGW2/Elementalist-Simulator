@@ -17,7 +17,7 @@
       "Weapon2": "Berserker's"
     },
     "weapons": [
-      "Scepter",
+      "Sword",
       "Dagger"
     ],
     "rune": "Dragonhunter",
@@ -25,7 +25,7 @@
       "Force",
       "Impact"
     ],
-    "relic": "Bloodstone",
+    "relic": "Claw",
     "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
     "utility": "Superior Sharpening Stone",
     "jadeBotCore": true,
@@ -36,21 +36,21 @@
       },
       {
         "name": "Air",
-        "traits": "3-3-1"
+        "traits": "3-3-2"
       },
       {
-        "name": "Evoker",
-        "traits": "1-1-1"
+        "name": "Catalyst",
+        "traits": "2-3-3"
       }
     ],
     "infusions": [
       {
         "stat": "Power",
-        "count": 18
+        "count": 13
       },
       {
         "stat": "Precision",
-        "count": 0
+        "count": 5
       },
       {
         "stat": "Ferocity",
@@ -59,15 +59,15 @@
     ]
   },
   "selectedSkills": {
-    "heal": "Rejuvenate",
-    "util1": "Fox's Fury",
+    "heal": "Signet of Restoration",
+    "util1": "Relentless Fire",
     "util2": "Glyph of Storms (Fire)",
     "util3": "Signet of Fire",
-    "elite": "Elemental Procession"
+    "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Earth",
+  "activeAttunement": "Water",
   "secondaryAttunement": "Air",
-  "evokerElement": "Air",
+  "evokerElement": null,
   "evokerStartCharges": 6,
   "evokerStartEmpowered": 0,
   "permaBoons": {

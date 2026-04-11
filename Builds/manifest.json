@@ -3,9 +3,19 @@
     "section": "Weaver",
     "presets": [
       {
-        "label": "Power",
-        "build": "Builds/b-power-weaver.json",
-        "rotation": "Rotations/r-power-weaver.json"
+        "label": "Power (Sword)",
+        "build": "Builds/b-power-weaver-sword.json",
+        "rotation": "Rotations/r-power-weaver-sword.json"
+      },
+      {
+        "label": "Power (Spear)",
+        "build": "Builds/b-power-weaver-spear.json",
+        "rotation": "Rotations/r-power-weaver-spear.json"
+      },
+      {
+        "label": "Condi (Pistol)",
+        "build": "Builds/b-condi-weaver-pistol.json",
+        "rotation": "Rotations/r-condi-weaver-pistol.json"
       },
       {
         "label": "Condi (Scepter)",
@@ -18,14 +28,39 @@
     "section": "Tempest",
     "presets": [
       {
+        "label": "Power (Sword)",
+        "build": "Builds/b-power-tempest-sword.json",
+        "rotation": "Rotations/r-power-tempest-sword.json"
+      },
+      {
+        "label": "Power (Scepter)",
+        "build": "Builds/b-power-tempest-scepter.json",
+        "rotation": "Rotations/r-power-tempest-scepter.json"
+      },
+      {
+        "label": "Power (Spear)",
+        "build": "Builds/b-power-tempest-spear.json",
+        "rotation": "Rotations/r-power-tempest-spear.json"
+      },
+      {
         "label": "Power (Hammer)",
         "build": "Builds/b-power-tempest-hammer.json",
         "rotation": "Rotations/r-power-tempest-hammer.json"
       },
       {
-        "label": "Power (Sword)",
-        "build": "Builds/b-power-tempest-sword.json",
-        "rotation": "Rotations/r-power-tempest-sword.json"
+        "label": "Power Alacrity (Sword)",
+        "build": "Builds/b-power-alac-tempest-sword.json",
+        "rotation": "Rotations/r-power-alac-tempest-sword.json"
+      },
+      {
+        "label": "Power Alacrity (Hammer)",
+        "build": "Builds/b-power-alac-tempest-hammer.json",
+        "rotation": "Rotations/r-power-alac-tempest-hammer.json"
+      },
+      {
+        "label": "Condi (Pistol)",
+        "build": "Builds/b-condi-tempest-pistol.json",
+        "rotation": "Rotations/r-condi-tempest-pistol.json"
       },
       {
         "label": "Condi (Scepter)",
@@ -33,12 +68,22 @@
         "rotation": "Rotations/r-condi-tempest-scepter.json"
       },
       {
-        "label": "Condi Alac (Scepter)",
+        "label": "Condi Alacrity (Pistol)",
+        "build": "Builds/b-condi-alac-tempest-pistol.json",
+        "rotation": "Rotations/r-condi-alac-tempest-pistol.json"
+      },
+      {
+        "label": "Condi Alacrity (Scepter)",
         "build": "Builds/b-condi-alac-tempest-scepter.json",
         "rotation": "Rotations/r-condi-alac-tempest-scepter.json"
       },
       {
-        "label": "Inferno Alac",
+        "label": "Inferno",
+        "build": "Builds/b-inferno-tempest.json",
+        "rotation": "Rotations/r-inferno-tempest.json"
+      },
+      {
+        "label": "Inferno Alacrity",
         "build": "Builds/b-inferno-alac-tempest.json",
         "rotation": "Rotations/r-inferno-alac-tempest.json"
       }
@@ -48,19 +93,54 @@
     "section": "Catalyst",
     "presets": [
       {
-        "label": "Power (Spear)",
-        "build": "Builds/b-power-catalyst-spear.json",
-        "rotation": "Rotations/r-power-catalyst-spear.json"
-      },
-      {
         "label": "Power (Sword)",
         "build": "Builds/b-power-catalyst-sword.json",
         "rotation": "Rotations/r-power-catalyst-sword.json"
       },
       {
+        "label": "Power (Scepter)",
+        "build": "Builds/b-power-catalyst-scepter.json",
+        "rotation": "Rotations/r-power-catalyst-scepter.json"
+      },
+      {
+        "label": "Power (Spear)",
+        "build": "Builds/b-power-catalyst-spear.json",
+        "rotation": "Rotations/r-power-catalyst-spear.json"
+      },
+      {
+        "label": "Power Quickness (Sword)",
+        "build": "Builds/b-power-quick-catalyst-sword.json",
+        "rotation": "Rotations/r-power-quick-catalyst-sword.json"
+      },
+      {
+        "label": "Power Quickness (Scepter)",
+        "build": "Builds/b-power-quick-catalyst-scepter.json",
+        "rotation": "Rotations/r-power-quick-catalyst-scepter.json"
+      },
+      {
         "label": "Condi (Pistol)",
         "build": "Builds/b-condi-catalyst-pistol.json",
         "rotation": "Rotations/r-condi-catalyst-pistol.json"
+      },
+      {
+        "label": "Condi Quickness (Pistol/Warhorn)",
+        "build": "Builds/b-condi-quick-catalyst-pistol-warhorn.json",
+        "rotation": "Rotations/r-condi-quick-catalyst-pistol-warhorn.json"
+      },
+      {
+        "label": "Condi Quickness (Pistol/Dagger)",
+        "build": "Builds/b-condi-quick-catalyst-pistol-dagger.json",
+        "rotation": "Rotations/r-condi-quick-catalyst-pistol-dagger.json"
+      },
+      {
+        "label": "Inferno",
+        "build": "Builds/b-inferno-catalyst.json",
+        "rotation": "Rotations/r-inferno-catalyst.json"
+      },
+      {
+        "label": "Inferno Quickness",
+        "build": "Builds/b-inferno-quick-catalyst.json",
+        "rotation": "Rotations/r-inferno-quick-catalyst.json"
       }
     ]
   },
@@ -68,24 +148,44 @@
     "section": "Evoker",
     "presets": [
       {
-        "label": "Inferno SE",
-        "build": "Builds/b-inferno-evoker-se.json",
-        "rotation": "Rotations/r-inferno-evoker-se.json"
-      },
-      {
-        "label": "Condi SE (Arcane)",
-        "build": "Builds/b-condi-arcane-se-evoker.json",
-        "rotation": "Rotations/r-condi-arcane-se-evoker.json"
-      },
-      {
-        "label": "Power Hare",
+        "label": "Power (Hare)",
         "build": "Builds/b-power-evoker-hare.json",
         "rotation": "Rotations/r-power-evoker-hare.json"
       },
       {
-        "label": "Power Alac Toad",
+        "label": "Power Quickness (Hare)",
+        "build": "Builds/b-power-quick-evoker-hare.json",
+        "rotation": "Rotations/r-power-quick-evoker-hare.json"
+      },
+      {
+        "label": "Power Alacrity (Toad)",
         "build": "Builds/b-power-alac-evoker-toad.json",
         "rotation": "Rotations/r-power-alac-evoker-toad.json"
+      },
+      {
+        "label": "Power Alacrity (Toad Severance)",
+        "build": "Builds/b-power-alac-evoker-toad-severance.json",
+        "rotation": "Rotations/r-power-alac-evoker-toad.json"
+      },
+      {
+        "label": "Condi (Fox)",
+        "build": "Builds/b-condi-evoker.json",
+        "rotation": "Rotations/r-condi-evoker.json"
+      },
+      {
+        "label": "Condi SE (Arcane Fox)",
+        "build": "Builds/b-condi-arcane-se-evoker.json",
+        "rotation": "Rotations/r-condi-arcane-se-evoker.json"
+      },
+      {
+        "label": "Inferno SE (Fox)",
+        "build": "Builds/b-inferno-evoker-se.json",
+        "rotation": "Rotations/r-inferno-evoker-se.json"
+      },
+      {
+        "label": "Inferno Quickness SE (Fox)",
+        "build": "Builds/b-inferno-quick-evoker-se.json",
+        "rotation": "Rotations/r-inferno-quick-evoker-se.json"
       }
     ]
   }
