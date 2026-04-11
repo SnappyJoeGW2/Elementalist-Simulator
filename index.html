@@ -52,9 +52,9 @@
                 <ul class="about-limitations">
                     <li>Skill list is intentionally incomplete — only DPS-relevant skills are included.</li>
                     <li>Lesser Elementals are not included.</li>
-                    <li>Elite Elemental assumes Fire variant and only applies burning (it applies burning from Flame
-                        Barrage automatically as well, without any skill usage). No elemental's strike damage
-                        is included (~520 DPS loss).</li>
+                    <li>Elite Elemental assumes Fire variant and automatically uses Flame Barrage. However, it does not
+                        deal increased damage based on Might that the player may grant it as part of their rotation.
+                    </li>
                     <li>No healing or barrier simulation.</li>
                 </ul>
                 <p> If you spot any bugs or have any suggestions, please <a
@@ -103,6 +103,10 @@
                         precast Hurl, auras to trigger traits, Overloads, stack boons on yourself etc.).
                     </li>
                     <li>
+                        Critical hits are calculated by incrementing the counter by the critical chance and checking if
+                        it exceeds 1. When it does, a critical hit is registered and the counter lowered by 1.
+                    </li>
+                    <li>
                         <Strong>Skill details</Strong> panel below the rotation shows total damage dealt, including
                         condition ticks from this skill (unlike dps logs, which only show strike damage and aggregate
                         each condition type).
@@ -111,8 +115,12 @@
                         <Strong>Gear optimizer</Strong> searches whole combinatory space of gear prefixes, runes,
                         sigils, relics, food, utility, and infusions. It uses current rotation to evaluate each build,
                         making it <strong>much heavier</strong> than other optimizers. It is advised to use optimizer
-                        with 1 prefix
-                        selected, but multiple Sigils/Relics (accurate procs), or vice versa.
+                        with 1-2 prefixes
+                        selected, but multiple Sigils/Relics (accurate procs).
+                    </li>
+                    <li>
+                        The tool supports importing dps.report links, however sometimes they may result in a "broken"
+                        rotation. If this happens, you need to manually fix it by editing the rotation file.
                     </li>
                 </ul>
             </div>
@@ -315,7 +323,8 @@
                             Total:
                             <input type="number" id="opt-inf-total" min="0" max="18" value="18" class="opt-inf-count">
                         </label>
-                        <span class="opt-inf-hint">Selected infusion stats are treated as totals, not slot assignments</span>
+                        <span class="opt-inf-hint">Selected infusion stats are treated as totals, not slot
+                            assignments</span>
                     </div>
                     <div class="opt-check-grid" id="opt-infusions"></div>
                     <div class="opt-infusion-ranges" id="opt-infusion-ranges"></div>

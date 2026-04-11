@@ -24,6 +24,8 @@ const SCHEDULER_WORKING_STATE_FIXED_KEYS = Object.freeze([
     'weaveSelfUntil',
     'weaveSelfVisited',
     'perfectWeaveUntil',
+    'wsFireBonusWindows',
+    'wsAirBonusWindows',
     'unravelUntil',
     'hasExplicitCombatStart',
     'combatStartTime',
@@ -160,6 +162,9 @@ export function createSchedulerPhaseState(runState, {
     if (phaseState.schedulerIntentState) {
         eventQueue._schedulerIntentState = phaseState.schedulerIntentState;
     }
+
+    if (!Array.isArray(phaseState.wsFireBonusWindows)) phaseState.wsFireBonusWindows = [];
+    if (!Array.isArray(phaseState.wsAirBonusWindows))  phaseState.wsAirBonusWindows  = [];
 
     return phaseState;
 }

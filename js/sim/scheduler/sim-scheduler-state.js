@@ -204,11 +204,24 @@ export function setScheduledWeaveSelfUntil(S, time) {
 
 export function addScheduledWeaveSelfVisited(S, attunement) {
     S.weaveSelfVisited.add(attunement);
+    // Record the time window during which this attunement's Weave Self bonus
+    // is active. The window runs from now until weaveSelfUntil. The resolver
+    // receives the final (zeroed) weaveSelfVisited, so it needs these windows
+    // to correctly compute per-tick bonuses.
+    if (S.weaveSelfUntil > S.t) {
+        if (attunement === 'Fire') S.wsFireBonusWindows.push({ start: S.t, end: S.weaveSelfUntil });
+        if (attunement === 'Air')  S.wsAirBonusWindows.push({  start: S.t, end: S.weaveSelfUntil });
+    }
     return S.weaveSelfVisited.size;
 }
 
 export function setScheduledPerfectWeaveUntil(S, time) {
     S.perfectWeaveUntil = time;
+    if (time > 0) {
+        // Perfect Weave grants all Weave Self attunement bonuses simultaneously.
+        S.wsFireBonusWindows.push({ start: S.t, end: time });
+        S.wsAirBonusWindows.push({  start: S.t, end: time });
+    }
     return time;
 }
 

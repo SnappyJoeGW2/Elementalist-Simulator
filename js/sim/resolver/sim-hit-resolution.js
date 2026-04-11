@@ -3,6 +3,14 @@ import { getEvokerState } from '../state/sim-specialization-state.js';
 import { getActiveConditionStacks } from '../state/sim-runtime-state.js';
 import { applyRuntimeAction } from '../shared/sim-deferred-runtime-actions.js';
 
+function checkWsBonusWindow(windows, t) {
+    if (!windows) return false;
+    for (const w of windows) {
+        if (t >= w.start && t < w.end) return true;
+    }
+    return false;
+}
+
 function hasActiveConditionOrPermaBoon(S, cond, time) {
     return (getActiveConditionStacks(S, cond, time).length > 0)
         || !!(S.permaBoons?.[cond]);
@@ -156,10 +164,8 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
     const hammerFireOrbUp = effectSnapshot.hammerFireOrbUp;
     const nourysStrikeAdd = effectSnapshot.nourysActive ? (ctx.getRelicProc('Nourys')?.strikeDmgA || 0) : 0;
     const nourysCondAdd = effectSnapshot.nourysActive ? (ctx.getRelicProc('Nourys')?.condDmgA || 0) : 0;
-    const wsFireBonus = (S.weaveSelfVisited.has('Fire') && ev.time < S.weaveSelfUntil)
-        || ev.time < S.perfectWeaveUntil;
-    const wsAirBonus = (S.weaveSelfVisited.has('Air') && ev.time < S.weaveSelfUntil)
-        || ev.time < S.perfectWeaveUntil;
+    const wsFireBonus = checkWsBonusWindow(S.wsFireBonusWindows, ev.time);
+    const wsAirBonus  = checkWsBonusWindow(S.wsAirBonusWindows,  ev.time);
 
     const addStrike = pfStacks * 0.02
         + (tempAriaUp ? 0.10 : 0)

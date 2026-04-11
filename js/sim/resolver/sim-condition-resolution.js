@@ -24,6 +24,14 @@ import {
     pushReportingStep,
 } from '../state/sim-reporting-state.js';
 
+function checkWsBonusWindow(windows, t) {
+    if (!windows) return false;
+    for (const w of windows) {
+        if (t >= w.start && t < w.end) return true;
+    }
+    return false;
+}
+
 function buildConditionTickEffectSnapshot(ctx, ev) {
     const { S } = ctx;
     const evokerState = getEvokerState(S);
@@ -47,6 +55,7 @@ function buildConditionTickEffectSnapshot(ctx, ev) {
             && effectStacks("Familiar's Prowess") > 0)
             ? (S._hasFamiliarsFocus ? 0.10 : 0.05)
             : 0,
+        wsFireBonus: checkWsBonusWindow(S.wsFireBonusWindows, time),
     };
 }
 
@@ -100,6 +109,7 @@ function buildConditionTickContext(ctx, ev, {
         + effectSnapshot.elementsOfRage
         + effectSnapshot.empoweringAuras
         + effectSnapshot.familiarsProwess
+        + (effectSnapshot.wsFireBonus ? 0.20 : 0)
     ) * sigilMuls.condMul * vulnMul;
 
     const diag = engine.fastMode ? null : {
@@ -115,6 +125,7 @@ function buildConditionTickContext(ctx, ev, {
         elemRage: effectSnapshot.elementsOfRage,
         empAuras: effectSnapshot.empoweringAuras,
         famProwess: effectSnapshot.familiarsProwess,
+        wsFireBonus: effectSnapshot.wsFireBonus,
         vulnStacks: skipVuln ? 0 : ctx.vulnStacksAt(ev.time),
         vulnMul,
         might,

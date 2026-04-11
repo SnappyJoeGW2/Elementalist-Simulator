@@ -44,6 +44,8 @@ const RESOLVER_HANDOFF_SPECIALIZATION_KEYS = Object.freeze([
     'weaveSelfUntil',
     'weaveSelfVisited',
     'perfectWeaveUntil',
+    'wsFireBonusWindows',
+    'wsAirBonusWindows',
     'unravelUntil',
     'etchingState',
     'etchingOtherCasts',
@@ -253,6 +255,8 @@ function validateResolverHandoff(value) {
     if (!isPlainObject(value.specialization.evokerState)) return 'specialization.evokerState must be a plain object';
     if (!isFiniteNumber(value.specialization.unravelUntil)) return 'specialization.unravelUntil must be finite';
     if (!(value.specialization.weaveSelfVisited instanceof Set)) return 'specialization.weaveSelfVisited must be a Set';
+    if (value.specialization.wsFireBonusWindows != null && !Array.isArray(value.specialization.wsFireBonusWindows)) return 'specialization.wsFireBonusWindows must be an array';
+    if (value.specialization.wsAirBonusWindows != null && !Array.isArray(value.specialization.wsAirBonusWindows)) return 'specialization.wsAirBonusWindows must be an array';
     if (!isPlainObject(value.specialization.hammerOrbs)) return 'specialization.hammerOrbs must be a plain object';
     if (!isPlainObject(value.specialization.hammerOrbGrantedBy)) return 'specialization.hammerOrbGrantedBy must be a plain object';
     if (!isPlainObject(value.specialization.hammerOrbDamageWindows)) return 'specialization.hammerOrbDamageWindows must be a plain object';
@@ -309,6 +313,9 @@ export function bindResolverHandoffToRunState(runState, handoff) {
     restoreReportingState(runState, resolved.reporting);
     restoreCombatRecordState(runState, resolved.combatRecords);
     restoreConditionState(runState, resolved.conditionState);
+    // Ensure bonus-window arrays are always present (may be absent in older handoffs).
+    if (!Array.isArray(runState.wsFireBonusWindows)) runState.wsFireBonusWindows = [];
+    if (!Array.isArray(runState.wsAirBonusWindows))  runState.wsAirBonusWindows  = [];
     return runState;
 }
 

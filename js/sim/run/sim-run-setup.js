@@ -98,6 +98,8 @@ export function createRunState(engine, {
         weaveSelfUntil: 0,
         weaveSelfVisited: new Set(),
         perfectWeaveUntil: 0,
+        wsFireBonusWindows: [],
+        wsAirBonusWindows: [],
         unravelUntil: 0,
         hasExplicitCombatStart: false,
         combatStartTime: null,
