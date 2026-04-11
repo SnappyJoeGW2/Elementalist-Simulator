@@ -242,6 +242,8 @@ const EFFECT_COLORS = {
     'Elemental Empowerment': '#44ddaa',
     'Empowering Auras': '#ffaa33',
     "Familiar's Prowess": '#aa55ff',
+    'Weave Self': '#c59932',
+    'Perfect Weave': '#ffe066',
     'Hammer Orb Fire': '#e05530',
     'Hammer Orb Water': '#4488cc',
     'Hammer Orb Air': '#c06ad0',

@@ -15,6 +15,7 @@ import {
     getSkillCooldownReadyAt,
 } from '../state/sim-cooldown-state.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
+import { pushTimedStack } from '../state/sim-runtime-state.js';
 
 function buildCooldownDisplayMeta(state, startedAt, displayDurationMs, {
     applyAlacrity = true,
@@ -226,7 +227,12 @@ export function handleWeaverSwap(ctx, target, sk, isConcurrent, concurrents, {
         ctx.addWeaveSelfVisited(target);
         if (S.weaveSelfVisited.size >= 4) {
             ctx.resetWeaveSelfState();
+            // Trim the Weave Self chart bar to end exactly when Perfect Weave begins
+            // (mirrors in-game: Weave Self is removed the same frame Perfect Weave procs).
+            const wsStack = S.allCondStacks && [...S.allCondStacks].reverse().find(s => s.cond === 'Weave Self');
+            if (wsStack) wsStack.expiresAt = S.t;
             ctx.setPerfectWeaveUntil(S.t + 10000);
+            pushTimedStack(S, { t: S.t, cond: 'Perfect Weave', expiresAt: S.t + 10000 });
             ctx.log({ t: S.t, type: 'skill_proc', skill: 'Perfect Weave', detail: '10s' });
         }
     }

@@ -1,6 +1,7 @@
 import { getProcState } from '../state/sim-proc-state.js';
 import { getCatalystState, getEvokerState } from '../state/sim-specialization-state.js';
 import { setSkillCooldownReadyAt } from '../state/sim-cooldown-state.js';
+import { pushTimedStack } from '../state/sim-runtime-state.js';
 
 const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
 const ELECTRIC_ENCHANTMENT_ICON = 'https://wiki.guildwars2.com/images/7/7b/Hare%27s_Agility.png';
@@ -118,6 +119,7 @@ export function applySkillSpecificPostCast(ctx, sk, { start, end, scaleOff }) {
         ctx.resetWeaveSelfState();
         ctx.setWeaveSelfUntil(end + 20000);
         ctx.addWeaveSelfVisited(S.att);
+        pushTimedStack(S, { t: end, cond: 'Weave Self', expiresAt: end + 20000 });
         ctx.log({ t: end, type: 'skill_proc', skill: 'Weave Self', detail: `armed, starting in ${S.att}` });
     }
 

@@ -1032,6 +1032,8 @@ export class SimulationEngine {
         if (ht('Elemental Lockdown')) modifiers.push({ id: 'Trait:Elemental Lockdown', name: 'Elemental Lockdown' });
         if (ht('Arcane Lightning')) modifiers.push({ id: 'Trait:Arcane Lightning', name: 'Arcane Lightning' });
         if (ht('Bountiful Power')) modifiers.push({ id: 'Trait:Bountiful Power', name: 'Bountiful Power' });
+        if (fullResults.allCondStacks.some(s => s.cond === 'Weave Self'))
+            modifiers.push({ id: 'Trait:Weave Self Bonuses', name: 'Weave Self (Fire+Air)' });
 
         // When a kill occurred, run an extra infinite-HP pass to get a clean baseline for
         // all modifiers that don't need finite HP.  Using the finite-HP baseline for every

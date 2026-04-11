@@ -176,6 +176,7 @@ export function createRunState(engine, {
         _hasHardyConduit: engine._hasTrait('Hardy Conduit'),
         _hasTranscendentTempest: engine._hasTrait('Transcendent Tempest'),
         _suppressTranscendentTempestContributionBuff: false,
+        _disableWeaveSelfBonuses: false,
         _hasLucidSingularity: engine._hasTrait('Lucid Singularity'),
         _hasElementalBastion: engine._hasTrait('Elemental Bastion'),
         _hasSuperiorElements: engine._hasTrait('Superior Elements'),
@@ -237,6 +238,10 @@ export function applyDisabledTraitFlags(S, disTrait) {
     }
     if (disTrait === 'Transcendent Tempest') {
         S._suppressTranscendentTempestContributionBuff = true;
+        return;
+    }
+    if (disTrait === 'Weave Self Bonuses') {
+        S._disableWeaveSelfBonuses = true;
         return;
     }
 

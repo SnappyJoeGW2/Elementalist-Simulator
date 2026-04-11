@@ -26,6 +26,7 @@ const SCHEDULER_WORKING_STATE_FIXED_KEYS = Object.freeze([
     'perfectWeaveUntil',
     'wsFireBonusWindows',
     'wsAirBonusWindows',
+    '_disableWeaveSelfBonuses',
     'unravelUntil',
     'hasExplicitCombatStart',
     'combatStartTime',
