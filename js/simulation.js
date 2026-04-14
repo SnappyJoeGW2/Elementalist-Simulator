@@ -300,7 +300,7 @@ const RELIC_PROCS = {
     },
     Steamshrieker: {
         trigger: 'water_blast_leap_combo', icd: 0,
-        conditions: { Burning: { stacks: 1, dur: 4 } },
+        conditions: { Burning: { stacks: 1, dur: 5 } },
         icon: 'https://render.guildwars2.com/file/23B0F0A5BF05E05C9F527BF7EB4962C9F49C6F42/3441975.png',
     },
 };

@@ -117,8 +117,8 @@ export function handleJadeSphere(ctx, sk, concurrents, {
     updateSpearEtchingProgression(ctx, sk, sk.name, state.t);
 
     if (state._hasSpectacularSphere) {
-        const durMul = state._hasSphereSpecialist ? 1.5 : 1;
-        ctx.trackEffect('Quickness', 1, 1.5 * durMul, state.t);
+        const durMul = state._hasSphereSpecialist ? 2 : 1;
+        ctx.trackEffect('Quickness', 1, 1 * durMul, state.t);
         const att = sk.attunement;
         if (att === 'Fire') ctx.trackEffect('Might', 5, 10 * durMul, state.t);
         else if (att === 'Water') ctx.trackEffect('Vigor', 1, 5 * durMul, state.t);
