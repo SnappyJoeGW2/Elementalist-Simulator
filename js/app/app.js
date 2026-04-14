@@ -2431,7 +2431,11 @@ class App {
         const dpsCanvas = document.getElementById('rotation-chart');
         const effectsCanvas = document.getElementById('rotation-effects-chart');
         if (!dpsCanvas || !effectsCanvas || !this.sim?.results) return;
-        const maxTime = r.rotationMs;
+        // Cap the chart at kill time when the target died before the rotation ended,
+        // so the DPS line doesn't slope downward through the post-death idle window.
+        const maxTime = (r.deathTime !== null && r.deathTime !== undefined && r.deathTime < r.rotationMs)
+            ? r.deathTime
+            : r.rotationMs;
         if (maxTime <= 0) return;
 
         const allStacks = r.allCondStacks || [];
