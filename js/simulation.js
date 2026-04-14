@@ -966,6 +966,14 @@ export class SimulationEngine {
             baselineStop = null;
         }
 
+        // Bolt to the Heart fires once accumulated damage >= 50% of targetHP. When
+        // the target doesn't die (no baselineStop), the infinite-HP re-run above acts
+        // as the "without Bolt" baseline because tgtHP = Infinity keeps boltMul = 1.
+        // So the contribution is simply fullResults.dps - fullDps — no extra run needed.
+        const boltFires = baselineStop === null
+            && targetHP > 0
+            && (fullResults.totalDamage ?? 0) >= targetHP * 0.5;
+
         const modifiers = [];
         const ht = name => this.activeTraitNames.has(name);
 
@@ -1017,7 +1025,10 @@ export class SimulationEngine {
         if (ht("Pyromancer's Training")) modifiers.push({ id: "Trait:Pyromancer's Training", name: "Pyromancer's Training" });
         if (ht('Fiery Might')) modifiers.push({ id: 'Trait:Fiery Might', name: 'Fiery Might' });
         if (ht('Stormsoul')) modifiers.push({ id: 'Trait:Stormsoul', name: 'Stormsoul' });
-        if (ht('Bolt to the Heart')) modifiers.push({ id: 'Trait:Bolt to the Heart', name: 'Bolt to the Heart' });
+        // Show Bolt when it actually fires: either target dies (baselineStop path)
+        // or target doesn't die but rotation crosses the 50% HP threshold (boltFires path).
+        if (ht('Bolt to the Heart') && (baselineStop !== null || boltFires))
+            modifiers.push({ id: 'Trait:Bolt to the Heart', name: 'Bolt to the Heart' });
         if (ht('Transcendent Tempest')) modifiers.push({ id: 'Trait:Transcendent Tempest', name: 'Transcendent Tempest' });
         if (ht('Elements of Rage')) modifiers.push({ id: 'Trait:Elements of Rage', name: 'Elements of Rage (proc)' });
         if (ht('Swift Revenge')) modifiers.push({ id: 'Trait:Swift Revenge', name: 'Swift Revenge' });
@@ -1079,6 +1090,18 @@ export class SimulationEngine {
                 );
                 const withoutDps = this.results.totalDamage / baselineWindowSec;
                 const increase = fullDps - withoutDps;
+                contributions.push({
+                    id: mod.id,
+                    name: mod.name,
+                    dpsIncrease: increase,
+                    pctIncrease: withoutDps > 0 ? (increase / withoutDps) * 100 : 0,
+                });
+            } else if (isBolt && boltFires) {
+                // Bolt fires but target didn't die. The infinite-HP re-run above already
+                // computed fullDps without Bolt active (tgtHP = Infinity → boltMul = 1).
+                // No extra sim needed — the difference is the pure Bolt contribution.
+                const withoutDps = fullDps;
+                const increase = fullResults.dps - withoutDps;
                 contributions.push({
                     id: mod.id,
                     name: mod.name,
