@@ -2174,7 +2174,7 @@ class App {
         const dpsWindowSec = (r.dpsWindowMs ?? 0) / 1000;
 
         h += `<div class="res-breakdown"><div class="res-hdr">
-            <span>Skill</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span><span>Avg/Cast</span><span>DCT</span><span>Casts</span>
+            <span>Skill</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span><span>Avg/Cast</span><span>DCT</span><span>Casts</span><span>Hits</span>
         </div>`;
         // Build a name→icon map from proc steps (sigils/relics carry their icon there)
         const stepIconMap = {};
@@ -2205,6 +2205,7 @@ class App {
                 <span>${avgPerCast.toLocaleString()}</span>
                 <span>${dct !== null ? dct.toLocaleString() : '—'}</span>
                 <span>${d.casts}</span>
+                <span>${d.hits ?? 0}</span>
             </div>`;
         }
         h += '</div>';

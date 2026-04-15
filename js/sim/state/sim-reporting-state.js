@@ -33,7 +33,7 @@ export function ensureReportingPerSkill(S) {
 export function ensurePerSkillRecord(S, name) {
     const perSkill = ensureReportingPerSkill(S);
     if (!perSkill[name]) {
-        perSkill[name] = { strike: 0, condition: 0, casts: 0, castTimeMs: 0 };
+        perSkill[name] = { strike: 0, condition: 0, casts: 0, castTimeMs: 0, hits: 0 };
     }
     return perSkill[name];
 }
@@ -44,6 +44,10 @@ export function addPerSkillStrike(S, name, amount) {
 
 export function addPerSkillCondition(S, name, amount) {
     ensurePerSkillRecord(S, name).condition += amount;
+}
+
+export function addPerSkillHit(S, name) {
+    ensurePerSkillRecord(S, name).hits++;
 }
 
 export function recordPerSkillCast(S, name, castMs) {

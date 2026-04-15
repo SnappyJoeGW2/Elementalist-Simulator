@@ -807,12 +807,21 @@ export class SimulationEngine {
             }
         }
 
+        const hitCounts = {};
+        for (const ev of (S.log || [])) {
+            if (ev?.type === 'hit' && ev.skill && skillNames.has(ev.skill)) {
+                hitCounts[ev.skill] = (hitCounts[ev.skill] || 0) + 1;
+            }
+        }
+
         for (const [name, entry] of Object.entries(perSkill)) {
             const backfilledCasts = stepCounts[name] || procLogCounts[name] || fallbackEventCounts[name] || 0;
             if (backfilledCasts > entry.casts) entry.casts = backfilledCasts;
 
             const backfilledCastMs = stepCastMs[name] || 0;
             if (backfilledCastMs > entry.castTimeMs) entry.castTimeMs = backfilledCastMs;
+
+            if (!entry.hits) entry.hits = hitCounts[name] || 0;
         }
 
         return perSkill;

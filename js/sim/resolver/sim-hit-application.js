@@ -1,6 +1,6 @@
 import { strikeDamage } from '../../core/damage.js';
 import { anySphereActiveAt } from '../scheduler/sim-special-actions.js';
-import { addPerSkillStrike } from '../state/sim-reporting-state.js';
+import { addPerSkillStrike, addPerSkillHit } from '../state/sim-reporting-state.js';
 
 function isFlatStrikeEvent(ev) {
     return Number.isFinite(ev?.flatStrikeBase) || Number.isFinite(ev?.flatStrikePowerCoeff);
@@ -30,6 +30,7 @@ function applyStrikeDamage(ctx, ev, power, critMult, strikeMul) {
 function recordStrikeContribution(ctx, skillName, strike) {
     ctx.ensurePerSkill(skillName);
     addPerSkillStrike(ctx.S, skillName, strike);
+    addPerSkillHit(ctx.S, skillName);
 }
 
 function applyPayloadEffects(ctx, ev) {
