@@ -77,7 +77,7 @@ export function triggerFlameExpulsion(ctx, time) {
 
     const might = ctx.mightStacksAt(time);
     const capped = Math.min(might, 10);
-    const coeff = 1.0 + 0.05 * capped;
+    const coeff = 1.0 + 0.1 * capped;
     const burnDur = Math.min(2 + 0.5 * capped, 7);
 
     enqueueTraitHit(ctx, {
