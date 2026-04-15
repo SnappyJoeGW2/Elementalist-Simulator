@@ -73,8 +73,9 @@ function buildPowerAndCritContext(ctx, ev, {
 }) {
     const { S } = ctx;
     const evokerState = getEvokerState(S);
-    const hitAtt = ev.att;
-    const hitAtt2 = ev.att2 || null;
+    const useStampedAtt = ev.isTraitProc || ev.isSigilProc || ev.isRelicProc;
+    const hitAtt = useStampedAtt ? ev.att : ctx.attAt(ev.time);
+    const hitAtt2 = useStampedAtt ? (ev.att2 || null) : ctx.att2At(ev.time);
     const empFlame = (S._hasEmpoweringFlame && hitAtt === 'Fire') ? 150 : 0;
 
     let powOvr = 0;

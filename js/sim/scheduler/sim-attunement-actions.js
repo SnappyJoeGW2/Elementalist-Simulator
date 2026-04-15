@@ -376,7 +376,7 @@ export function handleOverload(ctx, sk, concurrents, {
             skill: 'Lightning Jolt', hitIdx: 1, sub: 1, totalSubs: 1,
             dmg: 2.64, ws: 690.5,
             isField: false, cc: false, conds: null,
-            noCrit: true, att: state.att, isTraitProc: true,
+            noCrit: true, att: state.att, att2: state.att2 || null, isTraitProc: true,
         });
         ctx.ensurePerSkill('Lightning Jolt');
         ctx.recordSkillCast('Lightning Jolt', 0);

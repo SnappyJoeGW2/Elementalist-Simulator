@@ -53,7 +53,7 @@ export function triggerSunspot(ctx, time) {
         skill: 'Sunspot', hitIdx: 1, sub: 1, totalSubs: 1,
         dmg: 0.6, ws: 690.5,
         isField: false, cc: false, conds: null,
-        noCrit: true, att: S.att, isTraitProc: true,
+        noCrit: true, att: S.att, att2: S.att2 || null, isTraitProc: true,
         postHitActions: [buildAuraFollowupAction({ time, skill: 'Sunspot' })],
     });
 
@@ -85,7 +85,7 @@ export function triggerFlameExpulsion(ctx, time) {
         skill: 'Flame Expulsion', hitIdx: 1, sub: 1, totalSubs: 1,
         dmg: coeff, ws: 690.5,
         isField: false, cc: false, conds: null,
-        noCrit: false, att: S.att, isTraitProc: true,
+        noCrit: false, att: S.att, att2: S.att2 || null, isTraitProc: true,
     });
 
     ctx.applyCondition('Burning', 1, burnDur, time, 'Flame Expulsion');
@@ -109,7 +109,7 @@ export function triggerEarthenBlast(ctx, time) {
         skill: 'Earthen Blast', hitIdx: 1, sub: 1, totalSubs: 1,
         dmg: 0.36, ws: 690.5,
         isField: false, cc: false, conds: null,
-        noCrit: true, att: S.att, isTraitProc: true,
+        noCrit: true, att: S.att, att2: S.att2 || null, isTraitProc: true,
     });
 
     ctx.log({ t: time, type: 'trait_proc', trait: 'Earthen Blast', skill: 'Earthen Blast' });
@@ -137,7 +137,7 @@ export function triggerElectricDischarge(ctx, time) {
         dmg: 0.35, ws: 690.5,
         isField: false, cc: false,
         conds: { Vulnerability: { stacks: 1, duration: 8 } },
-        noCrit: false, att: S.att, isTraitProc: true,
+        noCrit: false, att: S.att, att2: S.att2 || null, isTraitProc: true,
         doubleOnCrit: true,
     });
 
@@ -173,7 +173,7 @@ export function triggerLightningRod(ctx, time) {
         dmg: 1.5, ws: 690.5,
         isField: false, cc: false,
         conds: { Weakness: { stacks: 1, duration: 4 } },
-        noCrit: false, att: S.att, isTraitProc: true,
+        noCrit: false, att: S.att, att2: S.att2 || null, isTraitProc: true,
     });
 
     ctx.log({ t: time, type: 'trait_proc', trait: 'Lightning Rod', skill: 'Lightning Rod' });

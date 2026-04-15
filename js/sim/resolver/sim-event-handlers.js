@@ -242,7 +242,7 @@ export function handlePostHitConditions(ctx, ev, triggerCtx) {
             dmg: 0.4, ws: 690.5,
             isField: false, cc: false,
             conds: { Burning: { stacks: 1, duration: 1.5 } },
-            isTraitProc: true, noCrit: false, att: S.att,
+            isTraitProc: true, noCrit: false, att: S.att, att2: S.att2 || null,
         }, {
             logEntry: { t: ev.time, type: 'trait_proc', trait: 'Electric Enchantment' },
             stepEntry: {

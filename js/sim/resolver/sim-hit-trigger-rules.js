@@ -29,6 +29,7 @@ export function queueShatteringIceProc(S, ev, { queueHit = null } = {}) {
         conds: { Chilled: { stacks: 1, duration: 1 } },
         noCrit: false,
         att: ev.att,
+        att2: ev.att2 || null,
         isTraitProc: true,
     };
     if (queueHit) queueHit(hitEvent);
