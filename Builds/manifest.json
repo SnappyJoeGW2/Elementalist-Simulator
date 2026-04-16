@@ -173,7 +173,12 @@
         "rotation": "Rotations/r-condi-evoker.json"
       },
       {
-        "label": "Condi SE (Arcane Fox)",
+        "label": "Condi SE (Air)",
+        "build": "Builds/b-condi-air-se-evoker.json",
+        "rotation": "Rotations/r-condi-air-se-evoker.json"
+      },
+      {
+        "label": "Condi SE (Arcane)",
         "build": "Builds/b-condi-arcane-se-evoker.json",
         "rotation": "Rotations/r-condi-arcane-se-evoker.json"
       },
