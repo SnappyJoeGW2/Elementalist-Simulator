@@ -46,11 +46,11 @@
     "infusions": [
       {
         "stat": "Power",
-        "count": 13
+        "count": 14
       },
       {
         "stat": "Precision",
-        "count": 5
+        "count": 4
       },
       {
         "stat": "Ferocity",
