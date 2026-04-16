@@ -147,6 +147,9 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
     // Inject missing aura skill casts inferred from unattributed aura buff activations.
     injectAuraCasts(allCasts, player, toolSkillNames, weapons);
 
+    // Inject Blinding Flash from target Blind+Weakness co-application.
+    injectBlindingFlash(allCasts, eiJson, toolSkillNames, weapons);
+
     // 2. Walk chronologically and emit rotation items.
     const items = [];
     // Infer the starting primary attunement from the first identifiable pre-swap skill.
@@ -378,6 +381,109 @@ function injectAuraCasts(allCasts, player, toolSkillNames, weapons) {
                 anyInjected = true;
             }
         }
+    }
+
+    if (anyInjected) allCasts.sort((a, b) => a.castTime - b.castTime);
+}
+
+// ─── Blinding Flash injection ─────────────────────────────────────────────────
+
+const BLIND_BUFF_ID    = 720;
+const WEAKNESS_BUFF_ID = 742;
+const BF_COOCCUR_MS    = 100; // max gap between Blind and Weakness to count as simultaneous
+const BF_WINDOW_MS     = 1000;
+
+// Skills that apply Blind and could be mistaken for Blinding Flash.
+const BF_BLIND_SOURCES = new Set(['Dust Devil', 'Dust Storm']);
+// Skills that apply Weakness and could be mistaken for Blinding Flash.
+const BF_WEAK_SOURCES  = new Set(['Lightning Blitz']);
+
+/**
+ * Detect Blinding Flash casts from simultaneous Blind + Weakness applications
+ * on the target.  arcdps does not log Blinding Flash as a cast.
+ *
+ * Only runs when Scepter is the mainhand weapon.
+ *
+ * A co-occurrence is attributed to Blinding Flash unless BOTH a known blind
+ * source AND a known weakness source are cast within ±BF_WINDOW_MS (which
+ * would fully explain the co-occurrence without Blinding Flash).
+ *
+ * On golem logs with permanent conditions there will be no 0→1 transitions,
+ * so this gracefully does nothing.
+ */
+function injectBlindingFlash(allCasts, eiJson, toolSkillNames, weapons) {
+    if (!toolSkillNames.has('Blinding Flash')) return;
+    const mh = (weapons[0] || '').toLowerCase();
+    if (mh !== 'scepter') return;
+
+    // Collect 0→1 transition times for Blind and Weakness across all targets.
+    const blindTimes = new Set();
+    const weakTimes  = new Set();
+    for (const target of (eiJson.targets || [])) {
+        for (const buff of (target.buffs || [])) {
+            const set = buff.id === BLIND_BUFF_ID ? blindTimes
+                      : buff.id === WEAKNESS_BUFF_ID ? weakTimes
+                      : null;
+            if (!set || !buff.states) continue;
+            let prev = 0;
+            for (const [t, state] of buff.states) {
+                if (prev === 0 && state >= 1 && t >= 0) set.add(t);
+                prev = state;
+            }
+        }
+    }
+    // Need at least one condition to have transitions.
+    if (blindTimes.size === 0 && weakTimes.size === 0) return;
+
+    // Build candidate times.  When both conditions have data, require
+    // co-occurrence (both within ±BF_COOCCUR_MS).  When one condition is
+    // perma-active (no transitions), the other alone is sufficient.
+    const hasBlindData = blindTimes.size > 0;
+    const hasWeakData  = weakTimes.size > 0;
+    const candidates = new Set();
+
+    if (hasBlindData && hasWeakData) {
+        // Both available — require co-occurrence.
+        const weakArr = [...weakTimes].sort((a, b) => a - b);
+        let wi = 0;
+        for (const bt of [...blindTimes].sort((a, b) => a - b)) {
+            while (wi < weakArr.length && weakArr[wi] < bt - BF_COOCCUR_MS) wi++;
+            if (wi < weakArr.length && Math.abs(weakArr[wi] - bt) <= BF_COOCCUR_MS) {
+                candidates.add(bt);
+            }
+        }
+    } else if (hasBlindData) {
+        // Only Blind transitions (Weakness is perma) — each Blind is a candidate.
+        for (const t of blindTimes) candidates.add(t);
+    } else {
+        // Only Weakness transitions (Blind is perma) — each Weakness is a candidate.
+        for (const t of weakTimes) candidates.add(t);
+    }
+    if (candidates.size === 0) return;
+
+    let anyInjected = false;
+    for (const t of candidates) {
+        const hasBlindSource = allCasts.some(c =>
+            BF_BLIND_SOURCES.has(c.name) && Math.abs(c.castTime - t) <= BF_WINDOW_MS);
+        const hasWeakSource  = allCasts.some(c =>
+            BF_WEAK_SOURCES.has(c.name)  && Math.abs(c.castTime - t) <= BF_WINDOW_MS);
+
+        // When both conditions have transition data, suppress only if both are
+        // fully explained by other skills.  When one condition is perma (no
+        // transitions), suppress if the available condition's source is nearby.
+        if (hasBlindData && hasWeakData && hasBlindSource && hasWeakSource) continue;
+        if (hasBlindData && !hasWeakData && hasBlindSource) continue;
+        if (!hasBlindData && hasWeakData && hasWeakSource) continue;
+
+        allCasts.push({
+            name:          'Blinding Flash',
+            castTime:      t,
+            duration:      0,
+            isInstant:     true,
+            isSwap:        false,
+            isInterrupted: false,
+        });
+        anyInjected = true;
     }
 
     if (anyInjected) allCasts.sort((a, b) => a.castTime - b.castTime);
