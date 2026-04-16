@@ -13,6 +13,21 @@ const ELEMENTALIST_SPECS = new Set([
     'Elementalist', 'Weaver', 'Tempest', 'Catalyst', 'Evoker',
 ]);
 
+// Channeled skills whose actual cast duration determines how many hits land.
+// When EI reports timeGained > 0 for these, the channel was cut short and the
+// import should treat them as interrupted so the tool simulates fewer hits.
+//
+// Values are not used for thresholding (timeGained handles that); the Set is
+// purely a membership check.
+const SHORTENABLE_SKILLS = new Set([
+    'Flamestrike',      // Scepter Fire 1 — 2 hits over 600ms channel
+    'Arc Lightning',    // Scepter Air 1  — 10 hits over 2720ms channel
+]);
+
+// Minimum positive timeGained (ms) before a shortenable skill is treated as
+// interrupted.  Avoids flagging tiny timing jitter as a shortened channel.
+const SHORTEN_THRESHOLD_MS = 100;
+
 // Skills whose tool name requires a current-attunement suffix.
 // These skills keep the same base name in EI but need "(Fire)" / "(Air)" etc.
 const ATTUNEMENT_SUFFIX_SKILLS = new Set([
@@ -93,13 +108,18 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
 
         for (const cast of se.skills) {
             const timeGained = cast.timeGained ?? 0;
+            const cleanName  = (info.name || '').replace(/^"|"$/g, '');
+            const cancelled  = timeGained < 0;
+            const shortened  = !cancelled
+                && SHORTENABLE_SKILLS.has(cleanName)
+                && timeGained > SHORTEN_THRESHOLD_MS;
             allCasts.push({
-                name:        (info.name || '').replace(/^"|"$/g, ''),
-                castTime:    cast.castTime,
-                duration:    cast.duration,
-                isInstant:   !!(info.isInstantCast || cast.duration === 0),
-                isSwap:      !!info.isSwap,
-                isInterrupted: timeGained < 0,
+                name:          cleanName,
+                castTime:      cast.castTime,
+                duration:      cast.duration,
+                isInstant:     !!(info.isInstantCast || cast.duration === 0),
+                isSwap:        !!info.isSwap,
+                isInterrupted: cancelled || shortened,
             });
         }
     }
@@ -169,64 +189,60 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
 
 // ─── Aura injection ───────────────────────────────────────────────────────────
 
-const AURA_WINDOW_MS = 2000;
+const AURA_WINDOW_MS = 1500;
+
+// Attunement swaps only grant auras through Weaver traits (e.g. Elemental
+// Refreshment), where the aura procs nearly instantly.  Use a much tighter
+// window so manual aura casts near swaps aren't incorrectly suppressed.
+const SWAP_AURA_WINDOW_MS = 300;
 
 // Configuration for each elemental aura skill that arcdps does not log.
 //
-//   buffId        — EI buff ID for the aura effect
-//   skillName     — tool skill name to inject when the aura is unattributed
-//   transmuteName — precondition: this Transmute skill must be in the rotation
-//                   (confirms the build uses the Aura → Transmute combo)
-//   attunement    — swapping TO this attunement counts as a known aura source
-//   sources       — other EI skill names (post-quote-strip) that also grant
-//                   this aura; any cast within ±AURA_WINDOW_MS means the
-//                   activation came from that skill, not the missing aura skill
+//   buffId    — EI buff ID for the aura effect
+//   skillName — tool skill name to inject when the aura is unattributed
+//   attunement — swapping TO this attunement within ±SWAP_AURA_WINDOW_MS
+//                counts as a known source (covers Weaver trait procs)
+//   sources   — other EI skill names (post-quote-strip) that also grant
+//               this aura; any cast within ±AURA_WINDOW_MS means the
+//               activation came from that skill, not the missing aura skill
 const AURA_CONFIG = [
     {
         buffId:        5677,
         skillName:     'Fire Shield',
-        transmuteName: 'Transmute Fire',
         attunement:    'Fire',
         sources: new Set([
             'Elemental Explosion', 'Searing Salvo', 'Frostfire Flurry',
             'Frostfire Ward', 'Immutable Stone', 'Feel the Burn!',
             'Signet of Fire', 'Signet of Earth', 'Overload Fire',
-            'Transmute Fire',
         ]),
     },
     {
         buffId:        5579,
         skillName:     'Frost Aura',
-        transmuteName: 'Transmute Frost',
         attunement:    'Water',
         sources: new Set([
             'Elemental Explosion', 'Frozen Ground', 'Flowing Finesse',
             'Frostfire Ward', 'Immutable Stone',
             'Signet of Fire', 'Signet of Earth', 'Overload Water',
-            'Transmute Frost',
         ]),
     },
     {
         buffId:        5684,
         skillName:     'Magnetic Aura',
-        transmuteName: 'Transmute Earth',
         attunement:    'Earth',
         sources: new Set([
             'Elemental Explosion', 'Sand Squall', 'Immutable Stone',
             'Aftershock!',
             'Signet of Fire', 'Signet of Earth', 'Overload Earth',
-            'Transmute Earth',
         ]),
     },
     {
         buffId:        5577,
         skillName:     'Shocking Aura',
-        transmuteName: 'Transmute Lightning',
         attunement:    'Air',
         sources: new Set([
             'Elemental Explosion', 'Immutable Stone',
             'Signet of Fire', 'Signet of Earth', 'Overload Air',
-            'Transmute Lightning',
         ]),
     },
 ];
@@ -239,10 +255,7 @@ const AURA_CONFIG = [
  * arcdps does not emit cast events for these instant aura skills, so they
  * never appear in the EI rotation.  We detect them from the corresponding
  * aura buff (buffUptimes.states): any 0→1 transition at t ≥ 0 that has no
- * known source within ±AURA_WINDOW_MS is attributed to the missing skill.
- *
- * Precondition per aura: the matching Transmute skill must appear in allCasts,
- * signalling the build intentionally uses the Aura → Transmute combo.
+ * known source nearby is attributed to the missing skill.
  *
  * Mutates allCasts in place; re-sorts only when at least one cast is injected.
  */
@@ -252,7 +265,6 @@ function injectAuraCasts(allCasts, player, toolSkillNames) {
 
     for (const cfg of AURA_CONFIG) {
         if (!toolSkillNames.has(cfg.skillName)) continue;
-        if (!allCasts.some(c => c.name === cfg.transmuteName)) continue;
 
         const auraBuff = buffUptimes.find(b => b.id === cfg.buffId);
         if (!auraBuff?.states) continue;
@@ -266,13 +278,16 @@ function injectAuraCasts(allCasts, player, toolSkillNames) {
         }
 
         for (const t of activations) {
-            const winStart = t - AURA_WINDOW_MS;
-            const winEnd   = t + AURA_WINDOW_MS;
-
             const hasKnownSource = allCasts.some(c => {
-                if (c.castTime < winStart || c.castTime > winEnd) return false;
-                if (c.isSwap && resolveAttunementSwap(c.name) === `${cfg.attunement} Attunement`) return true;
-                return cfg.sources.has(c.name);
+                // Attunement swaps — only count with a tight window (trait procs)
+                if (c.isSwap && resolveAttunementSwap(c.name) === `${cfg.attunement} Attunement`) {
+                    return Math.abs(c.castTime - t) <= SWAP_AURA_WINDOW_MS;
+                }
+                // Other known aura-granting skills — standard window
+                if (cfg.sources.has(c.name)) {
+                    return Math.abs(c.castTime - t) <= AURA_WINDOW_MS;
+                }
+                return false;
             });
 
             if (!hasKnownSource) {
