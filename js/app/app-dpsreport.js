@@ -36,6 +36,20 @@ const ATTUNEMENT_SUFFIX_SKILLS = new Set([
     'Deploy Jade Sphere',
 ]);
 
+// Chain skills that EI logs under a single name but the tool splits into
+// numbered variants.  Each entry maps the EI name to the ordered list of
+// tool names in the chain.  Consecutive casts of the same EI name cycle
+// through the list; the cycle resets after a gap (> CHAIN_RESET_MS) or an
+// attunement swap.
+const CHAIN_SKILLS = new Map([
+    ['Aerial Agility', [
+        'Aerial Agility',
+        'Aerial Agility (chain)',
+        'Aerial Agility (dash)',
+    ]],
+]);
+const CHAIN_RESET_MS = 4000;
+
 // Direct EI skill name → tool skill name overrides.
 // Used when EI reports a completely different name than the tool uses,
 // typically because the in-game skill name changes per attunement.
@@ -89,13 +103,14 @@ export function findElementalistPlayers(eiJson) {
 /**
  * Convert an EI player rotation into the tool's rotation item array.
  *
- * @param {object}  eiJson            - Full Elite Insights JSON from dps.report
- * @param {object}  player            - Player entry from eiJson.players[]
- * @param {Set}     toolSkillNames    - Set of all skill names the tool knows (from CSV)
- * @param {Map}     skillAttunements  - Map of tool skill name → attunement string (from CSV)
+ * @param {object}   eiJson            - Full Elite Insights JSON from dps.report
+ * @param {object}   player            - Player entry from eiJson.players[]
+ * @param {Set}      toolSkillNames    - Set of all skill names the tool knows (from CSV)
+ * @param {Map}      skillAttunements  - Map of tool skill name → attunement string (from CSV)
+ * @param {string[]} [weapons]         - Current build weapons, e.g. ['Scepter','Focus']
  * @returns {Array} Rotation items — strings, { name, offset }, { name, interruptMs }, or { name: '__wait', waitMs }
  */
-export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunements = new Map()) {
+export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunements = new Map(), weapons = []) {
     const skillMap = eiJson.skillMap || {};
 
     // 1. Flatten all casts from the per-skill-id grouping into a single list.
@@ -125,8 +140,12 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
     }
     allCasts.sort((a, b) => a.castTime - b.castTime);
 
+    // Resolve chain skills: rename consecutive same-name casts to their
+    // tool chain variants (e.g. Aerial Agility → chain → dash).
+    resolveChainSkills(allCasts);
+
     // Inject missing aura skill casts inferred from unattributed aura buff activations.
-    injectAuraCasts(allCasts, player, toolSkillNames);
+    injectAuraCasts(allCasts, player, toolSkillNames, weapons);
 
     // 2. Walk chronologically and emit rotation items.
     const items = [];
@@ -187,87 +206,146 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
     return items;
 }
 
+// ─── Chain skill resolution ───────────────────────────────────────────────────
+
+/**
+ * Walk the sorted allCasts list and rename chain-skill casts to their tool
+ * variants.  EI logs every press as the same base name; the tool needs the
+ * ordered chain names.
+ *
+ * The chain index resets when:
+ *   - A different skill (or an attunement swap) is cast between chain presses
+ *   - More than CHAIN_RESET_MS has elapsed since the previous chain cast
+ *
+ * Mutates cast.name in place.
+ */
+function resolveChainSkills(allCasts) {
+    // Per EI base name: track { idx, lastTime }
+    const state = new Map();
+
+    for (const cast of allCasts) {
+        const eiName = cast.name;
+        const chain = CHAIN_SKILLS.get(eiName);
+        if (!chain) {
+            // Any non-chain cast resets all running chains.
+            if (state.size > 0) state.clear();
+            continue;
+        }
+
+        const prev = state.get(eiName);
+        let idx = 0;
+        if (prev && (cast.castTime - prev.lastTime) <= CHAIN_RESET_MS) {
+            idx = (prev.idx + 1) % chain.length;
+        }
+
+        cast.name = chain[idx];
+        state.set(eiName, { idx, lastTime: cast.castTime });
+    }
+}
+
 // ─── Aura injection ───────────────────────────────────────────────────────────
 
-const AURA_WINDOW_MS = 1500;
+const AURA_WINDOW_MS = 1000;
 
-// Attunement swaps only grant auras through Weaver traits (e.g. Elemental
-// Refreshment), where the aura procs nearly instantly.  Use a much tighter
-// window so manual aura casts near swaps aren't incorrectly suppressed.
-const SWAP_AURA_WINDOW_MS = 300;
-
-// Configuration for each elemental aura skill that arcdps does not log.
+// Each aura skill that arcdps does not log cast events for.
 //
-//   buffId    — EI buff ID for the aura effect
-//   skillName — tool skill name to inject when the aura is unattributed
-//   attunement — swapping TO this attunement within ±SWAP_AURA_WINDOW_MS
-//                counts as a known source (covers Weaver trait procs)
-//   sources   — other EI skill names (post-quote-strip) that also grant
-//               this aura; any cast within ±AURA_WINDOW_MS means the
-//               activation came from that skill, not the missing aura skill
+//   buffId       — EI buff ID for the aura effect
+//   skillName    — tool skill name to inject
+//   weaponReq    — weapon that must be equipped for this skill to exist
+//   weaponSlot   — 'mh' (index 0) or 'oh' (index 1); needed because Dagger
+//                  can sit in either slot and the aura skill differs
+//   swapElement  — swapping TO this element is a known source (Sunspot trait)
+//   baseSources  — EI skill names that always grant this aura (non-weapon)
+//   pistolSources — additional sources only relevant when Pistol is equipped
 const AURA_CONFIG = [
     {
         buffId:        5677,
         skillName:     'Fire Shield',
-        attunement:    'Fire',
-        sources: new Set([
+        weaponReq:     'Focus',
+        weaponSlot:    'oh',
+        swapElement:   'Fire',
+        baseSources: new Set([
+            'Feel the Burn!', 'Signet of Fire', 'Conflagrate', 'Overload Fire',
+        ]),
+        pistolSources: new Set([
             'Elemental Explosion', 'Searing Salvo', 'Frostfire Flurry',
-            'Frostfire Ward', 'Immutable Stone', 'Feel the Burn!',
-            'Signet of Fire', 'Signet of Earth', 'Overload Fire',
         ]),
     },
     {
         buffId:        5579,
         skillName:     'Frost Aura',
-        attunement:    'Water',
-        sources: new Set([
-            'Elemental Explosion', 'Frozen Ground', 'Flowing Finesse',
-            'Frostfire Ward', 'Immutable Stone',
-            'Signet of Fire', 'Signet of Earth', 'Overload Water',
+        weaponReq:     'Dagger',
+        weaponSlot:    'oh',
+        swapElement:   null,
+        baseSources: new Set([
+            'Overload Water',
         ]),
-    },
-    {
-        buffId:        5684,
-        skillName:     'Magnetic Aura',
-        attunement:    'Earth',
-        sources: new Set([
-            'Elemental Explosion', 'Sand Squall', 'Immutable Stone',
-            'Aftershock!',
-            'Signet of Fire', 'Signet of Earth', 'Overload Earth',
+        pistolSources: new Set([
+            'Elemental Explosion', 'Flowing Finesse',
         ]),
     },
     {
         buffId:        5577,
         skillName:     'Shocking Aura',
-        attunement:    'Air',
-        sources: new Set([
-            'Elemental Explosion', 'Immutable Stone',
-            'Signet of Fire', 'Signet of Earth', 'Overload Air',
+        weaponReq:     'Dagger',
+        weaponSlot:    'mh',
+        swapElement:   null,
+        baseSources: new Set([
+            'Overload Air',
         ]),
+        pistolSources: null,
+    },
+    {
+        buffId:        5684,
+        skillName:     'Magnetic Aura',
+        weaponReq:     'Staff',
+        weaponSlot:    'mh',
+        swapElement:   null,
+        baseSources: new Set([
+            'Overload Earth', 'Aftershock!', 'Signet of Earth',
+        ]),
+        pistolSources: null,
     },
 ];
 
 /**
- * Splice missing aura skill casts (Fire Shield, Frost Aura, Magnetic Aura,
- * Shocking Aura) into allCasts by detecting buff activations that have no
- * other known aura-granting skill nearby.
+ * Splice missing aura skill casts into allCasts by detecting buff activations
+ * that have no other known aura-granting skill nearby.
  *
  * arcdps does not emit cast events for these instant aura skills, so they
  * never appear in the EI rotation.  We detect them from the corresponding
  * aura buff (buffUptimes.states): any 0→1 transition at t ≥ 0 that has no
- * known source nearby is attributed to the missing skill.
+ * known source within ±AURA_WINDOW_MS is attributed to the missing skill.
  *
- * Mutates allCasts in place; re-sorts only when at least one cast is injected.
+ * Each aura is only considered if the build has the required weapon equipped.
+ *
+ * @param {Array}    allCasts       – mutable cast list
+ * @param {object}   player         – EI player entry
+ * @param {Set}      toolSkillNames – all known tool skill names
+ * @param {string[]} weapons        – current build weapons, e.g. ['Scepter','Focus']
  */
-function injectAuraCasts(allCasts, player, toolSkillNames) {
+function injectAuraCasts(allCasts, player, toolSkillNames, weapons) {
     const buffUptimes = player.buffUptimes || [];
+    const mh = (weapons[0] || '').toLowerCase();
+    const oh = (weapons[1] || '').toLowerCase();
+    const hasPistol = mh === 'pistol' || oh === 'pistol';
     let anyInjected = false;
 
     for (const cfg of AURA_CONFIG) {
+        // Weapon precondition — check the correct slot (MH / OH).
+        const reqLower = cfg.weaponReq.toLowerCase();
+        const slotWeapon = cfg.weaponSlot === 'mh' ? mh : oh;
+        if (slotWeapon !== reqLower) continue;
         if (!toolSkillNames.has(cfg.skillName)) continue;
 
         const auraBuff = buffUptimes.find(b => b.id === cfg.buffId);
         if (!auraBuff?.states) continue;
+
+        // Build the effective source set for this build.
+        const sources = new Set(cfg.baseSources);
+        if (hasPistol && cfg.pistolSources) {
+            for (const s of cfg.pistolSources) sources.add(s);
+        }
 
         // Collect 0→1 transitions; skip t < 0 (pre-fight pre-casts).
         const activations = [];
@@ -279,15 +357,13 @@ function injectAuraCasts(allCasts, player, toolSkillNames) {
 
         for (const t of activations) {
             const hasKnownSource = allCasts.some(c => {
-                // Attunement swaps — only count with a tight window (trait procs)
-                if (c.isSwap && resolveAttunementSwap(c.name) === `${cfg.attunement} Attunement`) {
-                    return Math.abs(c.castTime - t) <= SWAP_AURA_WINDOW_MS;
+                if (Math.abs(c.castTime - t) > AURA_WINDOW_MS) return false;
+                // Attunement swap granting aura via Sunspot / trait
+                if (cfg.swapElement && c.isSwap
+                    && resolveAttunementSwap(c.name) === `${cfg.swapElement} Attunement`) {
+                    return true;
                 }
-                // Other known aura-granting skills — standard window
-                if (cfg.sources.has(c.name)) {
-                    return Math.abs(c.castTime - t) <= AURA_WINDOW_MS;
-                }
-                return false;
+                return sources.has(c.name);
             });
 
             if (!hasKnownSource) {

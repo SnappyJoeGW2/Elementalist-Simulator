@@ -2930,7 +2930,8 @@ class App {
 
         const toolSkillNames = new Set(this.data.skills.map(s => s.name));
         const skillAttunements = new Map(this.data.skills.map(s => [s.name, s.attunement || '']));
-        const items = convertEIRotation(this._eiJson, player, toolSkillNames, skillAttunements);
+        const weapons = this.build?.weapons || [];
+        const items = convertEIRotation(this._eiJson, player, toolSkillNames, skillAttunements, weapons);
 
         const waits = items.filter(i => i?.name === '__wait').length;
         const total  = items.length;
