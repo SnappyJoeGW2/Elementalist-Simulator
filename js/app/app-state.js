@@ -59,6 +59,7 @@ export function buildSnapshotFromState({
     permaBoons,
     rotation,
     hitboxSize,
+    glyphBoonedElementals,
 }) {
     return {
         build: JSON.parse(JSON.stringify(build)),
@@ -71,6 +72,7 @@ export function buildSnapshotFromState({
         permaBoons: JSON.parse(JSON.stringify(permaBoons)),
         rotation: cloneRotationItems(rotation),
         hitboxSize: hitboxSize || 'large',
+        glyphBoonedElementals: !!glyphBoonedElementals,
     };
 }
 
@@ -85,6 +87,7 @@ export function mergeSnapshotIntoState(currentState, snapshot, skillDefs = null)
         permaBoons: currentState.permaBoons,
         selectedSkills: currentState.selectedSkills,
         hitboxSize: currentState.hitboxSize || 'large',
+        glyphBoonedElementals: !!currentState.glyphBoonedElementals,
         rotation: null,
     };
 
@@ -95,6 +98,7 @@ export function mergeSnapshotIntoState(currentState, snapshot, skillDefs = null)
     if ('evokerStartCharges' in snapshot) nextState.evokerStartCharges = snapshot.evokerStartCharges;
     if ('evokerStartEmpowered' in snapshot) nextState.evokerStartEmpowered = snapshot.evokerStartEmpowered;
     if (snapshot.hitboxSize) nextState.hitboxSize = snapshot.hitboxSize;
+    if ('glyphBoonedElementals' in snapshot) nextState.glyphBoonedElementals = !!snapshot.glyphBoonedElementals;
     if (snapshot.permaBoons && Object.keys(snapshot.permaBoons).length > 0) {
         nextState.permaBoons = JSON.parse(JSON.stringify(snapshot.permaBoons));
     }

@@ -11,7 +11,7 @@ export function calcBuildAttributes(build, selectedSkills) {
     return calcAttributes(build, getSelectedSkillList(selectedSkills));
 }
 
-export function createSimulationEngine(data, attributes, { hitboxSize } = {}) {
+export function createSimulationEngine(data, attributes, { hitboxSize, glyphBoonedElementals } = {}) {
     return new SimulationEngine({
         skills: data.skills,
         skillHits: data.skillHits,
@@ -21,12 +21,13 @@ export function createSimulationEngine(data, attributes, { hitboxSize } = {}) {
         relics: RELIC_DATA,
         activeTraits: attributes.activeTraits,
         hitboxSize,
+        glyphBoonedElementals,
     });
 }
 
-export function rebuildSimulation({ data, build, selectedSkills, rotation = [], hitboxSize }) {
+export function rebuildSimulation({ data, build, selectedSkills, rotation = [], hitboxSize, glyphBoonedElementals }) {
     const attributes = calcBuildAttributes(build, selectedSkills);
-    const sim = createSimulationEngine(data, attributes, { hitboxSize });
+    const sim = createSimulationEngine(data, attributes, { hitboxSize, glyphBoonedElementals });
     sim.rotation = cloneRotationItems(rotation);
     return { attributes, sim };
 }

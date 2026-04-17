@@ -104,7 +104,10 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
                 totalSubs: count,
                 dmg: perHit,
                 ws,
-                ...(h.flatDamage > 0 ? { flatStrikeBase: h.flatDamage, flatStrikePowerCoeff: 0 } : {}),
+                ...(h.flatDamage > 0 ? {
+                    flatStrikeBase: h.flatDamage * (ctx.glyphBoonedElementals && sk.name === 'Glyph of Elementals' ? 1.7 : 1),
+                    flatStrikePowerCoeff: 0,
+                } : {}),
                 isField: h.isFieldTick,
                 cc: h.cc,
                 conds: h.conditions,

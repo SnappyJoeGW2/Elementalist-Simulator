@@ -3022,6 +3022,24 @@ header .accent {
     }
 }
 
+/* ─── Glyph Booned checkbox ─── */
+.glyph-booned-wrap {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+}
+
+.glyph-booned-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-dim);
+    cursor: pointer;
+}
+
+.glyph-booned-label input[type="checkbox"] {
+    accent-color: var(--accent);
+}
+
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar {
     width: 6px;

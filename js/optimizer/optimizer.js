@@ -14,13 +14,14 @@ import { calcAttributes } from '../core/calc-attributes.js';
 import { GEAR_SLOTS, GEAR_STATS, WEAPON_DATA, getActiveGearSlots } from '../data/gear-data.js';
 
 export class GearOptimizer {
-    constructor({ skills, skillHits, weapons, sigils, relics, hitboxSize }) {
+    constructor({ skills, skillHits, weapons, sigils, relics, hitboxSize, glyphBoonedElementals }) {
         this.skills = skills;
         this.skillHits = skillHits;
         this.weapons = weapons;
         this.sigilsData = sigils;
         this.relicsData = relics;
         this.hitboxSize = hitboxSize || 'large';
+        this.glyphBoonedElementals = !!glyphBoonedElementals;
         this._cancelled = false;
         this._workers = [];
     }
@@ -68,6 +69,7 @@ export class GearOptimizer {
             activeSlots,
             startAtt, startAtt2, evokerElement, permaBoons,
             hitboxSize: this.hitboxSize,
+            glyphBoonedElementals: this.glyphBoonedElementals,
         };
 
         const top10 = [];
@@ -218,6 +220,7 @@ export class GearOptimizer {
             relics: this.relicsData,
             activeTraits: attrs.activeTraits,
             hitboxSize: this.hitboxSize,
+            glyphBoonedElementals: this.glyphBoonedElementals,
         });
         sim.rotation = rotation;
         sim.fastMode = true;

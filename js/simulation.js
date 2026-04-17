@@ -450,7 +450,7 @@ export const SMALL_HITBOX_CAPS = new Map([
 ]);
 
 export class SimulationEngine {
-    constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits, hitboxSize }) {
+    constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits, hitboxSize, glyphBoonedElementals }) {
         this.skills = skills;
         this.skillHits = skillHits;
         this.weapons = weapons;
@@ -459,6 +459,7 @@ export class SimulationEngine {
         this.relics = relics || {};
         this.activeTraitNames = new Set((activeTraits || []).map(t => t.name));
         this.hitboxSize = hitboxSize || 'large';
+        this.glyphBoonedElementals = !!glyphBoonedElementals;
         this.rotation = [];
         this.results = null;
         this.fastMode = false;

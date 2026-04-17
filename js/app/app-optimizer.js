@@ -106,6 +106,7 @@ export function initOptimizer(app) {
         sigils: SIGIL_DATA,
         relics: RELIC_DATA,
         hitboxSize: app.hitboxSize,
+        glyphBoonedElementals: app.glyphBoonedElementals,
     });
     app._optResults = [];
     app._optRunning = false;

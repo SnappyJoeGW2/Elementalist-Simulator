@@ -171,6 +171,7 @@ export function createSchedulerContext(engine, S, config = {}) {
         skills: engine.skills,
         skillHits: engine.skillHits,
         hitboxSize: engine.hitboxSize || 'large',
+        glyphBoonedElementals: !!engine.glyphBoonedElementals,
 
         runStep(name, skipCastUntil = false, concurrents = [], rotationMeta = {}) {
             return runStepHandler(name, skipCastUntil, concurrents, rotationMeta);

@@ -9,12 +9,12 @@
       "name": "__wait",
       "waitMs": 5000
     },
-    "Glyph of Elementals",
     "Overload Earth",
     {
       "name": "__combat_start",
       "offset": 2757
     },
+    "Glyph of Elementals",
     "Dust Storm",
     "Shattering Stone",
     "Boulder Blast",

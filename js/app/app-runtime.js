@@ -52,6 +52,7 @@ export function buildSnapshot(app) {
         permaBoons: app.permaBoons,
         rotation: serializeRotation(app),
         hitboxSize: app.hitboxSize,
+        glyphBoonedElementals: app.glyphBoonedElementals,
     });
 }
 
@@ -66,6 +67,7 @@ export function applySnapshot(app, state) {
         permaBoons: app.permaBoons,
         selectedSkills: app.selectedSkills,
         hitboxSize: app.hitboxSize,
+        glyphBoonedElementals: app.glyphBoonedElementals,
     }, state, app.data?.skills);
 
     app.build = merged.build;
@@ -77,6 +79,7 @@ export function applySnapshot(app, state) {
     app.permaBoons = merged.permaBoons;
     app.selectedSkills = merged.selectedSkills;
     app.hitboxSize = merged.hitboxSize || 'large';
+    app.glyphBoonedElementals = !!merged.glyphBoonedElementals;
 
     if (merged.rotation) {
         if (app.sim) deserializeRotation(app, merged.rotation);
@@ -106,6 +109,7 @@ export function onBuildChange(app) {
         selectedSkills: app.selectedSkills,
         rotation,
         hitboxSize: app.hitboxSize,
+        glyphBoonedElementals: app.glyphBoonedElementals,
     });
     app.data.attributes = rebuilt.attributes;
     app.sim = rebuilt.sim;
@@ -124,6 +128,15 @@ export function onBuildChange(app) {
     persistBuild(app);
 }
 
+function updateGlyphBoonedVisibility(app) {
+    const wrap = document.getElementById('glyph-booned-wrap');
+    if (!wrap) return;
+    const hasGlyph = app.sim?.rotation.some(item =>
+        (typeof item === 'string' ? item : item?.name) === 'Glyph of Elementals'
+    );
+    wrap.style.display = hasGlyph ? '' : 'none';
+}
+
 export function autoRun(app) {
     if (!app.sim || app.sim.rotation.length === 0) {
         app.sim.results = null;
@@ -131,6 +144,7 @@ export function autoRun(app) {
         app._renderTimeline();
         document.getElementById('rotation-results').innerHTML = '';
         app._updateOptimizerVisibility(false);
+        updateGlyphBoonedVisibility(app);
         persistBuild(app);
         return;
     }
@@ -151,6 +165,7 @@ export function autoRun(app) {
     app._renderTimeline();
     app._renderResults();
     app._updateOptimizerVisibility(true);
+    updateGlyphBoonedVisibility(app);
     persistBuild(app);
 }
 

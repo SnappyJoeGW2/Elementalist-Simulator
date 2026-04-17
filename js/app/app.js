@@ -323,9 +323,10 @@ class App {
         // Initialize build state — restore from localStorage or fall back to default
         this.build = JSON.parse(JSON.stringify(DEFAULT_BUILD));
         this.hitboxSize = 'large';
+        this.glyphBoonedElementals = false;
         this._restoreBuild(); // populates this.build, selectedSkills, etc. from localStorage if available
         this.data.attributes = calcBuildAttributes(this.build, this.selectedSkills);
-        this.sim = createSimulationEngine(this.data, this.data.attributes, { hitboxSize: this.hitboxSize });
+        this.sim = createSimulationEngine(this.data, this.data.attributes, { hitboxSize: this.hitboxSize, glyphBoonedElementals: this.glyphBoonedElementals });
 
         // Rotation couldn't be restored in _restoreBuild because this.sim didn't
         // exist yet.  Re-apply the saved rotation now that the engine is ready.
@@ -377,6 +378,12 @@ class App {
             if (this.sim) this.sim.hitboxSize = this.hitboxSize;
             this._persistBuild();
             this.renderWeaponBar();
+            if (this.sim?.rotation.length > 0) this._autoRun();
+        });
+        document.getElementById('glyph-booned-cb').addEventListener('change', (e) => {
+            this.glyphBoonedElementals = e.target.checked;
+            if (this.sim) this.sim.glyphBoonedElementals = this.glyphBoonedElementals;
+            this._persistBuild();
             if (this.sim?.rotation.length > 0) this._autoRun();
         });
 
@@ -437,6 +444,8 @@ class App {
         this.renderRotationBuilder();
         const hitboxEl = document.getElementById('hitbox-size');
         if (hitboxEl) hitboxEl.value = this.hitboxSize || 'large';
+        const glyphCb = document.getElementById('glyph-booned-cb');
+        if (glyphCb) glyphCb.checked = !!this.glyphBoonedElementals;
     }
 
     // ─── Gear Panel ───
