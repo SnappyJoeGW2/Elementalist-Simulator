@@ -6,7 +6,6 @@
       "name": "__wait",
       "waitMs": 5000
     },
-    "Glyph of Elementals",
     "Overload Air",
     {
       "name": "__combat_start",
@@ -16,6 +15,7 @@
       "name": "Lightning Strike",
       "offset": 3128
     },
+    "Glyph of Elementals",
     {
       "name": "Arc Lightning",
       "interruptMs": 38
