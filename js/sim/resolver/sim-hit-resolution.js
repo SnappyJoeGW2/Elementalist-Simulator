@@ -172,7 +172,6 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
         + (tempAriaUp ? 0.10 : 0)
         + (transcTempUp ? 0.25 : 0)
         + (elemRageUp ? 0.07 : 0)
-        + (hasSpeed ? 0.07 : 0)
         + empAurasStacks * 0.01
         + (relentlessFireUp ? 0.10 : 0)
         + (bountifulPowerUp ? 0.20 : 0)
@@ -206,6 +205,7 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
         && (S.totalStrike + S.totalCond) >= tgtHP * 0.5) ? 1.20 : 1;
 
     const zapMul = effectSnapshot.zapBuff ? 1.03 : 1;
+    const swiftRevengeMul = hasSpeed ? 1.07 : 1;
     const targetHasVuln = targetSnapshot.targetHasVuln;
     const piercingShardsMul = (S._hasPiercingShards && targetHasVuln)
         ? (hitAtt === 'Water' ? 1.14 : 1.07) : 1;
@@ -213,7 +213,7 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
 
     const strikeMul = baseStrike * vulnMul * critCtx.relicStrikeMul
         * pyroMul * fieryMightMul * serratedMul * stormsoulMul
-        * flowLikeWaterMul * boltMul * zapMul * piercingShardsMul * seetheMul;
+        * flowLikeWaterMul * boltMul * zapMul * swiftRevengeMul * piercingShardsMul * seetheMul;
     const cMul = baseCond * vulnMul;
 
     return {
@@ -228,6 +228,7 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
         stormsoulMul,
         flowLikeWaterMul,
         zapMul,
+        swiftRevengeMul,
         piercingShardsMul,
         boltMul,
         strikeMul,
