@@ -72,9 +72,8 @@ export function applyAura(engine, S, auraName, durMs, time, skill, opts = {}) {
     if (followupMode === 'immediate') {
         if (S._hasEmpoweringAuras) grantEmpoweringAuras(auraCtx, time);
         if (S._hasElemEpitome) grantElementalEmpowerment(effectCtx, 1, time, skill);
+        applyOnAuraGainEffects(auraCtx, time);
     }
-
-    applyOnAuraGainEffects(auraCtx, time);
 
     if (followupMode === 'queued') {
         const runtimeActionTarget = opts.runtimeActionTarget || S;

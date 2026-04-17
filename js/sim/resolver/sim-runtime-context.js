@@ -13,7 +13,7 @@ import {
     checkFoodCritProc,
 } from '../mechanics/sim-crit-sigil-helpers.js';
 import { applyAura } from '../mechanics/sim-field-aura-combo.js';
-import { grantEmpoweringAuras } from '../mechanics/sim-aura-effects.js';
+import { grantEmpoweringAuras, applyOnAuraGainEffects as runAuraGainEffects } from '../mechanics/sim-aura-effects.js';
 import { checkCombo } from '../mechanics/sim-combo-resolution.js';
 import { getRelicStrikeMultiplier, checkRelicOnHit, trackBlightbringerPoison, checkBloodstoneBlast } from '../mechanics/sim-relic-helpers.js';
 import { pushTimedStack } from '../state/sim-runtime-state.js';
@@ -211,6 +211,10 @@ export function createRuntimeContext(engine, S, config = {}) {
 
         grantEmpoweringAuras(time) {
             return grantEmpoweringAuras(this, time);
+        },
+
+        applyOnAuraGainEffects(time) {
+            return runAuraGainEffects(this, time);
         },
 
         applyAura(auraName, durMs, time, skill, opts = {}) {

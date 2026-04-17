@@ -23,6 +23,11 @@ import {
     setSkillCooldownReadyAt,
 } from '../state/sim-cooldown-state.js';
 
+const FIXED_DURATION_EFFECTS = new Set([
+    'Transcendent Tempest',
+    'Tempestuous Aria',
+]);
+
 const DURATION_STACKING_BOONS = new Set([
     'Alacrity',
     'Fury',
@@ -242,10 +247,12 @@ export function trackEffect(engine, S, effect, stacks, durSec, time, {
             ? (cond, nextStacks, nextDur, at, skillName, castStart = null, extraCondDurPct = 0) =>
                 engine._applyCondition(S, cond, nextStacks, nextDur, at, skillName, castStart, extraCondDurPct)
             : null);
-    let bonus;
+    let bonus = 0;
     let uncapped = 0;
 
-    if (boons.has(effect)) {
+    if (FIXED_DURATION_EFFECTS.has(effect)) {
+        // Trait buffs with fixed durations — no scaling from Expertise or Condition Duration
+    } else if (boons.has(effect)) {
         bonus = getBoonDurationBonus(effect, attrs);
         if (S._empPool?.Concentration) {
             bonus += (S._empPool.Concentration * getEmpowermentMultiplier({

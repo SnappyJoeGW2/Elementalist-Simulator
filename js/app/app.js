@@ -2818,7 +2818,9 @@ class App {
     }
 
     _exportBuild() {
-        downloadJson('gw2-build.json', this._buildSnapshot());
+        const snapshot = this._buildSnapshot();
+        delete snapshot.rotation;
+        downloadJson('gw2-build.json', snapshot);
     }
 
     _refreshAfterBuildStateChange() {

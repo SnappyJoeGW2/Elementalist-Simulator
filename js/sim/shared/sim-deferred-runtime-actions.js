@@ -55,6 +55,7 @@ export function applyRuntimeAction(ctx, action) {
     if (action.type === 'aura_followup') {
         if (S._hasEmpoweringAuras) ctx.grantEmpoweringAuras(action.time);
         if (S._hasElemEpitome) ctx.grantElemEmpowerment(1, action.time, action.skill);
+        ctx.applyOnAuraGainEffects(action.time);
     } else if (action.type === 'primordial_stance') {
         const att1 = ctx.attAt(action.time);
         const att2 = ctx.att2At(action.time);
