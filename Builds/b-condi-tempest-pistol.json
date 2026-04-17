@@ -60,9 +60,9 @@
   },
   "selectedSkills": {
     "heal": "Signet of Restoration",
-    "util1": "Glyph of Elemental Power (Air)",
+    "util1": "Signet of Earth",
     "util2": "Signet of Fire",
-    "util3": "Glyph of Storms (Earth)",
+    "util3": "Glyph of Storms (Fire)",
     "elite": "Glyph of Elementals"
   },
   "activeAttunement": "Fire",
