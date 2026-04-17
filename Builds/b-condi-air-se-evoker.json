@@ -2,12 +2,12 @@
   "build": {
     "gear": {
       "Helm": "Viper's",
-      "Shoulders": "Viper's",
+      "Shoulders": "Sinister",
       "Chest": "Viper's",
-      "Gloves": "Viper's",
+      "Gloves": "Sinister",
       "Leggins": "Viper's",
-      "Boots": "Viper's",
-      "Amulet": "Sinister",
+      "Boots": "Sinister",
+      "Amulet": "Viper's",
       "Ring1": "Sinister",
       "Ring2": "Viper's",
       "Accessory1": "Sinister",
@@ -26,7 +26,7 @@
       "Earth"
     ],
     "relic": "Fractal",
-    "food": "Plate of Beef Rendang",
+    "food": "Cilantro and Cured Meat Flatbread",
     "utility": "Toxic Tuning Crystal",
     "jadeBotCore": true,
     "specializations": [

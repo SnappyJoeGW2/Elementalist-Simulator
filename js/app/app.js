@@ -2157,6 +2157,19 @@ class App {
             <div class="res-stat"><span class="res-label">Condition</span><span class="res-val condi">${Math.round(r.totalCondition).toLocaleString()}</span></div>
         </div>`;
 
+        if (this.benchmarkInfo) {
+            const bi = this.benchmarkInfo;
+            let benchHtml = '<div class="benchmark-info">';
+            if (bi.benchmarkDps) {
+                benchHtml += `<span class="benchmark-stat">In-game: <strong>${Number(bi.benchmarkDps).toLocaleString()}</strong> DPS</span>`;
+            }
+            if (bi.dpsReportUrl) {
+                benchHtml += `<a class="benchmark-link" href="${esc(bi.dpsReportUrl)}" target="_blank" rel="noopener">dps.report log</a>`;
+            }
+            benchHtml += '</div>';
+            h += benchHtml;
+        }
+
         h += `<details class="res-log-wrap"><summary>Event Log (${r.log.length} events)</summary>`;
         h += `<button class="btn-csv-export" onclick="window._exportLogCSV()">Download CSV Log</button>`;
         h += `<div class="res-log">`;
@@ -2886,6 +2899,9 @@ class App {
         if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
         try {
             const { buildData, rotationItems } = await loadPresetBundle(preset);
+            this.benchmarkInfo = (preset.dpsReportUrl || preset.benchmarkDps)
+                ? { dpsReportUrl: preset.dpsReportUrl || null, benchmarkDps: preset.benchmarkDps || null }
+                : null;
             this._applyLoadedBuildState(buildData, rotationItems);
         } catch (err) {
             alert('Failed to load preset: ' + err.message);
@@ -2897,6 +2913,7 @@ class App {
     async _importBuild(file) {
         try {
             const state = await readJsonFile(file);
+            this.benchmarkInfo = null;
             this._applyLoadedBuildState(state);
         } catch (err) {
             alert('Failed to load build file: ' + err.message);

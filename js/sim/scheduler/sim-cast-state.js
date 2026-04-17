@@ -45,9 +45,14 @@ export function resetChainsOnCast(ctx, sk) {
     if (Math.round((sk.castTime || 0) * 1000) === 0) return;
     if (CHAIN_PRESERVING_SKILLS.has(sk.name)) return;
     const ownRoot = sk.chainSkill ? getChainRoot(ctx, sk) : null;
+    const isOwnChain = ownRoot !== null;
     const carryRoot = S.aaCarryover?.root || null;
+    if (carryRoot && !isOwnChain) {
+        ctx.clearAACarryover();
+    }
+    const effectiveCarryRoot = isOwnChain ? carryRoot : null;
     for (const key of listChainRoots(S)) {
-        if (key === ownRoot || key === carryRoot) continue;
+        if (key === ownRoot || key === effectiveCarryRoot) continue;
         if (getChainProgress(S, key) !== key) {
             if (getChainExpiry(S, key) !== undefined && getChainExpiry(S, key) > S.t) continue;
             ctx.expireChainProgress(key);

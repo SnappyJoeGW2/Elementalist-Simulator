@@ -26,7 +26,7 @@
       "Accuracy"
     ],
     "relic": "Fireworks",
-    "food": "Plate of Truffle Steak",
+    "food": "Plate of Coq Au Vin with Salsa",
     "utility": "Superior Sharpening Stone",
     "jadeBotCore": true,
     "specializations": [
@@ -68,6 +68,8 @@
   "activeAttunement": "Air",
   "secondaryAttunement": "Air",
   "evokerElement": null,
+  "evokerStartCharges": 6,
+  "evokerStartEmpowered": 0,
   "permaBoons": {
     "Might": 25,
     "Fury": true,
@@ -88,5 +90,7 @@
     "Slow": true,
     "Weakness": true,
     "Vulnerability": 25
-  }
+  },
+  "hitboxSize": "small",
+  "glyphBoonedElementals": false
 }

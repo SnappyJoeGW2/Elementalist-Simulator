@@ -16,431 +16,466 @@
     "Signet of Fire",
     {
       "name": "Lightning Strike",
-      "offset": 482
-    },
-    "Wildfire",
-    {
-      "name": "Fire Attunement",
-      "offset": 120
-    },
-    "Dragon's Tooth",
-    "Signet of Earth",
-    {
-      "name": "Fire Attunement",
-      "offset": 445
-    },
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Primordial Stance (Fire)",
-      "offset": 243
+      "offset": 400
     },
     {
-      "name": "Earth Attunement",
-      "offset": 561
+      "name": "Blinding Flash",
+      "offset": 400
     },
-    {
-      "name": "Stone Shards",
-      "interruptMs": 84
-    },
-    "Fracturing Strike",
-    {
-      "name": "Hurl",
-      "offset": 1
-    },
-    "Stone Shards",
-    {
-      "name": "Fire Attunement",
-      "offset": 642
-    },
-    "Dust Storm",
-    "Dragon's Tooth",
-    "Flamestrike",
-    {
-      "name": "Fire Attunement",
-      "offset": 81
-    },
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 38
-    },
-    "Phoenix",
-    {
-      "name": "Earth Attunement",
-      "offset": 84
-    },
-    "Signet of Fire",
-    "Rock Barrier",
-    {
-      "name": "Stone Shards",
-      "interruptMs": 361
-    },
-    "Hurl",
-    "Fire Attunement",
-    "Dragon's Tooth",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 43
-    },
-    "Signet of Earth",
-    "Flamestrike",
-    {
-      "name": "Fire Attunement",
-      "offset": 164
-    },
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 77
-    },
-    "Dragon's Tooth",
-    "Phoenix",
-    {
-      "name": "Earth Attunement",
-      "offset": 241
-    },
-    "Rock Barrier",
-    "Fracturing Strike",
-    {
-      "name": "Hurl",
-      "offset": 36
-    },
-    {
-      "name": "Water Attunement",
-      "offset": 800
-    },
-    "Shatterstone",
-    "Stone Tide",
-    "Signet of Fire",
-    {
-      "name": "Ice Shards",
-      "interruptMs": 241
-    },
-    "Fire Attunement",
-    "Dragon's Tooth",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Fire Attunement",
-      "offset": 201
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 79
-    },
-    "Wildfire",
-    "Phoenix",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 43
-    },
-    "Signet of Earth",
-    {
-      "name": "Primordial Stance (Fire)",
-      "offset": 354
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Earth Attunement",
-      "offset": 478
-    },
-    {
-      "name": "Stone Shards",
-      "interruptMs": 39
-    },
-    "Rock Barrier",
-    {
-      "name": "Stone Shards",
-      "interruptMs": 318
-    },
-    "Hurl",
-    "Fracturing Strike",
-    "Stone Shards",
-    "Signet of Fire",
-    {
-      "name": "Stone Shards",
-      "interruptMs": 156
-    },
-    "Fire Attunement",
-    "Dust Storm",
-    "Dragon's Tooth",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Fire Attunement",
-      "offset": 447
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 48
-    },
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 81
-    },
-    "Primordial Stance (Fire)",
-    "Dragon's Tooth",
-    {
-      "name": "Earth Attunement",
-      "offset": 118
-    },
-    {
-      "name": "Stone Shards",
-      "interruptMs": 76
-    },
-    "Rock Barrier",
-    {
-      "name": "Stone Shards",
-      "interruptMs": 327
-    },
-    "Signet of Earth",
-    {
-      "name": "Hurl",
-      "offset": 240
-    },
-    {
-      "name": "Stone Shards",
-      "interruptMs": 116
-    },
-    "Fracturing Strike",
-    {
-      "name": "Fire Attunement",
-      "offset": 924
-    },
-    "Signet of Fire",
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Fire Attunement",
-      "offset": 83
-    },
-    "Phoenix",
-    "Wildfire",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 43
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Earth Attunement",
-      "offset": 118
-    },
-    {
-      "name": "Stone Shards",
-      "interruptMs": 160
-    },
-    "Rock Barrier",
-    "Stone Shards",
-    {
-      "name": "Hurl",
-      "offset": 238
-    },
-    "Fracturing Strike",
-    {
-      "name": "Fire Attunement",
-      "offset": 685
-    },
-    "Signet of Fire",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 46
-    },
-    "Signet of Earth",
-    "Dust Storm",
-    "Dragon's Tooth",
-    "Flamestrike",
-    {
-      "name": "Fire Attunement",
-      "offset": 445
-    },
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Primordial Stance (Fire)",
-      "offset": 198
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 41
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Earth Attunement",
-      "offset": 117
-    },
-    {
-      "name": "Stone Shards",
-      "interruptMs": 43
-    },
-    "Rock Barrier",
-    "Stone Shards",
-    {
-      "name": "Hurl",
-      "offset": 206
-    },
-    {
-      "name": "Stone Shards",
-      "interruptMs": 77
-    },
-    "Fracturing Strike",
-    {
-      "name": "Fire Attunement",
-      "offset": 645
-    },
-    "Signet of Fire",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 44
-    },
-    "Dragon's Tooth",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 79
-    },
-    "Signet of Earth",
-    "Fire Attunement",
-    "Flamestrike",
-    "Phoenix",
-    "Wildfire",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    {
-      "name": "Air Attunement",
-      "offset": 122
-    },
-    "Plasma Beam",
     {
       "name": "Arc Lightning",
-      "interruptMs": 1484
+      "interruptMs": 46
     },
-    {
-      "name": "Lightning Strike",
-      "offset": 721
-    },
-    "Weave Self",
+    "Wildfire",
     {
       "name": "Fire Attunement",
-      "offset": 720
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 41
-    },
-    "Signet of Fire",
-    "Lightning Orb",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 39
+      "offset": 200
     },
     "Dragon's Tooth",
-    {
-      "name": "Primordial Stance (Fire)",
-      "offset": 360
-    },
+    "Signet of Earth",
     {
       "name": "Fire Attunement",
-      "offset": 565
+      "offset": 485
     },
     "Phoenix",
     "Flamestrike",
     "Flamestrike",
-    "Earth Attunement",
+    {
+      "name": "Earth Attunement",
+      "offset": 358
+    },
     {
       "name": "Stone Shards",
-      "interruptMs": 77
+      "interruptMs": 164
     },
-    "Rock Barrier",
+    "Hurl",
     "Fracturing Strike",
-    {
-      "name": "Hurl",
-      "offset": 121
-    },
-    "Signet of Earth",
+    "Stone Shards",
     {
       "name": "Fire Attunement",
-      "offset": 34
+      "offset": 364
     },
     "Dust Storm",
     "Dragon's Tooth",
+    {
+      "name": "Fire Attunement",
+      "offset": 364
+    },
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
     {
       "name": "Primordial Stance (Fire)",
       "offset": 199
     },
     {
+      "name": "Flamestrike",
+      "interruptMs": 127
+    },
+    "Phoenix",
+    {
+      "name": "Earth Attunement",
+      "offset": 236
+    },
+    "Signet of Fire",
+    "Rock Barrier",
+    "Hurl",
+    "Fire Attunement",
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Signet of Earth",
+    "Fracturing Strike",
+    {
       "name": "Fire Attunement",
-      "offset": 518
+      "offset": 85
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 278
+    },
+    "Dragon's Tooth",
+    {
+      "name": "Primordial Stance (Fire)",
+      "offset": 164
+    },
+    "Phoenix",
+    {
+      "name": "Earth Attunement",
+      "offset": 201
+    },
+    "Rock Barrier",
+    "Stone Shards",
+    {
+      "name": "Hurl",
+      "offset": 79
+    },
+    {
+      "name": "Water Attunement",
+      "offset": 679
+    },
+    "Shatterstone",
+    "Stone Tide",
+    "Signet of Fire",
+    {
+      "name": "Fire Attunement",
+      "offset": 321
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 36
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Fire Attunement",
+      "offset": 528
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 121
+    },
+    "Phoenix",
+    "Wildfire",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 41
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Earth Attunement",
+      "offset": 564
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 121
+    },
+    "Signet of Earth",
+    "Rock Barrier",
+    {
+      "name": "Stone Shards",
+      "interruptMs": 122
+    },
+    "Hurl",
+    "Fracturing Strike",
+    "Stone Shards",
+    {
+      "name": "Fire Attunement",
+      "offset": 885
+    },
+    "Signet of Fire",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 37
+    },
+    "Dust Storm",
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Flamestrike",
+    "Fire Attunement",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 120
+    },
+    "Phoenix",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Primordial Stance (Fire)",
+      "offset": 360
+    },
+    "Dragon's Tooth",
+    {
+      "name": "Earth Attunement",
+      "offset": 488
+    },
+    "Rock Barrier",
+    "Stone Shards",
+    {
+      "name": "Hurl",
+      "offset": 123
+    },
+    "Fracturing Strike",
+    "Signet of Earth",
+    "Signet of Fire",
+    {
+      "name": "Fire Attunement",
+      "offset": 43
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 121
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Fire Attunement",
+      "offset": 200
+    },
+    "Phoenix",
+    "Wildfire",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 120
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 242
+    },
+    "Earth Attunement",
+    "Rock Barrier",
+    "Stone Shards",
+    {
+      "name": "Hurl",
+      "offset": 73
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 206
+    },
+    "Fracturing Strike",
+    {
+      "name": "Fire Attunement",
+      "offset": 673
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 43
+    },
+    "Dragon's Tooth",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 36
+    },
+    "Dust Storm",
+    "Signet of Fire",
+    "Signet of Earth",
+    "Flamestrike",
+    {
+      "name": "Fire Attunement",
+      "offset": 557
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 120
+    },
+    "Phoenix",
+    "Flamestrike",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 278
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Primordial Stance (Fire)",
+      "offset": 80
+    },
+    {
+      "name": "Earth Attunement",
+      "offset": 480
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 78
+    },
+    "Rock Barrier",
+    "Stone Shards",
+    {
+      "name": "Hurl",
+      "offset": 122
+    },
+    "Stone Shards",
+    "Fracturing Strike",
+    {
+      "name": "Fire Attunement",
+      "offset": 163
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Signet of Fire",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Fire Attunement",
+      "offset": 122
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 36
+    },
+    "Phoenix",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 279
+    },
+    "Wildfire",
+    "Dragon's Tooth",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 36
+    },
+    "Signet of Earth",
+    {
+      "name": "Primordial Stance (Fire)",
+      "offset": 321
+    },
+    "Earth Attunement",
+    {
+      "name": "Stone Shards",
+      "interruptMs": 78
+    },
+    "Rock Barrier",
+    "Stone Shards",
+    {
+      "name": "Hurl",
+      "offset": 37
+    },
+    "Stone Shards",
+    {
+      "name": "Stone Shards",
+      "interruptMs": 157
+    },
+    "Fracturing Strike",
+    {
+      "name": "Air Attunement",
+      "offset": 201
+    },
+    {
+      "name": "Lightning Strike",
+      "offset": 358
+    },
+    "Earthen Synergy",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 36
+    },
+    "Dust Storm",
+    "Signet of Fire",
+    "Weave Self",
+    {
+      "name": "Arc Lightning",
+      "interruptMs": 357
+    },
+    "Fire Attunement",
+    "Dragon's Tooth",
+    "Lightning Orb",
+    "Plasma Beam",
+    {
+      "name": "Fire Attunement",
+      "offset": 437
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 36
+    },
+    "Phoenix",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Earth Attunement",
+      "offset": 85
+    },
+    "Rock Barrier",
+    {
+      "name": "Stone Shards",
+      "interruptMs": 163
+    },
+    "Signet of Earth",
+    {
+      "name": "Hurl",
+      "offset": 158
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 437
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 158
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 37
+    },
+    "Fracturing Strike",
+    {
+      "name": "Fire Attunement",
+      "offset": 442
+    },
+    "Flamestrike",
+    {
+      "name": "Primordial Stance (Fire)",
+      "offset": 600
+    },
+    "Flamestrike",
+    "Signet of Fire",
+    "Phoenix",
+    {
+      "name": "Earth Attunement",
+      "offset": 201
+    },
+    {
+      "name": "Stone Shards",
+      "interruptMs": 442
+    },
+    "Rock Barrier",
+    "Wildfire",
+    {
+      "name": "Hurl",
+      "offset": 164
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 400
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Fire Attunement",
+      "offset": 200
     },
     "Flamestrike",
     "Flamestrike",
     "Flamestrike",
     {
       "name": "Flamestrike",
-      "interruptMs": 79
+      "interruptMs": 200
     },
     "Phoenix",
+    "Dragon's Tooth",
     {
       "name": "Earth Attunement",
-      "offset": 124
+      "offset": 163
     },
     "Rock Barrier",
-    {
-      "name": "Stone Shards",
-      "interruptMs": 39
-    },
-    "Signet of Fire",
+    "Fracturing Strike",
     {
       "name": "Hurl",
-      "offset": 1
+      "offset": 157
     },
     {
-      "name": "Stone Shards",
-      "interruptMs": 279
-    },
-    "Fire Attunement",
-    "Dragon's Tooth",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Fire Attunement",
-      "offset": 282
-    },
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike"
+      "name": "Water Attunement",
+      "offset": 478
+    }
   ]
 }

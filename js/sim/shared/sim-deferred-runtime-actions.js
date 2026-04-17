@@ -1,6 +1,7 @@
 import { enqueueRuntimeActionEvent } from './sim-events.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
 import { getRelicState } from '../state/sim-relic-state.js';
+import { getProcState } from '../state/sim-proc-state.js';
 
 export function buildAuraFollowupAction({ time, skill }) {
     return {
@@ -21,6 +22,14 @@ export function buildNourysTickAction({ time }) {
     return {
         type: 'nourys_tick',
         time,
+    };
+}
+
+export function buildShatteringStoneArmAction({ time, until }) {
+    return {
+        type: 'shattering_stone_arm',
+        time,
+        until,
     };
 }
 
@@ -60,6 +69,11 @@ export function applyRuntimeAction(ctx, action) {
         const att1 = ctx.attAt(action.time);
         const att2 = ctx.att2At(action.time);
         ctx.applyPrimordialStance(att1, att2, action.time);
+    } else if (action.type === 'shattering_stone_arm') {
+        const procState = getProcState(S);
+        procState.shatteringStoneHits = 3;
+        procState.shatteringStoneUntil = action.until;
+        ctx.log({ t: action.time, type: 'skill_proc', skill: 'Shattering Stone', detail: 'next 3 hits apply Bleed (10s)' });
     } else if (action.type === 'nourys_tick') {
         if (S.activeRelic !== 'Nourys') return;
         const proc = ctx.getRelicProc('Nourys');

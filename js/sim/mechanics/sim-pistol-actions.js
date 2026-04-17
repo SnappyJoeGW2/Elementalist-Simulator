@@ -1,5 +1,6 @@
 import { getProcState } from '../state/sim-proc-state.js';
 import { pushTimedStack } from '../state/sim-runtime-state.js';
+import { queueRuntimeAction, buildShatteringStoneArmAction } from '../shared/sim-deferred-runtime-actions.js';
 
 function bulletCondName(element) {
     return element === 'Water' ? 'Ice Bullet' : `${element} Bullet`;
@@ -94,21 +95,24 @@ function handleBasePistolBullet(ctx, sk, name, start, end) {
         } else if (name === 'Searing Salvo') {
             ctx.applyAura('Fire Aura', 4000, end, 'Searing Salvo');
         } else if (name === 'Frozen Fusillade') {
+            const hitTime = end + 4000;
             ctx.queueHitEvent({
-                time: end + 4000,
+                time: hitTime,
                 skill: 'Frozen Fusillade', hitIdx: 99, sub: 1, totalSubs: 1,
                 dmg: 0.75, ws: ctx.weaponStrength(sk),
                 isField: false, cc: false,
                 conds: { Bleeding: { stacks: 5, duration: 8 } },
                 att: S.att, att2: S.att2, castStart: start,
             });
+            ctx.log({ t: end, type: 'skill_proc', skill: 'Frozen Fusillade', detail: `Ice explosion queued at t=${hitTime}ms (5×Bleed)` });
         } else if (name === 'Dazing Discharge') {
             procState.dazingDischargeUntil = end + 5000;
             ctx.log({ t: end, type: 'skill_proc', skill: 'Dazing Discharge', detail: 'next Pistol CD -33% armed (5s)' });
         } else if (name === 'Shattering Stone') {
-            procState.shatteringStoneHits = 3;
-            procState.shatteringStoneUntil = end + 10000;
-            ctx.log({ t: end, type: 'skill_proc', skill: 'Shattering Stone', detail: 'next 3 hits apply Bleed (10s)' });
+            queueRuntimeAction(S, buildShatteringStoneArmAction({
+                time: end,
+                until: end + 10000,
+            }));
         } else if (name === 'Boulder Blast') {
             ctx.queueHitEvent({
                 time: end,

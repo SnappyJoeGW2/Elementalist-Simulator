@@ -101,6 +101,30 @@ export function applySkillSpecificPostCast(ctx, sk, { start, end, scaleOff }) {
         ctx.log({ t: end, type: 'skill_proc', skill: "Fox's Fury", detail: `tier ${foxTier}, ${foxMightCount} Might` });
     }
 
+    if (sk.name === 'Fulgor') {
+        for (let i = 0; i < 6; i++) {
+            ctx.queueHitEvent({
+                time: start + 320 + i * 1000,
+                skill: 'Fulgor',
+                hitIdx: 50 + i,
+                sub: 1,
+                totalSubs: 1,
+                dmg: 0,
+                ws: 0,
+                isField: false,
+                cc: false,
+                conds: null,
+                noCrit: true,
+                att: S.att,
+                att2: S.att2,
+                castStart: start,
+                isTraitProc: true,
+                flatStrikeBase: 200,
+                flatStrikePowerCoeff: 0.4,
+            });
+        }
+    }
+
     if (sk.name === 'Elemental Procession') {
         for (const ename of ['Conflagration', 'Lightning Blitz', 'Seismic Impact']) {
             const fsk = ctx.skill(ename);

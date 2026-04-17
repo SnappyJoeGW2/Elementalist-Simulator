@@ -3,18 +3,18 @@
     "gear": {
       "Helm": "Berserker's",
       "Shoulders": "Berserker's",
-      "Chest": "Berserker's",
+      "Chest": "Diviner's",
       "Gloves": "Berserker's",
       "Leggins": "Berserker's",
       "Boots": "Berserker's",
       "Amulet": "Berserker's",
       "Ring1": "Berserker's",
       "Ring2": "Berserker's",
-      "Accessory1": "Berserker's",
-      "Accessory2": "Berserker's",
-      "Back": "Berserker's",
+      "Accessory1": "Diviner's",
+      "Accessory2": "Diviner's",
+      "Back": "Diviner's",
       "Weapon1": "Berserker's",
-      "Weapon2": "Berserker's"
+      "Weapon2": "Diviner's"
     },
     "weapons": [
       "Sword",
@@ -23,10 +23,10 @@
     "rune": "Dragonhunter",
     "sigils": [
       "Force",
-      "Impact"
+      "Accuracy"
     ],
     "relic": "Claw",
-    "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
+    "food": "Cilantro Lime Sous-Vide Steak",
     "utility": "Superior Sharpening Stone",
     "jadeBotCore": true,
     "specializations": [
@@ -46,11 +46,11 @@
     "infusions": [
       {
         "stat": "Power",
-        "count": 13
+        "count": 14
       },
       {
         "stat": "Precision",
-        "count": 5
+        "count": 4
       },
       {
         "stat": "Ferocity",

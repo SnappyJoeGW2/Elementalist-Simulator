@@ -2,12 +2,12 @@
   "build": {
     "gear": {
       "Helm": "Viper's",
-      "Shoulders": "Viper's",
+      "Shoulders": "Sinister",
       "Chest": "Viper's",
-      "Gloves": "Viper's",
+      "Gloves": "Sinister",
       "Leggins": "Viper's",
-      "Boots": "Viper's",
-      "Amulet": "Sinister",
+      "Boots": "Sinister",
+      "Amulet": "Viper's",
       "Ring1": "Sinister",
       "Ring2": "Viper's",
       "Accessory1": "Sinister",
@@ -35,12 +35,12 @@
         "traits": "1-1-1"
       },
       {
-        "name": "Arcane",
-        "traits": "1-3-1"
+        "name": "Air",
+        "traits": "3-3-1"
       },
       {
         "name": "Evoker",
-        "traits": "1-1-3"
+        "traits": "1-2-3"
       }
     ],
     "infusions": [
@@ -91,6 +91,4 @@
     "Weakness": true,
     "Vulnerability": 25
   }
-  "hitboxSize": "small",
-  "glyphBoonedElementals": true
 }

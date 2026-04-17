@@ -26,7 +26,7 @@
       "Air"
     ],
     "relic": "Fireworks",
-    "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
+    "food": "Cilantro Lime Sous-Vide Steak",
     "utility": "Superior Sharpening Stone",
     "jadeBotCore": true,
     "specializations": [
@@ -65,7 +65,7 @@
     "util3": "Signet of Fire",
     "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Air",
+  "activeAttunement": "Fire",
   "secondaryAttunement": "Air",
   "evokerElement": null,
   "permaBoons": {

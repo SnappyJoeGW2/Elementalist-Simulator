@@ -5,7 +5,9 @@
       {
         "label": "Power (Sword)",
         "build": "Builds/b-power-weaver-sword.json",
-        "rotation": "Rotations/r-power-weaver-sword.json"
+        "rotation": "Rotations/r-power-weaver-sword.json",
+        "dpsReportUrl": "https://dps.report/TNDD-20260415-003554_golem",
+        "benchmarkDps": 40782
       },
       {
         "label": "Power (Spear)",
@@ -20,7 +22,9 @@
       {
         "label": "Condi (Scepter)",
         "build": "Builds/b-condi-weaver-scepter.json",
-        "rotation": "Rotations/r-condi-weaver-scepter.json"
+        "rotation": "Rotations/r-condi-weaver-scepter.json",
+        "dpsReportUrl": "https://dps.report/PRmV-20260416-115959_golem",
+        "benchmarkDps": 42573
       }
     ]
   },
@@ -30,22 +34,30 @@
       {
         "label": "Power (Sword)",
         "build": "Builds/b-power-tempest-sword.json",
-        "rotation": "Rotations/r-power-tempest-sword.json"
+        "rotation": "Rotations/r-power-tempest-sword.json",
+        "dpsReportUrl": "https://dps.report/y7fU-20260414-200827_golem",
+        "benchmarkDps": 41502
       },
       {
         "label": "Power (Scepter)",
         "build": "Builds/b-power-tempest-scepter.json",
-        "rotation": "Rotations/r-power-tempest-scepter.json"
+        "rotation": "Rotations/r-power-tempest-scepter.json",
+        "dpsReportUrl": "https://dps.report/aDHa-20260417-044805_golem",
+        "benchmarkDps": 41321
       },
       {
         "label": "Power (Spear)",
         "build": "Builds/b-power-tempest-spear.json",
-        "rotation": "Rotations/r-power-tempest-spear.json"
+        "rotation": "Rotations/r-power-tempest-spear.json",
+        "dpsReportUrl": "https://dps.report/Xrj5-20260415-121634_golem",
+        "benchmarkDps": 41514
       },
       {
         "label": "Power (Hammer)",
         "build": "Builds/b-power-tempest-hammer.json",
-        "rotation": "Rotations/r-power-tempest-hammer.json"
+        "rotation": "Rotations/r-power-tempest-hammer.json",
+        "dpsReportUrl": "https://dps.report/HMiL-20260414-202734_golem",
+        "benchmarkDps": 40791
       },
       {
         "label": "Power Alacrity (Sword)",
@@ -60,7 +72,9 @@
       {
         "label": "Condi (Pistol)",
         "build": "Builds/b-condi-tempest-pistol.json",
-        "rotation": "Rotations/r-condi-tempest-pistol.json"
+        "rotation": "Rotations/r-condi-tempest-pistol.json",
+        "dpsReportUrl": "https://dps.report/B38a-20260414-224425_golem",
+        "benchmarkDps": 41703
       },
       {
         "label": "Condi (Scepter)",
@@ -80,7 +94,9 @@
       {
         "label": "Inferno",
         "build": "Builds/b-inferno-tempest.json",
-        "rotation": "Rotations/r-inferno-tempest.json"
+        "rotation": "Rotations/r-inferno-tempest.json",
+        "dpsReportUrl": "https://dps.report/j7LY-20260414-172451_golem",
+        "benchmarkDps": 40920
       },
       {
         "label": "Inferno Alacrity",
@@ -100,7 +116,9 @@
       {
         "label": "Power (Scepter)",
         "build": "Builds/b-power-catalyst-scepter.json",
-        "rotation": "Rotations/r-power-catalyst-scepter.json"
+        "rotation": "Rotations/r-power-catalyst-scepter.json",
+        "dpsReportUrl": "https://dps.report/aAgi-20260414-165732_golem",
+        "benchmarkDps": 42006
       },
       {
         "label": "Power (Spear)",
@@ -110,12 +128,16 @@
       {
         "label": "Power Quickness (Sword)",
         "build": "Builds/b-power-quick-catalyst-sword.json",
-        "rotation": "Rotations/r-power-quick-catalyst-sword.json"
+        "rotation": "Rotations/r-power-quick-catalyst-sword.json",
+        "dpsReportUrl": "https://dps.report/iKCM-20260416-002204_golem",
+        "benchmarkDps": 33825
       },
       {
         "label": "Power Quickness (Scepter)",
         "build": "Builds/b-power-quick-catalyst-scepter.json",
-        "rotation": "Rotations/r-power-quick-catalyst-scepter.json"
+        "rotation": "Rotations/r-power-quick-catalyst-scepter.json",
+        "dpsReportUrl": "https://dps.report/63Dx-20260416-134815_golem",
+        "benchmarkDps": 35068
       },
       {
         "label": "Condi (Pistol)",
@@ -160,7 +182,9 @@
       {
         "label": "Power Alacrity (Toad)",
         "build": "Builds/b-power-alac-evoker-toad.json",
-        "rotation": "Rotations/r-power-alac-evoker-toad.json"
+        "rotation": "Rotations/r-power-alac-evoker-toad.json",
+        "dpsReportUrl": "https://dps.report/tFzd-20260415-200807_golem",
+        "benchmarkDps": 34372
       },
       {
         "label": "Power Alacrity (Toad Severance)",
@@ -175,12 +199,23 @@
       {
         "label": "Condi SE (Air)",
         "build": "Builds/b-condi-air-se-evoker.json",
-        "rotation": "Rotations/r-condi-air-se-evoker.json"
+        "rotation": "Rotations/r-condi-air-se-evoker.json",
+        "dpsReportUrl": "https://dps.report/A8km-20260416-161735_golem",
+        "benchmarkDps": 44367
       },
       {
         "label": "Condi SE (Arcane)",
         "build": "Builds/b-condi-arcane-se-evoker.json",
-        "rotation": "Rotations/r-condi-arcane-se-evoker.json"
+        "rotation": "Rotations/r-condi-arcane-se-evoker.json",
+        "dpsReportUrl": "https://dps.report/t9BV-20260415-180105_golem",
+        "benchmarkDps": 44268
+      },
+      {
+        "label": "Condi Quickness SE (Air)",
+        "build": "Builds/b-condi-quick-air-se-evoker.json",
+        "rotation": "Rotations/r-condi-quick-air-se-evoker.json",
+        "dpsReportUrl": "https://dps.report/wq08-20260416-153203_golem",
+        "benchmarkDps": 43158
       },
       {
         "label": "Inferno SE (Fox)",

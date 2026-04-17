@@ -1904,6 +1904,33 @@ header .accent {
     color: var(--health);
 }
 
+.benchmark-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 14px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.benchmark-stat {
+    color: var(--text);
+}
+
+.benchmark-stat strong {
+    color: var(--text-bright);
+}
+
+.benchmark-link {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.benchmark-link:hover {
+    text-decoration: underline;
+}
+
 .res-val.condi {
     color: var(--condi);
 }

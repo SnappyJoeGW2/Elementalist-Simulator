@@ -1,2 +1,12 @@
 Condi Tempest Pistol
 Inferno Tempest
+Power Tempest Hammer
+Power Tempest Sword
+Power Tempest Scepter
+Power Tempest Spear
+Condi Weaver Scepter
+Power Weaver Sword
+Power Catalyst Scepter
+Power Quick Catalyst Scepter
+Power Quick Catalyst Sword
+Power Alacrity Toad

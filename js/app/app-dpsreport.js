@@ -14,19 +14,13 @@ const ELEMENTALIST_SPECS = new Set([
 ]);
 
 // Channeled skills whose actual cast duration determines how many hits land.
-// When EI reports timeGained > 0 for these, the channel was cut short and the
-// import should treat them as interrupted so the tool simulates fewer hits.
-//
-// Values are not used for thresholding (timeGained handles that); the Set is
-// purely a membership check.
-const SHORTENABLE_SKILLS = new Set([
-    'Flamestrike',      // Scepter Fire 1 — 2 hits over 600ms channel
-    'Arc Lightning',    // Scepter Air 1  — 10 hits over 2720ms channel
+// Key = EI skill name, value = duration threshold (ms).  If the actual
+// cast.duration is below this threshold, the cast is treated as interrupted
+// so the tool simulates fewer hits.
+const SHORTENABLE_SKILLS = new Map([
+    ['Flamestrike', 440],   // Scepter Fire 1 — 2 hits over 600ms channel
+    ['Arc Lightning', 2600],  // Scepter Air 1  — 10 hits over 2720ms channel
 ]);
-
-// Minimum positive timeGained (ms) before a shortenable skill is treated as
-// interrupted.  Avoids flagging tiny timing jitter as a shortened channel.
-const SHORTEN_THRESHOLD_MS = 100;
 
 // Skills whose tool name requires a current-attunement suffix.
 // These skills keep the same base name in EI but need "(Fire)" / "(Air)" etc.
@@ -55,10 +49,10 @@ const CHAIN_RESET_MS = 4000;
 // typically because the in-game skill name changes per attunement.
 const EI_NAME_MAP = {
     // Glyph of Storms — EI uses the attunement-specific cast names.
-    'Firestorm':       'Glyph of Storms (Fire)',
-    'Ice Storm':       'Glyph of Storms (Water)',
+    'Firestorm': 'Glyph of Storms (Fire)',
+    'Ice Storm': 'Glyph of Storms (Water)',
     'Lightning Storm': 'Glyph of Storms (Air)',
-    'Sandstorm':       'Glyph of Storms (Earth)',
+    'Sandstorm': 'Glyph of Storms (Earth)',
 };
 
 // ─── URL / ID helpers ────────────────────────────────────────────────────────
@@ -123,17 +117,18 @@ export function convertEIRotation(eiJson, player, toolSkillNames, skillAttunemen
 
         for (const cast of se.skills) {
             const timeGained = cast.timeGained ?? 0;
-            const cleanName  = (info.name || '').replace(/^"|"$/g, '');
-            const cancelled  = timeGained < 0;
-            const shortened  = !cancelled
-                && SHORTENABLE_SKILLS.has(cleanName)
-                && timeGained > SHORTEN_THRESHOLD_MS;
+            const cleanName = (info.name || '').replace(/^"|"$/g, '');
+            const cancelled = timeGained < 0;
+            const shortenThreshold = SHORTENABLE_SKILLS.get(cleanName);
+            const shortened = !cancelled
+                && shortenThreshold !== undefined
+                && cast.duration < shortenThreshold;
             allCasts.push({
-                name:          cleanName,
-                castTime:      cast.castTime,
-                duration:      cast.duration,
-                isInstant:     !!(info.isInstantCast || cast.duration === 0),
-                isSwap:        !!info.isSwap,
+                name: cleanName,
+                castTime: cast.castTime,
+                duration: cast.duration,
+                isInstant: !!(info.isInstantCast || cast.duration === 0),
+                isSwap: !!info.isSwap,
                 isInterrupted: cancelled || shortened,
             });
         }
@@ -248,7 +243,7 @@ function resolveChainSkills(allCasts) {
 
 // ─── Aura injection ───────────────────────────────────────────────────────────
 
-const AURA_WINDOW_MS = 1000;
+const AURA_WINDOW_MS = 1500;
 
 // Each aura skill that arcdps does not log cast events for.
 //
@@ -262,24 +257,24 @@ const AURA_WINDOW_MS = 1000;
 //   pistolSources — additional sources only relevant when Pistol is equipped
 const AURA_CONFIG = [
     {
-        buffId:        5677,
-        skillName:     'Fire Shield',
-        weaponReq:     'Focus',
-        weaponSlot:    'oh',
-        swapElement:   'Fire',
+        buffId: 5677,
+        skillName: 'Fire Shield',
+        weaponReq: 'Focus',
+        weaponSlot: 'oh',
+        swapElement: 'Fire',
         baseSources: new Set([
-            'Feel the Burn!', 'Signet of Fire', 'Conflagrate', 'Overload Fire',
+            'Feel the Burn!', 'Signet of Fire', 'Conflagration', 'Overload Fire',
         ]),
         pistolSources: new Set([
             'Elemental Explosion', 'Searing Salvo', 'Frostfire Flurry',
         ]),
     },
     {
-        buffId:        5579,
-        skillName:     'Frost Aura',
-        weaponReq:     'Dagger',
-        weaponSlot:    'oh',
-        swapElement:   null,
+        buffId: 5579,
+        skillName: 'Frost Aura',
+        weaponReq: 'Dagger',
+        weaponSlot: 'oh',
+        swapElement: null,
         baseSources: new Set([
             'Overload Water',
         ]),
@@ -288,22 +283,22 @@ const AURA_CONFIG = [
         ]),
     },
     {
-        buffId:        5577,
-        skillName:     'Shocking Aura',
-        weaponReq:     'Dagger',
-        weaponSlot:    'mh',
-        swapElement:   null,
+        buffId: 5577,
+        skillName: 'Shocking Aura',
+        weaponReq: 'Dagger',
+        weaponSlot: 'mh',
+        swapElement: null,
         baseSources: new Set([
             'Overload Air',
         ]),
         pistolSources: null,
     },
     {
-        buffId:        5684,
-        skillName:     'Magnetic Aura',
-        weaponReq:     'Staff',
-        weaponSlot:    'mh',
-        swapElement:   null,
+        buffId: 5684,
+        skillName: 'Magnetic Aura',
+        weaponReq: 'Staff',
+        weaponSlot: 'mh',
+        swapElement: null,
         baseSources: new Set([
             'Overload Earth', 'Aftershock!', 'Signet of Earth',
         ]),
@@ -371,11 +366,11 @@ function injectAuraCasts(allCasts, player, toolSkillNames, weapons) {
 
             if (!hasKnownSource) {
                 allCasts.push({
-                    name:          cfg.skillName,
-                    castTime:      t,
-                    duration:      0,
-                    isInstant:     true,
-                    isSwap:        false,
+                    name: cfg.skillName,
+                    castTime: t,
+                    duration: 0,
+                    isInstant: true,
+                    isSwap: false,
                     isInterrupted: false,
                 });
                 anyInjected = true;
@@ -388,15 +383,15 @@ function injectAuraCasts(allCasts, player, toolSkillNames, weapons) {
 
 // ─── Blinding Flash injection ─────────────────────────────────────────────────
 
-const BLIND_BUFF_ID    = 720;
+const BLIND_BUFF_ID = 720;
 const WEAKNESS_BUFF_ID = 742;
-const BF_COOCCUR_MS    = 100; // max gap between Blind and Weakness to count as simultaneous
-const BF_WINDOW_MS     = 1000;
+const BF_COOCCUR_MS = 100; // max gap between Blind and Weakness to count as simultaneous
+const BF_WINDOW_MS = 1000;
 
 // Skills that apply Blind and could be mistaken for Blinding Flash.
 const BF_BLIND_SOURCES = new Set(['Dust Devil', 'Dust Storm']);
 // Skills that apply Weakness and could be mistaken for Blinding Flash.
-const BF_WEAK_SOURCES  = new Set(['Lightning Blitz']);
+const BF_WEAK_SOURCES = new Set(['Lightning Blitz']);
 
 /**
  * Detect Blinding Flash casts from simultaneous Blind + Weakness applications
@@ -418,12 +413,12 @@ function injectBlindingFlash(allCasts, eiJson, toolSkillNames, weapons) {
 
     // Collect 0→1 transition times for Blind and Weakness across all targets.
     const blindTimes = new Set();
-    const weakTimes  = new Set();
+    const weakTimes = new Set();
     for (const target of (eiJson.targets || [])) {
         for (const buff of (target.buffs || [])) {
             const set = buff.id === BLIND_BUFF_ID ? blindTimes
-                      : buff.id === WEAKNESS_BUFF_ID ? weakTimes
-                      : null;
+                : buff.id === WEAKNESS_BUFF_ID ? weakTimes
+                    : null;
             if (!set || !buff.states) continue;
             let prev = 0;
             for (const [t, state] of buff.states) {
@@ -439,7 +434,7 @@ function injectBlindingFlash(allCasts, eiJson, toolSkillNames, weapons) {
     // co-occurrence (both within ±BF_COOCCUR_MS).  When one condition is
     // perma-active (no transitions), the other alone is sufficient.
     const hasBlindData = blindTimes.size > 0;
-    const hasWeakData  = weakTimes.size > 0;
+    const hasWeakData = weakTimes.size > 0;
     const candidates = new Set();
 
     if (hasBlindData && hasWeakData) {
@@ -465,8 +460,8 @@ function injectBlindingFlash(allCasts, eiJson, toolSkillNames, weapons) {
     for (const t of candidates) {
         const hasBlindSource = allCasts.some(c =>
             BF_BLIND_SOURCES.has(c.name) && Math.abs(c.castTime - t) <= BF_WINDOW_MS);
-        const hasWeakSource  = allCasts.some(c =>
-            BF_WEAK_SOURCES.has(c.name)  && Math.abs(c.castTime - t) <= BF_WINDOW_MS);
+        const hasWeakSource = allCasts.some(c =>
+            BF_WEAK_SOURCES.has(c.name) && Math.abs(c.castTime - t) <= BF_WINDOW_MS);
 
         // When both conditions have transition data, suppress only if both are
         // fully explained by other skills.  When one condition is perma (no
@@ -476,11 +471,11 @@ function injectBlindingFlash(allCasts, eiJson, toolSkillNames, weapons) {
         if (!hasBlindData && hasWeakData && hasWeakSource) continue;
 
         allCasts.push({
-            name:          'Blinding Flash',
-            castTime:      t,
-            duration:      0,
-            isInstant:     true,
-            isSwap:        false,
+            name: 'Blinding Flash',
+            castTime: t,
+            duration: 0,
+            isInstant: true,
+            isSwap: false,
             isInterrupted: false,
         });
         anyInjected = true;
