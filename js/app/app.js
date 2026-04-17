@@ -1,6 +1,6 @@
 import { loadAllData } from '../data/csv-loader.js';
 import {
-    PREFIXES, GEAR_SLOTS, RUNE_NAMES, FOOD_NAMES, FOOD_DATA,
+    PREFIXES, GEAR_SLOTS, RUNE_NAMES, RUNE_GROUPS, FOOD_NAMES, FOOD_DATA, FOOD_GROUPS,
     UTILITY_NAMES, UTILITY_DATA, UTILITY_CONVERSION_RATES, INFUSION_STATS,
     WEAPON_DATA, SIGIL_DATA, SIGIL_NAMES, RELIC_DATA, RELIC_NAMES,
     getActiveGearSlots,
@@ -90,6 +90,19 @@ function _foodDesc(name) {
         ...Object.entries(d.stats).map(([k, v]) => `+${v} ${STAT_ABBR[k] || k}`),
         ...Object.entries(d.durations).map(([k, v]) => `+${v}% ${DUR_ABBR[k] || k}`),
     ].join(', ');
+}
+function _foodOptionLabel(name) {
+    const d = FOOD_DATA[name];
+    if (!d) return name;
+    const parts = [];
+    if (Object.keys(d.stats).length >= 6) {
+        parts.push('all stats');
+    } else {
+        for (const [k, v] of Object.entries(d.stats)) parts.push(`${STAT_ABBR[k] || k}+${v}`);
+        for (const [k, v] of Object.entries(d.durations)) parts.push(`${DUR_ABBR[k] || k}+${v}%`);
+    }
+    if (d.proc) parts.push('lifesteal');
+    return parts.length ? `${name}  (${parts.join(', ')})` : name;
 }
 function _utilityDesc(name) {
     const convs = UTILITY_DATA[name];
@@ -494,21 +507,38 @@ class App {
         const sigilNames = SIGIL_NAMES;
         const relicNames = RELIC_NAMES;
 
-        const selRow = (label, id, options, selected, cls = '') =>
-            `<div class="gear-row">
+        const selRow = (label, id, options, selected, cls = '', groups = null) => {
+            const mkOpt = o => `<option value="${esc(o)}"${o === selected ? ' selected' : ''}>${esc(o)}</option>`;
+            const optionsHtml = groups
+                ? groups.map(g => `<optgroup label="${esc(g.label)}">${g.items.map(mkOpt).join('')}</optgroup>`).join('')
+                : options.map(mkOpt).join('');
+            return `<div class="gear-row">
                 <span class="gear-label">${label}</span>
                 <select class="gear-select${cls ? ' ' + cls : ''}" id="${id}">
-                    ${options.map(o => `<option value="${esc(o)}"${o === selected ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+                    ${optionsHtml}
                 </select>
             </div>`;
+        };
 
-        const consumableRow = (label, id, options, selected, descFn, cls = '') => {
+        const consumableRow = (label, id, options, selected, descFn, cls = '', optLabelFn = null, groups = null) => {
             const hint = selected ? esc(descFn(selected)) : '';
+            const mkOpt = o => {
+                const optText = optLabelFn ? optLabelFn(o) : o;
+                return `<option value="${esc(o)}"${o === selected ? ' selected' : ''}>${esc(optText)}</option>`;
+            };
+            let optionsHtml;
+            if (groups) {
+                optionsHtml = groups.map(g =>
+                    `<optgroup label="${esc(g.label)}">${g.items.map(mkOpt).join('')}</optgroup>`
+                ).join('');
+            } else {
+                optionsHtml = options.map(mkOpt).join('');
+            }
             return `<div class="gear-row consumable-row">
                 <span class="gear-label">${label}</span>
                 <div class="consumable-select-wrap">
                     <select class="gear-select${cls ? ' ' + cls : ''}" id="${id}">
-                        ${options.map(o => `<option value="${esc(o)}"${o === selected ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+                        ${optionsHtml}
                     </select>
                     <span class="consumable-hint" id="${id}-hint">${hint}</span>
                 </div>
@@ -516,11 +546,11 @@ class App {
         };
 
         eq.innerHTML = `
-            ${selRow('Rune', 'sel-rune', RUNE_NAMES, b.rune)}
+            ${selRow('Rune', 'sel-rune', RUNE_NAMES, b.rune, '', RUNE_GROUPS)}
             ${selRow('Sigil 1', 'sel-sig1', sigilNames, b.sigils[0])}
             ${selRow('Sigil 2', 'sel-sig2', sigilNames, b.sigils[1])}
             ${selRow('Relic', 'sel-relic', relicNames, b.relic)}
-            ${consumableRow('Food', 'sel-food', FOOD_NAMES, b.food, _foodDesc, 'small-select')}
+            ${consumableRow('Food', 'sel-food', FOOD_NAMES, b.food, _foodDesc, 'small-select', _foodOptionLabel, FOOD_GROUPS)}
             ${consumableRow('Utility', 'sel-utility', UTILITY_NAMES, b.utility, _utilityDesc)}
             <div class="gear-row">
                 <span class="gear-label">Jade Bot</span>

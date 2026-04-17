@@ -385,6 +385,18 @@ header .accent {
     max-width: 130px;
 }
 
+.gear-select optgroup {
+    font-weight: 700;
+    color: var(--accent);
+    padding-top: 4px;
+}
+
+.gear-select optgroup option {
+    font-weight: 400;
+    color: var(--text);
+    padding-left: 8px;
+}
+
 /* Consumable (food/utility) rows with stat hint */
 .consumable-row {
     align-items: flex-start;
@@ -2626,6 +2638,16 @@ header .accent {
     color: var(--text-dim);
     line-height: 1.2;
     white-space: nowrap;
+}
+
+.opt-section-label {
+    width: 100%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 5px 0 2px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2px;
 }
 
 /* Run controls */

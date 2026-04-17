@@ -1,5 +1,6 @@
 import {
-    PREFIXES, GEAR_SLOTS, RUNE_NAMES, FOOD_NAMES, UTILITY_NAMES, INFUSION_STATS,
+    PREFIXES, GEAR_SLOTS, RUNE_NAMES, RUNE_GROUPS, FOOD_NAMES, FOOD_GROUPS,
+    UTILITY_NAMES, INFUSION_STATS,
     WEAPON_DATA, SIGIL_DATA, SIGIL_NAMES, RELIC_DATA, RELIC_NAMES, getActiveGearSlots,
 } from '../data/gear-data.js';
 import { GearOptimizer } from '../optimizer/optimizer.js';
@@ -115,40 +116,58 @@ export function initOptimizer(app) {
 export function populateOptimizerCheckboxes(app, { foodDesc, utilityDesc }) {
     const b = app.build;
 
-    const makeGrid = (containerId, items, group, currentVals) => {
-        const el = document.getElementById(containerId);
-        if (!el) return;
-        el.innerHTML = items.map(name => {
-            const checked = currentVals.includes(name) ? ' checked' : '';
-            const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
-            return `<label title="${esc(name)}">
-                <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
-                ${esc(short)}
-            </label>`;
-        }).join('');
+    const mkGridItem = (name, group, currentVals) => {
+        const checked = currentVals.includes(name) ? ' checked' : '';
+        const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
+        return `<label title="${esc(name)}">
+            <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
+            ${esc(short)}
+        </label>`;
     };
 
-    const makeConsumableGrid = (containerId, items, group, currentVals, descFn) => {
+    const makeGrid = (containerId, items, group, currentVals, groups = null) => {
         const el = document.getElementById(containerId);
         if (!el) return;
-        el.innerHTML = items.map(name => {
-            const checked = currentVals.includes(name) ? ' checked' : '';
-            const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
-            const desc = descFn(name);
-            return `<label class="consumable-label" title="${esc(name)}">
-                <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
-                <span class="opt-consumable-name">${esc(short)}</span>${desc ? `<span class="opt-consumable-desc">${esc(desc)}</span>` : ''}
-            </label>`;
-        }).join('');
+        if (groups) {
+            el.innerHTML = groups.map(g =>
+                `<div class="opt-section-label">${esc(g.label)}</div>`
+                + g.items.map(name => mkGridItem(name, group, currentVals)).join('')
+            ).join('');
+        } else {
+            el.innerHTML = items.map(name => mkGridItem(name, group, currentVals)).join('');
+        }
+    };
+
+    const mkConsumableItem = (name, group, currentVals, descFn) => {
+        const checked = currentVals.includes(name) ? ' checked' : '';
+        const short = name.length > 28 ? name.slice(0, 27) + '…' : name;
+        const desc = descFn(name);
+        return `<label class="consumable-label" title="${esc(name)}">
+            <input type="checkbox" data-group="${group}" value="${esc(name)}"${checked}>
+            <span class="opt-consumable-name">${esc(short)}</span>${desc ? `<span class="opt-consumable-desc">${esc(desc)}</span>` : ''}
+        </label>`;
+    };
+
+    const makeConsumableGrid = (containerId, items, group, currentVals, descFn, groups = null) => {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        if (groups) {
+            el.innerHTML = groups.map(g =>
+                `<div class="opt-section-label">${esc(g.label)}</div>`
+                + g.items.map(name => mkConsumableItem(name, group, currentVals, descFn)).join('')
+            ).join('');
+        } else {
+            el.innerHTML = items.map(name => mkConsumableItem(name, group, currentVals, descFn)).join('');
+        }
     };
 
     const curPrefix = Object.values(b.gear || {})[0] || PREFIXES[0];
     makeGrid('opt-prefixes', PREFIXES, 'prefix', [curPrefix, "Assassin's"].filter(p => PREFIXES.includes(p)));
-    makeGrid('opt-runes', RUNE_NAMES, 'rune', [b.rune].filter(Boolean));
+    makeGrid('opt-runes', RUNE_NAMES, 'rune', [b.rune].filter(Boolean), RUNE_GROUPS);
     makeGrid('opt-sigils-1', SIGIL_NAMES, 'sigil1', b.sigils?.[0] ? [b.sigils[0]] : []);
     makeGrid('opt-sigils-2', SIGIL_NAMES, 'sigil2', b.sigils?.[1] ? [b.sigils[1]] : []);
     makeGrid('opt-relics', RELIC_NAMES, 'relic', [b.relic].filter(Boolean));
-    makeConsumableGrid('opt-food', FOOD_NAMES, 'food', [b.food].filter(Boolean), foodDesc);
+    makeConsumableGrid('opt-food', FOOD_NAMES, 'food', [b.food].filter(Boolean), foodDesc, FOOD_GROUPS);
     makeConsumableGrid('opt-utility', UTILITY_NAMES, 'utility', [b.utility].filter(Boolean), utilityDesc);
 
     const infEl = document.getElementById('opt-infusions');

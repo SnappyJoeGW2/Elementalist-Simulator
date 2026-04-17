@@ -214,23 +214,15 @@ export const INFUSION_STATS = [
 // durations: percentage bonuses stored as numbers (e.g. 25 = 25%)
 export const RUNE_DATA = {
     // ── Power ──
-    'Fireworks': { stats: { Power: 175 }, durations: { 'Boon Duration': 25 } },
-    'Pack': { stats: { Power: 175, Precision: 125 }, durations: { 'Boon Duration': 15 } },
-    'Strength': { stats: { Power: 175 }, durations: { 'Might Duration': 50 } },
-    'Fire': { stats: { Power: 175 }, durations: { 'Burning Duration': 20, 'Might Duration': 30 } },
-    'Mad King': { stats: { Power: 175 }, durations: { 'Bleeding Duration': 40, 'Condition Duration': 5 } },
-    'Flame Legion': { stats: { Power: 175 }, durations: { 'Burning Duration': 50 } },
-    'Baelfire': { stats: { Power: 175 }, durations: { 'Condition Duration': 10, 'Burning Duration': 30 } },
-    'Elementalist': { stats: { Power: 175, 'Condition Damage': 225 }, durations: {} },
+    'Dragonhunter': { stats: { Power: 100, Ferocity: 300 }, durations: {} },
     'Scholar': { stats: { Power: 175, Ferocity: 225 }, durations: {} },
+    // ── Precision ──
     'Deadeye': { stats: { Power: 175, Precision: 125, Ferocity: 100 }, durations: {} },
     'Infiltration': { stats: { Power: 175, Precision: 225 }, durations: {} },
-    // ── Precision ──
     'Thief': { stats: { Precision: 300, 'Condition Damage': 100 }, durations: {} },
     'Eagle': { stats: { Precision: 175, Ferocity: 225 }, durations: {} },
+    'Golemancer': { stats: { Precision: 100, Ferocity: 300 }, durations: {} },
     // ── Condition ──
-    'Aristocracy': { stats: { 'Condition Damage': 175 }, durations: { 'Might Duration': 50 } },
-    'Firebrand': { stats: { 'Condition Damage': 175 }, durations: { 'Boon Duration': 10, 'Quickness Duration': 30 } },
     'Trapper': { stats: { 'Condition Damage': 300 }, durations: { 'Condition Duration': 15 } },
     'Krait': { stats: { 'Condition Damage': 175 }, durations: { 'Bleeding Duration': 50 } },
     'Balthazar': { stats: { 'Condition Damage': 175 }, durations: { 'Burning Duration': 50 } },
@@ -238,14 +230,23 @@ export const RUNE_DATA = {
     'Thorns': { stats: { 'Condition Damage': 175 }, durations: { 'Poison Duration': 50 } },
     'Afflicted': { stats: { 'Condition Damage': 175 }, durations: { 'Condition Duration': 10, 'Bleeding Duration': 20, 'Poison Duration': 10 } },
     'Tormenting': { stats: { 'Condition Damage': 175 }, durations: { 'Torment Duration': 50 } },
-    'Renegade': { stats: { Ferocity: 100, 'Condition Damage': 300 }, durations: {} },
+    // ── Hybrid ──
+    'Flame Legion': { stats: { Power: 175 }, durations: { 'Burning Duration': 50 } },
+    'Baelfire': { stats: { Power: 175 }, durations: { 'Condition Duration': 10, 'Burning Duration': 30 } },
+    'Mad King': { stats: { Power: 175 }, durations: { 'Bleeding Duration': 40, 'Condition Duration': 5 } },
+    'Elementalist': { stats: { Power: 175, 'Condition Damage': 225 }, durations: {} },
     'Berserker': { stats: { Power: 100, 'Condition Damage': 300 }, durations: {} },
     'Adventurer': { stats: { Power: 225, 'Condition Damage': 175 }, durations: {} },
-    // ── Ferocity ──
+    'Renegade': { stats: { Ferocity: 100, 'Condition Damage': 300 }, durations: {} },
+    'Fire': { stats: { Power: 175 }, durations: { 'Burning Duration': 20, 'Might Duration': 30 } },
+    // ── Boon Duration ──
+    'Firebrand': { stats: { 'Condition Damage': 175 }, durations: { 'Boon Duration': 10, 'Quickness Duration': 30 } },
+    'Fireworks': { stats: { Power: 175 }, durations: { 'Boon Duration': 25 } },
+    'Pack': { stats: { Power: 175, Precision: 125 }, durations: { 'Boon Duration': 15 } },
+    'Strength': { stats: { Power: 175 }, durations: { 'Might Duration': 50 } },
+    'Aristocracy': { stats: { 'Condition Damage': 175 }, durations: { 'Might Duration': 50 } },
     'Rage': { stats: { Ferocity: 300 }, durations: { 'Fury Duration': 30 } },
-    'Dragonhunter': { stats: { Power: 100, Ferocity: 300 }, durations: {} },
-    'Golemancer': { stats: { Precision: 100, Ferocity: 300 }, durations: {} },
-    // ── Misc ──
+    // ── All Stat ──
     'Leadership': { stats: { Power: 36, Precision: 36, Ferocity: 36, Concentration: 36, 'Condition Damage': 36, Expertise: 36, Toughness: 36, Vitality: 36 }, durations: { 'Boon Duration': 25 } },
     'Tempest': { stats: { Power: 36, Precision: 36, Ferocity: 36, Concentration: 36, 'Condition Damage': 36, Expertise: 36, Toughness: 36, Vitality: 36 }, durations: { 'Condition Duration': 25 } },
     'Weaver': { stats: { Power: 36, Precision: 36, Ferocity: 36, Concentration: 36, 'Condition Damage': 36, Expertise: 36, Toughness: 36, Vitality: 36 }, durations: { 'Condition Duration': 10, 'Burning Duration': 10 } },
@@ -253,6 +254,15 @@ export const RUNE_DATA = {
 };
 
 export const RUNE_NAMES = sortNames(Object.keys(RUNE_DATA));
+
+export const RUNE_GROUPS = [
+    { label: 'Power', items: ['Dragonhunter', 'Scholar'] },
+    { label: 'Precision', items: ['Deadeye', 'Infiltration', 'Thief', 'Eagle', 'Golemancer'] },
+    { label: 'Condition', items: ['Trapper', 'Krait', 'Balthazar', 'Perplexity', 'Thorns', 'Afflicted', 'Tormenting'] },
+    { label: 'Hybrid', items: ['Flame Legion', 'Baelfire', 'Mad King', 'Elementalist', 'Berserker', 'Adventurer', 'Renegade', 'Fire'] },
+    { label: 'Boon Duration', items: ['Firebrand', 'Fireworks', 'Pack', 'Strength', 'Aristocracy', 'Rage'] },
+    { label: 'All Stats', items: ['Leadership', 'Tempest', 'Weaver', 'Divinity'] },
+];
 
 // ─── Food Data ────────────────────────────────────────────────────────────────
 // isConverted: true  → stats feed into the conversion pool (subject to utility/trait conversions)
@@ -289,6 +299,56 @@ export const FOOD_DATA = {
 };
 
 export const FOOD_NAMES = sortNames(Object.keys(FOOD_DATA));
+
+export const FOOD_GROUPS = [
+    {
+        label: 'Power', items: [
+            'Plate of Jerk Poultry',
+            'Plate of Truffle Steak',
+            'Bowl of Sweet and Spicy Butternut Squash Soup',
+            'Bowl of Sawgill Mushroom Risotto',
+            'Bowl of Curry Butternut Squash Soup',
+            'Plate of Coq Au Vin with Salsa',
+            'Cilantro Lime Sous-Vide Steak',
+        ]
+    },
+    {
+        label: 'Condition', items: [
+            'Plate of Beef Rendang',
+            'Rare Veggie Pizza',
+            'Fishy Rice Bowl',
+            'Bowl of Kimchi Tofu Stew',
+            'Meaty Asparagus Skewer',
+            'Meaty Rice Bowl',
+            'Plate of Kimchi Pancakes',
+            'Cilantro and Cured Meat Flatbread',
+            'Salsa-Topped Veggie Flatbread',
+        ]
+    },
+    {
+        label: 'Hybrid', items: [
+            'Plate of Fire Flank Steak',
+            'Bowl of Fancy Potato and Leek Soup',
+            'Bowl of Truffle Risotto',
+            'Bowl of Sweet and Spicy Beans',
+            'Bowl of Fire Meat Chili',
+        ]
+    },
+    {
+        label: 'Concentration', items: [
+            'Soul Pastry',
+            'Plate of Eggs Benedict',
+            'Plate of Beef Carpaccio with Salsa Garnish',
+            'Salsa Eggs Benedict',
+        ]
+    },
+    {
+        label: 'All Stats', items: [
+            "Dragon's Revelry Starcake",
+            'Spherified Cilantro Oyster Soup',
+        ]
+    },
+];
 
 // ─── Utility Conversions ─────────────────────────────────────────────────────
 // Percentage of the source stat (from conversion base pool) added to target stat.
