@@ -6,11 +6,13 @@ import { createRuntimeWindowState } from '../state/sim-timing-window-state.js';
 import { createHammerOrbState } from '../mechanics/sim-hammer.js';
 import { pushTimedStack, ensureConditionState } from '../state/sim-runtime-state.js';
 import { ENDURANCE_MAX } from '../state/sim-endurance-state.js';
+import { FOOD_DATA } from '../../data/gear-data.js';
 
 export function applyDisabledStatAdjustments(engine, attributes, disabled, sigilStatMap) {
     const disSigil = disabled?.startsWith('Sigil:') ? disabled.slice(6) : null;
     const disRelic = disabled?.startsWith('Relic:') ? disabled.slice(6) : null;
     const disTrait = disabled?.startsWith('Trait:') ? disabled.slice(6) : null;
+    const disFood  = disabled?.startsWith('Food:')  ? disabled.slice(5) : null;
     const dsStat = disSigil ? (engine.sigils[disSigil] || {}) : {};
     const statAdj = {};
 
@@ -49,6 +51,7 @@ export function applyDisabledStatAdjustments(engine, attributes, disabled, sigil
         disSigil,
         disRelic,
         disTrait,
+        disFood,
         statAdj,
     };
 }
@@ -223,10 +226,15 @@ export function createRunState(engine, {
         spearNextCCHit: false,
         _mightCondDmgBonus: 30,
         _furyCritBonus: 25,
+        _foodProc: (FOOD_DATA[engine.attributes?.food] || {}).proc || null,
     };
 
     initializeRunPhaseState(S);
     return S;
+}
+
+export function applyDisabledFoodProc(S, disFood) {
+    if (disFood) S._foodProc = null;
 }
 
 export function applyDisabledTraitFlags(S, disTrait) {
@@ -336,6 +344,7 @@ export function initializeStartingPistolBullets(engine, S, permaExpiry) {
 
 export function applyRunSetupState(engine, S, {
     disTrait,
+    disFood,
     permaBoons,
     eliteSpec,
     attributes,
@@ -344,6 +353,7 @@ export function applyRunSetupState(engine, S, {
 }) {
     const evokerState = getEvokerState(S);
     applyDisabledTraitFlags(S, disTrait);
+    applyDisabledFoodProc(S, disFood);
 
     if (S._hasEnhancedPotency && evokerState.element === 'Fire') S._mightCondDmgBonus = 35;
     if (S._hasEnhancedPotency && evokerState.element === 'Air') S._furyCritBonus = 40;

@@ -156,6 +156,7 @@ export function handleCritAndCcTriggers(ctx, ev, hitCtx, triggerCtx) {
         if (S._hasFreshAir) ctx.checkFreshAir(ev.time, hitCtx.cc);
         if (S._hasArcanePrecision) ctx.checkArcanePrecision(ev.time, hitCtx.cc, hitCtx.hitAtt);
         if (S._hasRenewingStamina) ctx.checkRenewingStamina(ev.time, hitCtx.cc);
+        if (S._foodProc) ctx.checkFoodCritProc(ev.time, hitCtx.cc);
     }
 
     if (S._hasLightningRod && triggerCtx.ccPlayerHit) {

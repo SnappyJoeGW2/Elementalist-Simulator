@@ -10,6 +10,7 @@ import {
     checkBurningPrecision,
     checkArcanePrecision,
     checkRenewingStamina,
+    checkFoodCritProc,
 } from '../mechanics/sim-crit-sigil-helpers.js';
 import { applyAura } from '../mechanics/sim-field-aura-combo.js';
 import { grantEmpoweringAuras } from '../mechanics/sim-aura-effects.js';
@@ -198,6 +199,10 @@ export function createRuntimeContext(engine, S, config = {}) {
 
         checkRenewingStamina(time, critChancePct) {
             return checkRenewingStamina(this, time, critChancePct);
+        },
+
+        checkFoodCritProc(time, critChancePct) {
+            return checkFoodCritProc(this, time, critChancePct);
         },
 
         triggerLightningRod(time) {

@@ -279,6 +279,13 @@ export const FOOD_DATA = {
     'Plate of Kimchi Pancakes': { isConverted: true, stats: { 'Condition Damage': 70 }, durations: { 'Confusion Duration': 15 } },
     'Bowl of Fire Meat Chili': { isConverted: true, stats: { 'Precision': 70 }, durations: { 'Burning Duration': 15 } },
     "Dragon's Revelry Starcake": { isConverted: false, stats: { Power: 45, Ferocity: 45, Precision: 45, 'Condition Damage': 45, Expertise: 45, Vitality: 45, Toughness: 45, Concentration: 45 }, durations: {} },
+    'Plate of Coq Au Vin with Salsa': { isConverted: true, stats: { Power: 100, Precision: 70 }, durations: {}, proc: { type: 'critStrike', chance: 0.66, icdMs: 2000, flatDamage: 325, name: 'Nourishment' } },
+    'Cilantro Lime Sous-Vide Steak': { isConverted: true, stats: { Power: 100, Ferocity: 70 }, durations: {}, proc: { type: 'critStrike', chance: 0.66, icdMs: 2000, flatDamage: 325, name: 'Nourishment' } },
+    'Plate of Beef Carpaccio with Salsa Garnish': { isConverted: true, stats: { Power: 70, Concentration: 100 }, durations: {}, proc: { type: 'critStrike', chance: 0.66, icdMs: 2000, flatDamage: 325, name: 'Nourishment' } },
+    'Salsa Eggs Benedict': { isConverted: true, stats: { Expertise: 70, Concentration: 100 }, durations: {}, proc: { type: 'critStrike', chance: 0.66, icdMs: 2000, flatDamage: 325, name: 'Nourishment' } },
+    'Cilantro and Cured Meat Flatbread': { isConverted: true, stats: { 'Condition Damage': 100, Expertise: 70 }, durations: {}, proc: { type: 'critStrike', chance: 0.66, icdMs: 2000, flatDamage: 325, name: 'Nourishment' } },
+    'Salsa-Topped Veggie Flatbread': { isConverted: true, stats: { 'Condition Damage': 70, Expertise: 100 }, durations: {}, proc: { type: 'critStrike', chance: 0.66, icdMs: 2000, flatDamage: 325, name: 'Nourishment' } },
+    'Spherified Cilantro Oyster Soup': { isConverted: true, stats: { Power: 45, Ferocity: 45, Precision: 45, 'Condition Damage': 45, Expertise: 45, Vitality: 45, Toughness: 45, Concentration: 45 }, durations: {}, proc: { type: 'critStrike', chance: 0.66, icdMs: 2000, flatDamage: 325, name: 'Nourishment' } },
 };
 
 export const FOOD_NAMES = sortNames(Object.keys(FOOD_DATA));

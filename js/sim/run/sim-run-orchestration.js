@@ -99,6 +99,7 @@ export function prepareRunContext(engine, attributes, {
         disSigil,
         disRelic,
         disTrait,
+        disFood,
         statAdj,
     } = disabledCtx;
 
@@ -131,6 +132,7 @@ export function prepareRunContext(engine, attributes, {
     });
     engine._applyRunSetupState(S, {
         disTrait,
+        disFood,
         permaBoons,
         eliteSpec,
         a: attributes,

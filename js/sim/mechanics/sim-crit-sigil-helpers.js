@@ -101,6 +101,34 @@ export function checkArcanePrecision(ctx, time, critChancePct, attunement) {
     });
 }
 
+export function checkFoodCritProc(ctx, time, critChancePct) {
+    const { S } = ctx;
+    const proc = S._foodProc;
+    if (!proc || critChancePct <= 0) return;
+    const procState = getProcState(S);
+    procState.foodCritProcAccum += (critChancePct / 100) * proc.chance;
+    if (procState.foodCritProcAccum < 1) return;
+    if (!ctx.traitIcdReady('FoodCritProc', time)) return;
+
+    procState.foodCritProcAccum -= 1;
+    ctx.armTraitIcd('FoodCritProc', time, proc.icdMs);
+    queueSigilHit(ctx, {
+        time,
+        skill: proc.name,
+        hitIdx: 1, sub: 1, totalSubs: 1,
+        dmg: 0, ws: 0,
+        flatStrikeBase: proc.flatDamage,
+        flatStrikePowerCoeff: 0,
+        isField: false, cc: false, conds: null,
+        noCrit: true,
+        att: ctx.attAt(time),
+        att2: ctx.att2At(time),
+        castStart: time,
+        isFoodProc: true,
+    });
+    ctx.log({ t: time, type: 'food_proc', skill: proc.name });
+}
+
 export function checkRenewingStamina(ctx, time, critChancePct) {
     const { S } = ctx;
     const procState = getProcState(S);

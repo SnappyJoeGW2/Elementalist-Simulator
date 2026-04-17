@@ -62,6 +62,7 @@ import {
 } from './sim/shared/sim-stat-recharge-helpers.js';
 import { pushTimedStack } from './sim/state/sim-runtime-state.js';
 import { expectedCritMultiplier, strikeDamage } from './core/damage.js';
+import { FOOD_DATA } from './data/gear-data.js';
 
 const DAMAGING_CONDITIONS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
@@ -741,6 +742,7 @@ export class SimulationEngine {
 
     _applyRunSetupState(S, {
         disTrait,
+        disFood,
         permaBoons,
         eliteSpec,
         a,
@@ -748,6 +750,7 @@ export class SimulationEngine {
     }) {
         return applyRunSetupState(this, S, {
             disTrait,
+            disFood,
             permaBoons,
             eliteSpec,
             attributes: a,
@@ -1020,6 +1023,11 @@ export class SimulationEngine {
         const relic = this.attributes.relic;
         if (relic && RELIC_PROCS[relic])
             modifiers.push({ id: `Relic:${relic}`, name: `Relic of ${relic}` });
+
+        const foodName = this.attributes.food;
+        const foodEntry = foodName ? FOOD_DATA[foodName] : null;
+        if (foodEntry?.proc)
+            modifiers.push({ id: `Food:${foodEntry.proc.name}`, name: `Food: ${foodEntry.proc.name}` });
 
         // ── Trait contributions ──
         // Stat-based (flat bonus subtracted from attributes before running)

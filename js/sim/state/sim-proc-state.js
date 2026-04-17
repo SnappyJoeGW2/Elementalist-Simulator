@@ -16,6 +16,7 @@ export const PROC_STATE_KEYS = new Set([
     'familiarCanceledCastIds',
     'familiarCanceledLoggedCastIds',
     'lastEmpoweredFamiliarByBasic',
+    'foodCritProcAccum',
 ]);
 
 export function createProcState() {
@@ -37,6 +38,7 @@ export function createProcState() {
         familiarCanceledCastIds: {},
         familiarCanceledLoggedCastIds: {},
         lastEmpoweredFamiliarByBasic: {},
+        foodCritProcAccum: 0,
     };
 }
 
