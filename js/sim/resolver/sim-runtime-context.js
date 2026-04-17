@@ -54,8 +54,7 @@ import {
     armArcaneEchoWindow,
     clearArcaneEchoWindow,
     isArcaneEchoActive,
-    getSignetFirePassiveLostUntil,
-    setSignetFirePassiveLostUntil,
+    addSignetFirePassiveLostWindow,
     isSignetFirePassiveLost,
 } from '../state/sim-timing-window-state.js';
 
@@ -353,12 +352,8 @@ export function createRuntimeContext(engine, S, config = {}) {
             return isArcaneEchoActive(S, time);
         },
 
-        getSignetFirePassiveLostUntil(fallback = 0) {
-            return getSignetFirePassiveLostUntil(S, fallback);
-        },
-
-        setSignetFirePassiveLostUntil(time) {
-            return setSignetFirePassiveLostUntil(S, time);
+        addSignetFirePassiveLostWindow(from, until) {
+            return addSignetFirePassiveLostWindow(S, from, until);
         },
 
         signetFirePassiveLostAt(time) {

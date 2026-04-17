@@ -5,7 +5,7 @@ import {
     armArcaneEchoWindow,
     clearArcaneEchoWindow,
     isArcaneEchoActive,
-    setSignetFirePassiveLostUntil,
+    addSignetFirePassiveLostWindow,
     isSignetFirePassiveLost,
 } from '../state/sim-timing-window-state.js';
 import {
@@ -131,8 +131,8 @@ export function isScheduledArcaneEchoActive(S, time) {
     return isArcaneEchoActive(S, time);
 }
 
-export function setScheduledSignetFirePassiveLostUntil(S, time) {
-    return setSignetFirePassiveLostUntil(S, time);
+export function addScheduledSignetFirePassiveLostWindow(S, from, until) {
+    return addSignetFirePassiveLostWindow(S, from, until);
 }
 
 export function isScheduledSignetFirePassiveLost(S, time) {

@@ -43,7 +43,7 @@ export function applyGenericPostCastHooks(ctx, sk, { key, end }) {
             else if (sk.name === 'Signet of Earth') ctx.applyAura('Magnetic Aura', 3000, end, 'Written in Stone');
         }
         if (sk.name === 'Signet of Fire' && !S._hasWrittenInStone) {
-            ctx.setSignetFirePassiveLostUntil(getSkillCooldownReadyAt(S, key));
+            ctx.addSignetFirePassiveLostWindow(end, getSkillCooldownReadyAt(S, key));
         }
     }
 

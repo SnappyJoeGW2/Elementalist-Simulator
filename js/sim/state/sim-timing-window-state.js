@@ -31,7 +31,9 @@ function createRuntimeWindowSnapshot(source) {
     const runtimeWindowState = source?.runtimeWindowState;
     return {
         arcaneEchoUntil: runtimeWindowState?.arcaneEchoUntil ?? 0,
-        signetFirePassiveLostUntil: runtimeWindowState?.signetFirePassiveLostUntil ?? 0,
+        signetFirePassiveLostWindows: runtimeWindowState?.signetFirePassiveLostWindows
+            ? runtimeWindowState.signetFirePassiveLostWindows.map(w => ({ from: w.from, until: w.until }))
+            : [],
     };
 }
 
@@ -101,16 +103,15 @@ export function isArcaneEchoActive(S, time) {
     return getArcaneEchoUntil(S, 0) > time;
 }
 
-export function getSignetFirePassiveLostUntil(S, fallback = 0) {
-    return getRuntimeWindowState(S).signetFirePassiveLostUntil || fallback;
-}
-
-export function setSignetFirePassiveLostUntil(S, time) {
+export function addSignetFirePassiveLostWindow(S, from, until) {
     const target = getTimingWindowStateTarget(S);
-    target.runtimeWindowState.signetFirePassiveLostUntil = time;
-    return time;
+    target.runtimeWindowState.signetFirePassiveLostWindows.push({ from, until });
 }
 
 export function isSignetFirePassiveLost(S, time) {
-    return getSignetFirePassiveLostUntil(S, 0) > time;
+    const windows = getRuntimeWindowState(S).signetFirePassiveLostWindows;
+    for (let i = 0; i < windows.length; i++) {
+        if (time >= windows[i].from && time < windows[i].until) return true;
+    }
+    return false;
 }

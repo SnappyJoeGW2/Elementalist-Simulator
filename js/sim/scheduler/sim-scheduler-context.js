@@ -18,7 +18,7 @@ import {
     armScheduledArcaneEchoWindow,
     clearScheduledArcaneEchoWindow,
     isScheduledArcaneEchoActive,
-    setScheduledSignetFirePassiveLostUntil,
+    addScheduledSignetFirePassiveLostWindow,
     isScheduledSignetFirePassiveLost,
     adjustSchedulerChargeCount,
     setSchedulerChargeReadyAt,
@@ -465,8 +465,8 @@ export function createSchedulerContext(engine, S, config = {}) {
             return isScheduledArcaneEchoActive(S, time);
         },
 
-        setSignetFirePassiveLostUntil(time) {
-            return setScheduledSignetFirePassiveLostUntil(S, time);
+        addSignetFirePassiveLostWindow(from, until) {
+            return addScheduledSignetFirePassiveLostWindow(S, from, until);
         },
 
         signetFirePassiveLostAt(time) {

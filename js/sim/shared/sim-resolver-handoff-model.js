@@ -222,7 +222,7 @@ function validateResolverHandoff(value) {
     if (!isFiniteNumber(value.timingWindows.castUntil)) return 'timingWindows.castUntil must be finite';
     if (!isPlainObject(value.timingWindows.runtimeWindowState)) return 'timingWindows.runtimeWindowState must be a plain object';
     if (!isFiniteNumber(value.timingWindows.runtimeWindowState.arcaneEchoUntil)) return 'timingWindows.runtimeWindowState.arcaneEchoUntil must be finite';
-    if (!isFiniteNumber(value.timingWindows.runtimeWindowState.signetFirePassiveLostUntil)) return 'timingWindows.runtimeWindowState.signetFirePassiveLostUntil must be finite';
+    if (!Array.isArray(value.timingWindows.runtimeWindowState.signetFirePassiveLostWindows)) return 'timingWindows.runtimeWindowState.signetFirePassiveLostWindows must be an array';
 
     const attCdError = validateNumericMap(value.cooldowns.attCD, 'cooldowns.attCD');
     if (attCdError) return attCdError;
