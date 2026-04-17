@@ -51,6 +51,7 @@ export function buildSnapshot(app) {
         evokerStartEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
         rotation: serializeRotation(app),
+        hitboxSize: app.hitboxSize,
     });
 }
 
@@ -64,6 +65,7 @@ export function applySnapshot(app, state) {
         evokerStartEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
         selectedSkills: app.selectedSkills,
+        hitboxSize: app.hitboxSize,
     }, state, app.data?.skills);
 
     app.build = merged.build;
@@ -74,6 +76,7 @@ export function applySnapshot(app, state) {
     app.evokerStartEmpowered = merged.evokerStartEmpowered;
     app.permaBoons = merged.permaBoons;
     app.selectedSkills = merged.selectedSkills;
+    app.hitboxSize = merged.hitboxSize || 'large';
 
     if (merged.rotation) {
         if (app.sim) deserializeRotation(app, merged.rotation);
@@ -102,6 +105,7 @@ export function onBuildChange(app) {
         build: app.build,
         selectedSkills: app.selectedSkills,
         rotation,
+        hitboxSize: app.hitboxSize,
     });
     app.data.attributes = rebuilt.attributes;
     app.sim = rebuilt.sim;

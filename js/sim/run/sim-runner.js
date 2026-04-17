@@ -11,7 +11,7 @@ export function calcBuildAttributes(build, selectedSkills) {
     return calcAttributes(build, getSelectedSkillList(selectedSkills));
 }
 
-export function createSimulationEngine(data, attributes) {
+export function createSimulationEngine(data, attributes, { hitboxSize } = {}) {
     return new SimulationEngine({
         skills: data.skills,
         skillHits: data.skillHits,
@@ -20,12 +20,13 @@ export function createSimulationEngine(data, attributes) {
         sigils: SIGIL_DATA,
         relics: RELIC_DATA,
         activeTraits: attributes.activeTraits,
+        hitboxSize,
     });
 }
 
-export function rebuildSimulation({ data, build, selectedSkills, rotation = [] }) {
+export function rebuildSimulation({ data, build, selectedSkills, rotation = [], hitboxSize }) {
     const attributes = calcBuildAttributes(build, selectedSkills);
-    const sim = createSimulationEngine(data, attributes);
+    const sim = createSimulationEngine(data, attributes, { hitboxSize });
     sim.rotation = cloneRotationItems(rotation);
     return { attributes, sim };
 }

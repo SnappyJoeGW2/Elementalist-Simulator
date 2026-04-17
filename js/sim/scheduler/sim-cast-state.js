@@ -3,6 +3,7 @@ import {
     listChainRoots,
     getChainExpiry,
 } from '../state/sim-cooldown-state.js';
+import { SMALL_HITBOX_CAPS } from '../../simulation.js';
 
 export function detectAACarryover(ctx) {
     const { S } = ctx;
@@ -72,10 +73,12 @@ export function fillGap(ctx, sk, gapMs) {
     const end = start + gapMs;
     const ws = ctx.weaponStrength(sk);
     const rows = ctx.skillHits[sk.name] || [];
+    const hitboxCap = ctx.hitboxSize === 'small' ? (SMALL_HITBOX_CAPS.get(sk.name) ?? Infinity) : Infinity;
 
     ctx.log({ t: start, type: 'cast', skill: sk.name, att: S.att, dur: gapMs });
 
     for (const h of rows) {
+        if (h.hit > hitboxCap) continue;
         const off = h.startOffsetMs || 0;
         if (off >= gapMs) break;
         ctx.queueHitEvent({

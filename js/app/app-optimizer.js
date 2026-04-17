@@ -104,6 +104,7 @@ export function initOptimizer(app) {
         weapons: WEAPON_DATA,
         sigils: SIGIL_DATA,
         relics: RELIC_DATA,
+        hitboxSize: app.hitboxSize,
     });
     app._optResults = [];
     app._optRunning = false;

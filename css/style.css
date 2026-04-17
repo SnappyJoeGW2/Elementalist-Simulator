@@ -1467,9 +1467,20 @@ header .accent {
     font-family: var(--mono);
 }
 
-.target-hp-wrap input:focus {
+.target-hp-wrap input:focus,
+.target-hp-wrap select:focus {
     border-color: var(--accent);
     outline: none;
+}
+
+.target-hp-wrap select {
+    padding: 3px 6px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    font-family: var(--mono);
 }
 
 .btn {

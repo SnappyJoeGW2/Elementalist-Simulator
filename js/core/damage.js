@@ -64,7 +64,7 @@ export function getBoonDurationBonus(boonType, attributes) {
  * Calculate full damage for a single skill cast.
  * Returns { totalStrike, totalCondition, totalDamage, dps, hits[], conditions[] }
  */
-export function calculateSkillDamage(skill, skillHits, weaponStrength, attributes) {
+export function calculateSkillDamage(skill, skillHits, weaponStrength, attributes, { maxHit = Infinity } = {}) {
     const power = attributes['Power']?.final ?? 1000;
     const condDmg = attributes['Condition Damage']?.final ?? 0;
     const critChance = attributes['Critical Chance']?.final ?? 0;
@@ -78,6 +78,7 @@ export function calculateSkillDamage(skill, skillHits, weaponStrength, attribute
 
     const hits = skillHits || [];
     for (const hit of hits) {
+        if (hit.hit > maxHit) continue;
         const coefficient = hit.damage || 0;
         if (coefficient <= 0 && !hasConditions(hit)) continue;
 

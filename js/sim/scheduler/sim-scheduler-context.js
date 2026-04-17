@@ -170,6 +170,7 @@ export function createSchedulerContext(engine, S, config = {}) {
         sigilProcs,
         skills: engine.skills,
         skillHits: engine.skillHits,
+        hitboxSize: engine.hitboxSize || 'large',
 
         runStep(name, skipCastUntil = false, concurrents = [], rotationMeta = {}) {
             return runStepHandler(name, skipCastUntil, concurrents, rotationMeta);

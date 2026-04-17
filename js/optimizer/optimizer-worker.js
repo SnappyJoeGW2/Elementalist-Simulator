@@ -14,7 +14,7 @@ self.onmessage = ({ data }) => {
             baseBuild, selectedSkills, rotation,
             prefixes, constraints = {}, slotConstraints = {},
             startAtt, startAtt2, evokerElement, permaBoons,
-            combos, activeSlots,
+            combos, activeSlots, hitboxSize,
         } = data;
 
         const initAttrs = calcAttributes(baseBuild, selectedSkills);
@@ -24,6 +24,7 @@ self.onmessage = ({ data }) => {
             sigils: sigilsData,
             relics: relicsData,
             activeTraits: initAttrs.activeTraits,
+            hitboxSize,
         });
         sim.rotation = rotation;
         sim.fastMode = true;

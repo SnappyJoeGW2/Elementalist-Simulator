@@ -8,6 +8,7 @@ import {
 import { TRAITS, SPECIALIZATIONS } from '../data/traits-data.js';
 import { GW2API, PLACEHOLDER_ICON } from './gw2-api.js';
 import { calculateSkillDamage } from '../core/damage.js';
+import { SMALL_HITBOX_CAPS } from '../simulation.js';
 import {
     createDefaultPermaBoons,
     createEmptySelectedSkills,
@@ -308,9 +309,10 @@ class App {
 
         // Initialize build state — restore from localStorage or fall back to default
         this.build = JSON.parse(JSON.stringify(DEFAULT_BUILD));
+        this.hitboxSize = 'large';
         this._restoreBuild(); // populates this.build, selectedSkills, etc. from localStorage if available
         this.data.attributes = calcBuildAttributes(this.build, this.selectedSkills);
-        this.sim = createSimulationEngine(this.data, this.data.attributes);
+        this.sim = createSimulationEngine(this.data, this.data.attributes, { hitboxSize: this.hitboxSize });
 
         // Rotation couldn't be restored in _restoreBuild because this.sim didn't
         // exist yet.  Re-apply the saved rotation now that the engine is ready.
@@ -355,6 +357,13 @@ class App {
             if (file) { this._importBuild(file); e.target.value = ''; }
         });
         document.getElementById('target-hp').addEventListener('change', () => {
+            if (this.sim?.rotation.length > 0) this._autoRun();
+        });
+        document.getElementById('hitbox-size').addEventListener('change', (e) => {
+            this.hitboxSize = e.target.value;
+            if (this.sim) this.sim.hitboxSize = this.hitboxSize;
+            this._persistBuild();
+            this.renderWeaponBar();
             if (this.sim?.rotation.length > 0) this._autoRun();
         });
 
@@ -413,6 +422,8 @@ class App {
         this.renderSkillInfoTable();
         this._renderPermaBoons();
         this.renderRotationBuilder();
+        const hitboxEl = document.getElementById('hitbox-size');
+        if (hitboxEl) hitboxEl.value = this.hitboxSize || 'large';
     }
 
     // ─── Gear Panel ───
@@ -1447,7 +1458,8 @@ class App {
         const hits = this.data.skillHits[skill.name] || [];
         const wStr = WEAPON_DATA[weaponKey]?.weaponStrength || WEAPON_DATA[this._getWeaponForSkill(skill)]?.weaponStrength || 1000;
         const attrs = this.data.attributes.attributes;
-        const dmg = calculateSkillDamage(skill, hits, wStr, attrs);
+        const maxHit = this.hitboxSize === 'small' ? (SMALL_HITBOX_CAPS.get(skill.name) ?? Infinity) : Infinity;
+        const dmg = calculateSkillDamage(skill, hits, wStr, attrs, { maxHit });
 
         return `<div class="info-row">
             <img class="info-icon" src="${icon || PLACEHOLDER_ICON}" title="${esc(skill.name)}" />

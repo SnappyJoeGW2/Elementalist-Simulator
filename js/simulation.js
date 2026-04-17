@@ -437,8 +437,19 @@ const PERMA_EXPIRY = 999999999;
 
 const NOOP_ARRAY = { push() { }, length: 0 };
 
+// When hitboxSize is 'small', these skills have their hit count capped.
+// Key = skill name, value = max hit index (rows with h.hit > cap are skipped).
+export const SMALL_HITBOX_CAPS = new Map([
+    ['Meteor Shower',           12],
+    ['Lightning Orb',           11],
+    ['Frost Storm',             14],
+    ['Invoke Lightning',         9],
+    ['Glyph of Storms (Air)',   20],
+    ['Glyph of Storms (Water)', 11],
+]);
+
 export class SimulationEngine {
-    constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits }) {
+    constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits, hitboxSize }) {
         this.skills = skills;
         this.skillHits = skillHits;
         this.weapons = weapons;
@@ -446,6 +457,7 @@ export class SimulationEngine {
         this.sigils = sigils || {};
         this.relics = relics || {};
         this.activeTraitNames = new Set((activeTraits || []).map(t => t.name));
+        this.hitboxSize = hitboxSize || 'large';
         this.rotation = [];
         this.results = null;
         this.fastMode = false;

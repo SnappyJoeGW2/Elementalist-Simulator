@@ -4,6 +4,7 @@ import {
     estimateFreshAirLookaheadCritChance,
     processFreshAirCandidate,
 } from '../mechanics/sim-fresh-air-state.js';
+import { SMALL_HITBOX_CAPS } from '../../simulation.js';
 
 export function applyPrimordialStance(ctx, att1, att2, time) {
     const stanceEffects = {
@@ -47,6 +48,7 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
     const strippedName = sk.name.replace(/^"|"$/g, '');
     const rows = ctx.skillHits[sk.name] || ctx.skillHits[strippedName] || [];
     const ws = ctx.weaponStrength(sk);
+    const hitboxCap = ctx.hitboxSize === 'small' ? (SMALL_HITBOX_CAPS.get(sk.name) ?? Infinity) : Infinity;
 
     const hammerOrbElement = hammerOrbSkills[sk.name] || (hammerDualOrbSkills[sk.name] ? 'Dual' : null);
 
@@ -62,6 +64,8 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
 
     let firstHitScheduled = false;
     for (const h of rows) {
+        if (h.hit > hitboxCap) continue;
+
         const off = scaleOff(h.startOffsetMs || 0);
         const rep = h.repeatOffsetMs || 0;
         let count = 1;
