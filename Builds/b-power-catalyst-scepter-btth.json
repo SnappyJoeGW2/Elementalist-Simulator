@@ -3,18 +3,18 @@
     "gear": {
       "Helm": "Berserker's",
       "Shoulders": "Berserker's",
-      "Chest": "Diviner's",
+      "Chest": "Berserker's",
       "Gloves": "Berserker's",
       "Leggins": "Berserker's",
       "Boots": "Berserker's",
       "Amulet": "Berserker's",
       "Ring1": "Berserker's",
       "Ring2": "Berserker's",
-      "Accessory1": "Diviner's",
-      "Accessory2": "Diviner's",
-      "Back": "Diviner's",
+      "Accessory1": "Berserker's",
+      "Accessory2": "Berserker's",
+      "Back": "Berserker's",
       "Weapon1": "Berserker's",
-      "Weapon2": "Diviner's"
+      "Weapon2": "Berserker's"
     },
     "weapons": [
       "Scepter",
@@ -23,7 +23,7 @@
     "rune": "Dragonhunter",
     "sigils": [
       "Force",
-      "Accuracy"
+      "Impact"
     ],
     "relic": "Bloodstone",
     "food": "Cilantro Lime Sous-Vide Steak",
@@ -40,17 +40,17 @@
       },
       {
         "name": "Catalyst",
-        "traits": "2-3-3"
+        "traits": "2-1-2"
       }
     ],
     "infusions": [
       {
         "stat": "Power",
-        "count": 14
+        "count": 16
       },
       {
         "stat": "Precision",
-        "count": 4
+        "count": 2
       },
       {
         "stat": "Ferocity",
@@ -62,7 +62,7 @@
     "heal": "Arcane Brilliance",
     "util1": "Relentless Fire",
     "util2": "Glyph of Storms (Fire)",
-    "util3": "Signet of Fire",
+    "util3": "Arcane Blast",
     "elite": "Glyph of Elementals"
   },
   "activeAttunement": "Earth",
@@ -90,5 +90,7 @@
     "Slow": true,
     "Weakness": true,
     "Vulnerability": 25
-  }
+  },
+  "hitboxSize": "small",
+  "glyphBoonedElementals": true
 }

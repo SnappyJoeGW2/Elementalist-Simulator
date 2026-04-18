@@ -98,7 +98,7 @@ function armSpearNextSkillProgression(ctx, sk, name, end) {
 
     if (name === 'Seethe') {
         ctx.armSpearFollowup('spearNextDmgBonus');
-        ctx.log({ t: end, type: 'skill_proc', skill: 'Seethe', detail: 'next Spear +25% strike armed' });
+        ctx.log({ t: end, type: 'skill_proc', skill: 'Seethe', detail: 'next Spear +20% strike armed' });
     } else if (name === 'Ripple') {
         ctx.armSpearFollowup('spearNextCdReduce');
         ctx.log({ t: end, type: 'skill_proc', skill: 'Ripple', detail: 'next Spear -33% recharge armed' });

@@ -2876,7 +2876,8 @@ class App {
                 const btns = (sec.presets || []).map(p => {
                     const idx = allPresets.length;
                     allPresets.push(p);
-                    return `<button class="btn preset-btn" data-idx="${idx}">${esc(p.label)}</button>`;
+                    const cls = p.upToDate ? 'btn preset-btn preset-btn--current' : 'btn preset-btn';
+                    return `<button class="${cls}" data-idx="${idx}">${esc(p.label)}</button>`;
                 }).join('');
 
                 const labelHtml = sec.section
@@ -2890,6 +2891,13 @@ class App {
                 if (!btn) return;
                 this._loadPreset(allPresets[+btn.dataset.idx], btn);
             });
+
+            const legend = document.createElement('div');
+            legend.className = 'presets-legend';
+            legend.innerHTML =
+                '<span class="presets-legend-item"><span class="presets-legend-swatch presets-legend-swatch--default"></span>Outdated</span>' +
+                '<span class="presets-legend-item"><span class="presets-legend-swatch presets-legend-swatch--current"></span>Up to date</span>';
+            container.after(legend);
 
             document.getElementById('presets-bar').style.display = '';
         } catch (_) { /* silently skip if no manifest */ }

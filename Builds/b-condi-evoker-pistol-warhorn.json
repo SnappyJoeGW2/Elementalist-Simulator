@@ -2,28 +2,28 @@
   "build": {
     "gear": {
       "Helm": "Viper's",
-      "Shoulders": "Sinister",
+      "Shoulders": "Viper's",
       "Chest": "Viper's",
-      "Gloves": "Sinister",
+      "Gloves": "Viper's",
       "Leggins": "Viper's",
-      "Boots": "Sinister",
+      "Boots": "Viper's",
       "Amulet": "Viper's",
-      "Ring1": "Sinister",
+      "Ring1": "Viper's",
       "Ring2": "Viper's",
-      "Accessory1": "Sinister",
-      "Accessory2": "Sinister",
-      "Back": "Sinister",
+      "Accessory1": "Viper's",
+      "Accessory2": "Viper's",
+      "Back": "Viper's",
       "Weapon1": "Viper's",
       "Weapon2": "Viper's"
     },
     "weapons": [
-      "Scepter",
-      "Focus"
+      "Pistol",
+      "Warhorn"
     ],
-    "rune": "Balthazar",
+    "rune": "Trapper",
     "sigils": [
       "Bursting",
-      "Earth"
+      "Smoldering"
     ],
     "relic": "Fractal",
     "food": "Cilantro and Cured Meat Flatbread",
@@ -32,15 +32,15 @@
     "specializations": [
       {
         "name": "Fire",
-        "traits": "1-1-1"
+        "traits": "1-1-2"
       },
       {
-        "name": "Air",
-        "traits": "3-3-1"
+        "name": "Earth",
+        "traits": "2-1-2"
       },
       {
         "name": "Evoker",
-        "traits": "1-1-3"
+        "traits": "1-1-1"
       }
     ],
     "infusions": [
@@ -62,10 +62,10 @@
     "heal": "Rejuvenate",
     "util1": "Fox's Fury",
     "util2": "Signet of Fire",
-    "util3": "Cleansing Fire",
+    "util3": "Signet of Earth",
     "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Fire",
+  "activeAttunement": "Earth",
   "secondaryAttunement": "Fire",
   "evokerElement": "Fire",
   "evokerStartCharges": 6,
@@ -80,7 +80,7 @@
     "Regeneration": true,
     "Vigor": true,
     "Swiftness": true,
-    "Bleeding": 5,
+    "Bleeding": true,
     "Burning": true,
     "Torment": true,
     "Confusion": true,
@@ -92,5 +92,5 @@
     "Vulnerability": 25
   },
   "hitboxSize": "small",
-  "glyphBoonedElementals": true
+  "glyphBoonedElementals": false
 }

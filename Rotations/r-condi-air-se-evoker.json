@@ -14,438 +14,377 @@
     "Signet of Fire",
     {
       "name": "Cleansing Fire",
-      "offset": 276
+      "offset": 305
     },
     {
       "name": "Ignite",
-      "offset": 397
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 37
+      "offset": 359
     },
     "Fox's Fury",
-    "Phoenix",
-    {
-      "name": "Fire Shield",
-      "offset": 362
-    },
-    "Transmute Fire",
-    "Ignite",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 119
-    },
-    "Dragon's Tooth",
-    "Conflagration",
-    "Flamestrike",
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 101
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 255
-    },
-    "Flamewall",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 176
-    },
-    "Rejuvenate",
-    {
-      "name": "Fire Shield",
-      "offset": 287
-    },
-    "Transmute Fire",
-    {
-      "name": "Ignite",
-      "offset": 320
-    },
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 36
-    },
-    "Phoenix",
-    "Dragon's Tooth",
-    "Conflagration",
-    "Signet of Fire",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 39
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 200
-    },
-    "Flamewall",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 120
-    },
-    "Phoenix",
-    {
-      "name": "Fire Shield",
-      "offset": 119
-    },
-    "Transmute Fire",
-    "Fox's Fury",
-    {
-      "name": "Ignite",
-      "offset": 44
-    },
-    "Flamestrike",
-    {
-      "name": "Cleansing Fire",
-      "offset": 237
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 41
-    },
-    "Dragon's Tooth",
-    "Conflagration",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 107
-    },
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 41
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 242
-    },
-    "Flamewall",
-    "Signet of Fire",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 162
-    },
-    "Rejuvenate",
-    {
-      "name": "Fire Shield",
-      "offset": 156
-    },
-    "Transmute Fire",
-    {
-      "name": "Ignite",
-      "offset": 163
-    },
-    "Flamestrike",
-    "Phoenix",
-    "Dragon's Tooth",
-    "Conflagration",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 242
-    },
-    "Flamewall",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 160
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 40
-    },
-    "Phoenix",
-    {
-      "name": "Fire Shield",
-      "offset": 160
-    },
-    "Transmute Fire",
-    {
-      "name": "Ignite",
-      "offset": 277
-    },
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 40
-    },
-    "Fox's Fury",
-    "Dragon's Tooth",
-    "Conflagration",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 156
-    },
-    "Cleansing Fire",
-    "Phoenix",
-    "Signet of Fire",
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 212
-    },
-    "Flamewall",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 120
-    },
-    "Flamestrike",
-    "Rejuvenate",
-    {
-      "name": "Fire Shield",
-      "offset": 121
-    },
-    "Transmute Fire",
-    {
-      "name": "Ignite",
-      "offset": 22
-    },
-    "Phoenix",
-    "Dragon's Tooth",
-    "Conflagration",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 38
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 284
-    },
-    "Flamewall",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 156
-    },
     "Fire Shield",
     "Phoenix",
     "Transmute Fire",
     {
       "name": "Ignite",
-      "offset": 319
+      "offset": 321
     },
-    "Signet of Fire",
-    "Flamestrike",
-    "Dragon's Tooth",
-    "Conflagration",
-    "Fox's Fury",
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    {
-      "name": "Cleansing Fire",
-      "offset": 160
-    },
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 198
-    },
-    "Flamewall",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 200
-    },
-    "Flamestrike",
     "Flamestrike",
     {
       "name": "Flamestrike",
       "interruptMs": 38
     },
-    "Rejuvenate",
-    {
-      "name": "Fire Shield",
-      "offset": 227
-    },
-    "Ignite",
-    "Transmute Fire",
-    "Phoenix",
     "Dragon's Tooth",
-    "Signet of Fire",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 43
-    },
     "Conflagration",
     "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
     {
       "name": "Flamestrike",
-      "interruptMs": 43
+      "interruptMs": 63
     },
+    "Phoenix",
+    "Flamestrike",
+    "Flamestrike",
     "Dragon's Tooth",
     {
       "name": "Ignite",
-      "offset": 370
+      "offset": 158
     },
     "Flamewall",
     "Flamestrike",
     {
       "name": "Ignite",
-      "offset": 282
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 39
-    },
-    "Phoenix",
-    {
-      "name": "Fire Shield",
-      "offset": 201
-    },
-    "Transmute Fire",
-    {
-      "name": "Ignite",
-      "offset": 355
-    },
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    "Conflagration",
-    "Fox's Fury",
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    {
-      "name": "Cleansing Fire",
-      "offset": 281
-    },
-    {
-      "name": "Ignite",
-      "offset": 320
-    },
-    "Flamewall",
-    "Signet of Fire",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 159
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 40
+      "offset": 79
     },
     "Rejuvenate",
     {
       "name": "Fire Shield",
-      "offset": 159
+      "offset": 119
     },
     "Transmute Fire",
     {
       "name": "Ignite",
       "offset": 121
     },
+    "Flamestrike",
     "Phoenix",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 40
-    },
     "Dragon's Tooth",
     "Conflagration",
+    "Signet of Fire",
     "Flamestrike",
     "Flamestrike",
     "Flamestrike",
-    {
-      "name": "Flamestrike",
-      "interruptMs": 43
-    },
     "Dragon's Tooth",
     {
       "name": "Ignite",
-      "offset": 278
+      "offset": 321
     },
     "Flamewall",
     "Flamestrike",
     {
       "name": "Ignite",
-      "offset": 165
-    },
-    {
-      "name": "Flamestrike",
-      "interruptMs": 39
+      "offset": 126
     },
     "Phoenix",
     {
       "name": "Fire Shield",
-      "offset": 201
+      "offset": 162
     },
     "Transmute Fire",
     {
       "name": "Ignite",
-      "offset": 322
+      "offset": 120
     },
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    "Conflagration",
-    "Signet of Fire",
     "Fox's Fury",
-    "Phoenix",
-    "Flamestrike",
-    "Flamestrike",
-    "Dragon's Tooth",
-    {
-      "name": "Ignite",
-      "offset": 235
-    },
-    "Flamewall",
-    "Flamestrike",
-    {
-      "name": "Ignite",
-      "offset": 157
-    },
     "Flamestrike",
     {
       "name": "Cleansing Fire",
       "offset": 200
     },
+    "Dragon's Tooth",
+    "Conflagration",
     "Flamestrike",
+    "Phoenix",
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 239
+    },
+    "Flamewall",
+    "Signet of Fire",
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 79
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 38
+    },
     "Rejuvenate",
+    "Fire Shield",
+    "Transmute Fire",
+    {
+      "name": "Ignite",
+      "offset": 37
+    },
+    {
+      "name": "Flamestrike",
+      "interruptMs": 83
+    },
+    "Phoenix",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 38
+    },
+    "Dragon's Tooth",
+    "Flamestrike",
+    "Conflagration",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 321
+    },
+    "Flamewall",
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 122
+    },
+    "Phoenix",
     {
       "name": "Fire Shield",
-      "offset": 120
+      "offset": 80
     },
     "Transmute Fire",
     {
       "name": "Ignite",
-      "offset": 43
+      "offset": 279
+    },
+    "Flamestrike",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 40
+    },
+    "Fox's Fury",
+    "Dragon's Tooth",
+    "Conflagration",
+    {
+      "name": "Cleansing Fire",
+      "offset": 242
+    },
+    "Signet of Fire",
+    "Flamestrike",
+    "Phoenix",
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 200
+    },
+    "Flamewall",
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 158
+    },
+    "Flamestrike",
+    "Rejuvenate",
+    {
+      "name": "Fire Shield",
+      "offset": 122
+    },
+    "Transmute Fire",
+    {
+      "name": "Ignite",
+      "offset": 84
     },
     "Phoenix",
     "Dragon's Tooth",
     "Conflagration",
     "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 326
+    },
+    "Flamewall",
+    "Signet of Fire",
+    "Ignite",
+    "Flamestrike",
+    "Fire Shield",
+    "Phoenix",
+    "Transmute Fire",
+    {
+      "name": "Ignite",
+      "offset": 242
+    },
+    "Flamestrike",
+    "Dragon's Tooth",
+    "Conflagration",
+    "Fox's Fury",
+    "Flamestrike",
+    "Phoenix",
+    "Cleansing Fire",
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 200
+    },
+    "Flamewall",
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 83
+    },
+    "Flamestrike",
+    "Flamestrike",
+    "Rejuvenate",
+    {
+      "name": "Fire Shield",
+      "offset": 163
+    },
+    "Transmute Fire",
+    {
+      "name": "Ignite",
+      "offset": 42
+    },
+    "Phoenix",
+    "Dragon's Tooth",
+    "Conflagration",
+    "Signet of Fire",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 242
+    },
+    "Flamewall",
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 121
+    },
+    "Phoenix",
+    {
+      "name": "Fire Shield",
+      "offset": 159
+    },
+    "Transmute Fire",
+    {
+      "name": "Ignite",
+      "offset": 280
+    },
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    "Conflagration",
+    "Flamestrike",
+    "Phoenix",
+    "Fox's Fury",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Cleansing Fire",
+      "offset": 77
+    },
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 321
+    },
+    "Flamewall",
+    "Signet of Fire",
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 37
+    },
+    "Flamestrike",
+    "Rejuvenate",
+    {
+      "name": "Fire Shield",
+      "offset": 122
+    },
+    "Ignite",
+    "Transmute Fire",
+    "Phoenix",
+    "Dragon's Tooth",
+    "Conflagration",
+    "Flamestrike",
+    "Flamestrike",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 321
+    },
+    "Flamewall",
+    "Flamestrike",
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 41
+    },
+    "Phoenix",
+    {
+      "name": "Fire Shield",
+      "offset": 121
+    },
+    "Transmute Fire",
+    {
+      "name": "Ignite",
+      "offset": 201
+    },
+    "Flamestrike",
+    "Dragon's Tooth",
+    "Conflagration",
+    "Signet of Fire",
+    {
+      "name": "Flamestrike",
+      "interruptMs": 79
+    },
+    "Phoenix",
+    "Flamestrike",
+    "Fox's Fury",
+    "Flamestrike",
+    "Dragon's Tooth",
+    {
+      "name": "Ignite",
+      "offset": 238
+    },
+    "Flamewall",
+    {
+      "name": "Cleansing Fire",
+      "offset": 79
+    },
+    "Flamestrike",
+    {
+      "name": "Ignite",
+      "offset": 164
+    },
+    "Flamestrike",
+    "Flamestrike",
+    "Rejuvenate",
+    {
+      "name": "Fire Shield",
+      "offset": 163
+    },
+    "Ignite",
+    "Transmute Fire",
+    "Phoenix",
+    "Dragon's Tooth",
+    "Conflagration",
     "Flamestrike",
     "Flamestrike",
     "Flamestrike",

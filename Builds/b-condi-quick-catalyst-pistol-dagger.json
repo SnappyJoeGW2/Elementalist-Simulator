@@ -26,7 +26,7 @@
       "Malice"
     ],
     "relic": "Steamshrieker",
-    "food": "Plate of Beef Rendang",
+    "food": "Cilantro and Cured Meat Flatbread",
     "utility": "Toxic Tuning Crystal",
     "jadeBotCore": true,
     "specializations": [
@@ -90,5 +90,7 @@
     "Slow": true,
     "Weakness": true,
     "Vulnerability": 25
-  }
+  },
+  "hitboxSize": "small",
+  "glyphBoonedElementals": false
 }

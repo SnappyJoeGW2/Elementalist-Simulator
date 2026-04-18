@@ -15,10 +15,10 @@ import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
 
 const ELECTRIC_ENCHANTMENT_ICON = 'https://wiki.guildwars2.com/images/7/7b/Hare%27s_Agility.png';
 const FAMILIAR_INTERRUPT_WINDOWS = Object.freeze({
-    Ignite: { empowered: 'Conflagration', windowMs: 2500 },
-    Zap: { empowered: 'Lightning Blitz', windowMs: 2400 },
-    Splash: { empowered: 'Buoyant Deluge', windowMs: 2500 },
-    Calcify: { empowered: 'Seismic Impact', windowMs: 2300 },
+    Ignite: { empowered: 'Conflagration', windowMs: 2400 },
+    Zap: { empowered: 'Lightning Blitz', windowMs: 2300 },
+    Splash: { empowered: 'Buoyant Deluge', windowMs: 2400 },
+    Calcify: { empowered: 'Seismic Impact', windowMs: 2200 },
 });
 const FAMILIAR_FLIP_DELAYS = Object.freeze({
     Ignite: { empowered: 'Conflagration', delayMs: 960 },

@@ -166,7 +166,7 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
     const nourysStrikeAdd = effectSnapshot.nourysActive ? (ctx.getRelicProc('Nourys')?.strikeDmgA || 0) : 0;
     const nourysCondAdd = effectSnapshot.nourysActive ? (ctx.getRelicProc('Nourys')?.condDmgA || 0) : 0;
     const wsFireBonus = checkWsBonusWindow(S.wsFireBonusWindows, ev.time);
-    const wsAirBonus  = checkWsBonusWindow(S.wsAirBonusWindows,  ev.time);
+    const wsAirBonus = checkWsBonusWindow(S.wsAirBonusWindows, ev.time);
 
     const addStrike = pfStacks * 0.02
         + (tempAriaUp ? 0.10 : 0)
@@ -209,7 +209,7 @@ function buildStrikeAndConditionMultipliers(ctx, ev, {
     const targetHasVuln = targetSnapshot.targetHasVuln;
     const piercingShardsMul = (S._hasPiercingShards && targetHasVuln)
         ? (hitAtt === 'Water' ? 1.14 : 1.07) : 1;
-    const seetheMul = ev.spearDmgBonus ? 1.25 : 1;
+    const seetheMul = ev.spearDmgBonus ? 1.2 : 1;
 
     const strikeMul = baseStrike * vulnMul * critCtx.relicStrikeMul
         * pyroMul * fieryMightMul * serratedMul * stormsoulMul

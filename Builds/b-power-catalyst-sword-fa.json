@@ -17,15 +17,15 @@
       "Weapon2": "Berserker's"
     },
     "weapons": [
-      "Scepter",
+      "Sword",
       "Dagger"
     ],
-    "rune": "Dragonhunter",
+    "rune": "Scholar",
     "sigils": [
       "Force",
       "Impact"
     ],
-    "relic": "Bloodstone",
+    "relic": "Claw",
     "food": "Cilantro Lime Sous-Vide Steak",
     "utility": "Superior Sharpening Stone",
     "jadeBotCore": true,
@@ -36,7 +36,7 @@
       },
       {
         "name": "Air",
-        "traits": "3-3-1"
+        "traits": "3-3-2"
       },
       {
         "name": "Catalyst",
@@ -59,13 +59,13 @@
     ]
   },
   "selectedSkills": {
-    "heal": "Arcane Brilliance",
+    "heal": "Signet of Restoration",
     "util1": "Relentless Fire",
     "util2": "Glyph of Storms (Fire)",
     "util3": "Arcane Blast",
     "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Earth",
+  "activeAttunement": "Water",
   "secondaryAttunement": "Air",
   "evokerElement": null,
   "evokerStartCharges": 6,
@@ -90,5 +90,7 @@
     "Slow": true,
     "Weakness": true,
     "Vulnerability": 25
-  }
+  },
+  "hitboxSize": "small",
+  "glyphBoonedElementals": false
 }

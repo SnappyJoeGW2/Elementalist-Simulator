@@ -171,7 +171,7 @@ header .accent {
     gap: 8px;
 }
 
-.presets-group + .presets-group {
+.presets-group+.presets-group {
     border-top: 1px solid rgba(197, 153, 50, 0.4);
     padding-top: 4px;
 }
@@ -210,9 +210,56 @@ header .accent {
     background: var(--bg-panel-alt);
 }
 
+.btn.preset-btn--current {
+    background: #151624;
+    border-color: #4a9c6d;
+    color: #a0e8be;
+}
+
+.btn.preset-btn--current:hover {
+    background: #285037;
+    border-color: #5dbd84;
+    color: #b8f0d0;
+}
+
 .preset-btn:disabled {
     opacity: 0.5;
     cursor: default;
+}
+
+/* ─── Presets legend ─── */
+.presets-legend {
+    display: flex;
+    gap: 14px;
+    justify-content: flex-end;
+    margin-top: 5px;
+    padding-right: 2px;
+}
+
+.presets-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.66rem;
+    color: var(--text-dim);
+}
+
+.presets-legend-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid;
+}
+
+.presets-legend-swatch--default {
+    border-color: var(--border-light);
+    background: var(--bg-panel);
+}
+
+.presets-legend-swatch--current {
+    border-color: #4a9c6d;
+    background: #4a9c6d33;
 }
 
 /* ─── Loading ─── */
@@ -2481,7 +2528,7 @@ header .accent {
     gap: 6px;
 }
 
-.opt-subspace + .opt-subspace {
+.opt-subspace+.opt-subspace {
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
