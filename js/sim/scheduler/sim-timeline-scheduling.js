@@ -87,6 +87,12 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
         const perHit = durBased ? h.damage : (count > 1 ? h.damage / count : h.damage);
         const effectiveRep = rep > 0 ? rep : (durBased && count > 1 ? (h.interval || 1) * 1000 : 0);
 
+        const orbPreScheduled = hammerOrbElement && effectiveRep > 0 && count === 1
+            && (ctx.hammerOrbDurationMs || 0) > 0;
+        if (orbPreScheduled) {
+            count = Math.ceil(ctx.hammerOrbDurationMs / effectiveRep);
+        }
+
         for (let i = 0; i < count; i++) {
             const t = castStart + off + (effectiveRep > 0 && count > 1 ? i * effectiveRep : 0);
             if (interruptAt !== null && t > interruptAt) {
@@ -121,7 +127,7 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
                 spearForceCrit: spearForceCrit || undefined,
                 spearCCHit: (spearCCHit && isFirstHit) || undefined,
                 hammerOrbElement: hammerOrbElement || undefined,
-                hammerOrbRepeatMs: hammerOrbElement
+                hammerOrbRepeatMs: (hammerOrbElement && !orbPreScheduled)
                     ? (effectiveRep > 0 ? effectiveRep : ((h.interval || 0) > 0 ? h.interval * 1000 : 0))
                     : undefined,
                 frigidFlurryProc: S._frigidFlurryProcActive || undefined,
