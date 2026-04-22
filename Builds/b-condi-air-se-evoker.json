@@ -2,12 +2,12 @@
   "build": {
     "gear": {
       "Helm": "Viper's",
-      "Shoulders": "Sinister",
+      "Shoulders": "Viper's",
       "Chest": "Viper's",
-      "Gloves": "Sinister",
+      "Gloves": "Viper's",
       "Leggins": "Viper's",
-      "Boots": "Sinister",
-      "Amulet": "Viper's",
+      "Boots": "Viper's",
+      "Amulet": "Sinister",
       "Ring1": "Sinister",
       "Ring2": "Viper's",
       "Accessory1": "Sinister",
@@ -92,5 +92,5 @@
     "Vulnerability": 25
   },
   "hitboxSize": "small",
-  "glyphBoonedElementals": true
+  "glyphBoonedElementals": false
 }

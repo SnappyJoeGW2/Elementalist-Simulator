@@ -2,17 +2,17 @@
   "build": {
     "gear": {
       "Helm": "Viper's",
-      "Shoulders": "Sinister",
+      "Shoulders": "Viper's",
       "Chest": "Viper's",
-      "Gloves": "Sinister",
+      "Gloves": "Viper's",
       "Leggins": "Viper's",
-      "Boots": "Sinister",
+      "Boots": "Viper's",
       "Amulet": "Viper's",
-      "Ring1": "Sinister",
+      "Ring1": "Viper's",
       "Ring2": "Viper's",
-      "Accessory1": "Sinister",
-      "Accessory2": "Sinister",
-      "Back": "Sinister",
+      "Accessory1": "Viper's",
+      "Accessory2": "Viper's",
+      "Back": "Viper's",
       "Weapon1": "Viper's",
       "Weapon2": "Viper's"
     },
@@ -20,13 +20,13 @@
       "Scepter",
       "Focus"
     ],
-    "rune": "Balthazar",
+    "rune": "Firebrand",
     "sigils": [
-      "Bursting",
+      "Smoldering",
       "Earth"
     ],
     "relic": "Fractal",
-    "food": "Cilantro and Cured Meat Flatbread",
+    "food": "Fishy Rice Bowl",
     "utility": "Toxic Tuning Crystal",
     "jadeBotCore": true,
     "specializations": [
@@ -45,12 +45,12 @@
     ],
     "infusions": [
       {
-        "stat": "Condition Damage",
-        "count": 18
+        "stat": "Expertise",
+        "count": 8
       },
       {
-        "stat": "Precision",
-        "count": 0
+        "stat": "Condition Damage",
+        "count": 10
       },
       {
         "stat": "Ferocity",

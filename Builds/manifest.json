@@ -265,24 +265,16 @@
         "label": "Condi SE (Air)",
         "build": "Builds/b-condi-air-se-evoker.json",
         "rotation": "Rotations/r-condi-air-se-evoker.json",
-        "dpsReportUrl": "https://dps.report/LD8o-20260417-154444_golem",
-        "benchmarkDps": 44657,
-        "upToDate": true
-      },
-      {
-        "label": "Condi SE (Arcane)",
-        "build": "Builds/b-condi-arcane-se-evoker.json",
-        "rotation": "Rotations/r-condi-arcane-se-evoker.json",
-        "dpsReportUrl": "https://dps.report/t9BV-20260415-180105_golem",
-        "benchmarkDps": 44268,
+        "dpsReportUrl": "https://dps.report/zPEa-20260421-193615_golem",
+        "benchmarkDps": 44153,
         "upToDate": true
       },
       {
         "label": "Condi Quickness SE (Air)",
         "build": "Builds/b-condi-quick-air-se-evoker.json",
         "rotation": "Rotations/r-condi-quick-air-se-evoker.json",
-        "dpsReportUrl": "https://dps.report/wq08-20260416-153203_golem",
-        "benchmarkDps": 43158,
+        "dpsReportUrl": "https://dps.report/zPEa-20260421-193615_golem",
+        "benchmarkDps": 40102,
         "upToDate": true
       }
     ]
