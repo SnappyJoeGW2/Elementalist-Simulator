@@ -209,7 +209,6 @@ export function triggerEvasiveArcana(ctx, time) {
     ctx.scheduleHits(skill, time);
     ctx.trackField(skill, time);
     ctx.trackAura(skill, time);
-    grantEvasiveArcanaEvokerCharges(ctx, attunement, time, skillName);
     ctx.log({ t: time, type: 'trait_proc', trait: 'Evasive Arcana', skill: skillName });
     ctx.addStep({
         skill: skillName,

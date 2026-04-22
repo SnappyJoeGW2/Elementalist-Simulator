@@ -309,7 +309,7 @@ export function handleFamiliar(ctx, sk, concurrents, {
     }
     if (state._hasFamiliarsBlessing) {
         if (famElement === 'Fire' || famElement === 'Air') {
-            ctx.trackEffect('Quickness', 1, 3, end);
+            ctx.trackEffect('Quickness', 1, 1.75, end);
         } else {
             ctx.trackEffect('Alacrity', 1, 4, end);
         }
@@ -348,7 +348,7 @@ export function handleFamiliar(ctx, sk, concurrents, {
     }
 
     if (state._hasSpecializedElements) {
-        const pct = isBasic ? 0.10 : 0.50;
+        const pct = isBasic ? 0.10 : 0.33;
         ctx.rechargeWeaponSkills(pct, end);
         if (!isBasic) {
             ctx.triggerAttunementEnterEffects(evokerState.element, end);
