@@ -51,6 +51,7 @@ export function getConditionDurationBonus(conditionType, attributes) {
 const BOON_DURATION_KEYS = {
     Might: 'Might Duration',
     Fury: 'Fury Duration',
+    Quickness: 'Quickness Duration',
 };
 
 export function getBoonDurationBonus(boonType, attributes) {
