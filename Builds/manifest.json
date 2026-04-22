@@ -273,7 +273,7 @@
         "label": "Condi Quickness SE (Air)",
         "build": "Builds/b-condi-quick-air-se-evoker.json",
         "rotation": "Rotations/r-condi-quick-air-se-evoker.json",
-        "dpsReportUrl": "https://dps.report/zPEa-20260421-193615_golem",
+        "dpsReportUrl": "https://dps.report/2aDW-20260421-233936_golem",
         "benchmarkDps": 40102,
         "upToDate": true
       }
