@@ -202,6 +202,7 @@ export function calcAttributes(build, skills) {
         if (s.burningDuration)   add(sigilDur, 'Burning Duration',   s.burningDuration);
         if (s.poisonDuration)    add(sigilDur, 'Poison Duration',    s.poisonDuration);
         if (s.tormentDuration)   add(sigilDur, 'Torment Duration',   s.tormentDuration);
+        if (s.boonDuration)      add(sigilDur, 'Boon Duration',      s.boonDuration);
         if (s.criticalChance)    sigilCC += s.criticalChance;
     }
 
@@ -250,7 +251,7 @@ export function calcAttributes(build, skills) {
     };
 
     // Boon Duration = Concentration / 15  +  bonuses
-    const boonDurBonus = (runeDur['Boon Duration'] || 0) + (foodDur['Boon Duration'] || 0);
+    const boonDurBonus = (runeDur['Boon Duration'] || 0) + (foodDur['Boon Duration'] || 0) + (sigilDur['Boon Duration'] || 0);
     attributes['Boon Duration'] = {
         final: concFinal / 15 + boonDurBonus,
         base: 0, gear: 0, runes: 0, food: 0, utility: 0, jbc: 0, traits: 0, sigils: 0,

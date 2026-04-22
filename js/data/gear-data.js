@@ -426,6 +426,7 @@ export const SIGIL_DATA = {
     Geomancy: {},
     Hydromancy: {},
     Severance: {},
+    Concentration: { boonDuration: 10 },
 };
 
 export const SIGIL_NAMES = sortNames(Object.keys(SIGIL_DATA));
