@@ -1996,7 +1996,7 @@ header .accent {
 
 .res-hdr {
     display: grid;
-    grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px 48px 48px;
+    grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px 72px 48px 48px;
     gap: 4px;
     padding: 2px 4px;
     font-size: 9px;
@@ -2013,7 +2013,7 @@ header .accent {
 
 .res-row {
     display: grid;
-    grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px 48px 48px;
+    grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px 72px 48px 48px;
     gap: 4px;
     padding: 3px 4px;
     font-size: 12px;

@@ -2238,7 +2238,7 @@ class App {
         const dpsWindowSec = (r.dpsWindowMs ?? 0) / 1000;
 
         h += `<div class="res-breakdown"><div class="res-hdr">
-            <span>Skill</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span><span>Avg/Cast</span><span>DCT</span><span>Casts</span><span>Hits</span>
+            <span>Skill</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span><span>Avg/Cast</span><span>DCT</span><span>1s Delay</span><span>Casts</span><span>Hits</span>
         </div>`;
         // Build a name→icon map from proc steps (sigils/relics carry their icon there)
         const stepIconMap = {};
@@ -2260,6 +2260,9 @@ class App {
             const avgPerCast = d.casts > 0 ? Math.round(total / d.casts) : 0;
             const castTimeSec = (d.castTimeMs || 0) / 1000;
             const dct = castTimeSec > 0 ? Math.round(total / castTimeSec) : null;
+            const sk = this.sim._skill(name);
+            const cd = sk?.recharge || 0;
+            const delayCost = (avgPerCast > 0 && cd > 0) ? Math.round(avgPerCast / cd) : null;
             h += `<div class="res-row">
                 <span class="res-skill"><img src="${icon || PLACEHOLDER_ICON}" />${esc(name)}</span>
                 <span>${Math.round(d.strike).toLocaleString()}</span>
@@ -2268,6 +2271,7 @@ class App {
                 <span class="dps">${skillDps.toLocaleString()}</span>
                 <span>${avgPerCast.toLocaleString()}</span>
                 <span>${dct !== null ? dct.toLocaleString() : '—'}</span>
+                <span>${delayCost !== null ? delayCost.toLocaleString() : '—'}</span>
                 <span>${d.casts}</span>
                 <span>${d.hits ?? 0}</span>
             </div>`;
