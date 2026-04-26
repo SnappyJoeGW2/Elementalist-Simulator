@@ -216,6 +216,14 @@ const RELIC_PROCS = {
         conditions: null,
         icon: 'https://render.guildwars2.com/file/2999CCF7C94267B2EE3DDA7459050864622927C9/3122349.png',
     },
+    Mistburn: {
+        trigger: 'might_crit_chance', mightThreshold: 10, criticalChance: 10,
+        conditions: null, icon: null,
+    },
+    'Mist Stranger': {
+        trigger: 'flat_on_hit', flatDamage: 105,
+        conditions: null, icon: null,
+    },
     Nourys: {
         trigger: 'nourys', icd: 0, strikeDmgA: 0.25, condDmgA: 0.25, effectDuration: 5000,
         stackInterval: 3000, stacksNeeded: 10,
@@ -303,6 +311,12 @@ const RELIC_PROCS = {
         trigger: 'water_blast_leap_combo', icd: 0,
         conditions: { Burning: { stacks: 1, dur: 5 } },
         icon: 'https://render.guildwars2.com/file/23B0F0A5BF05E05C9F527BF7EB4962C9F49C6F42/3441975.png',
+    },
+    Thorns: {
+        trigger: 'enemy_hit', icd: 5000, conditionDamagePerStack: 30, maxStacks: 10,
+        bossAuraHitInterval: 3000, defaultHitInterval: 5000,
+        conditions: null,
+        icon: 'https://wiki.guildwars2.com/images/8/8a/Relic_of_Thorns.png',
     },
 };
 const ATTUNEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
@@ -450,7 +464,7 @@ export const SMALL_HITBOX_CAPS = new Map([
 ]);
 
 export class SimulationEngine {
-    constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits, hitboxSize, glyphBoonedElementals }) {
+    constructor({ skills, skillHits, weapons, attributes, sigils, relics, activeTraits, hitboxSize, glyphBoonedElementals, thornsBossAuraOnly }) {
         this.skills = skills;
         this.skillHits = skillHits;
         this.weapons = weapons;
@@ -460,6 +474,7 @@ export class SimulationEngine {
         this.activeTraitNames = new Set((activeTraits || []).map(t => t.name));
         this.hitboxSize = hitboxSize || 'large';
         this.glyphBoonedElementals = !!glyphBoonedElementals;
+        this.thornsBossAuraOnly = !!thornsBossAuraOnly;
         this.rotation = [];
         this.results = null;
         this.fastMode = false;

@@ -3,7 +3,7 @@
 // Slots with identical stat weights are grouped; we enumerate unique
 // distributions of prefixes per group, then expand to per-slot assignments.
 
-import { SimulationEngine } from '../simulation.js?v=46';
+import { SimulationEngine } from '../simulation.js?v=48';
 import { calcAttributes } from '../core/calc-attributes.js';
 import { GEAR_STATS } from '../data/gear-data.js';
 
@@ -14,7 +14,7 @@ self.onmessage = ({ data }) => {
             baseBuild, selectedSkills, rotation,
             prefixes, constraints = {}, slotConstraints = {},
             startAtt, startAtt2, evokerElement, permaBoons,
-            combos, activeSlots, hitboxSize, glyphBoonedElementals,
+            combos, activeSlots, hitboxSize, glyphBoonedElementals, thornsBossAuraOnly,
         } = data;
 
         const initAttrs = calcAttributes(baseBuild, selectedSkills);
@@ -26,6 +26,7 @@ self.onmessage = ({ data }) => {
             activeTraits: initAttrs.activeTraits,
             hitboxSize,
             glyphBoonedElementals,
+            thornsBossAuraOnly,
         });
         sim.rotation = rotation;
         sim.fastMode = true;

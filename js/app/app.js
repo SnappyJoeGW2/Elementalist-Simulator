@@ -48,6 +48,7 @@ import {
     restoreBuild,
     serializeRotation,
     truncateRotationAfter,
+    updateSpecialOptionVisibility,
 } from './app-runtime.js';
 import {
     applyOptimizerResult,
@@ -226,6 +227,7 @@ const INTENSITY_EFFECTS = new Set([
     'Burning', 'Bleeding', 'Poisoned', 'Poison', 'Torment', 'Confusion',
     'Might', 'Stability', 'Vulnerability',
     'Elemental Empowerment', 'Empowering Auras', 'Persisting Flames',
+    'Thorns',
 ]);
 
 const EFFECT_COLORS = {
@@ -249,6 +251,7 @@ const EFFECT_COLORS = {
     'Persisting Flames': '#ff6644',
     'Dark Aura': '#884488',
     'Persisting Flames': '#ff8833',
+    Thorns: '#6fbb46',
     'Fresh Air': '#66ccff',
     'Tempestuous Aria': '#dd6699',
     'Transcendent Tempest': '#9966ff',
@@ -324,9 +327,14 @@ class App {
         this.build = JSON.parse(JSON.stringify(DEFAULT_BUILD));
         this.hitboxSize = 'large';
         this.glyphBoonedElementals = false;
+        this.thornsBossAuraOnly = false;
         this._restoreBuild(); // populates this.build, selectedSkills, etc. from localStorage if available
         this.data.attributes = calcBuildAttributes(this.build, this.selectedSkills);
-        this.sim = createSimulationEngine(this.data, this.data.attributes, { hitboxSize: this.hitboxSize, glyphBoonedElementals: this.glyphBoonedElementals });
+        this.sim = createSimulationEngine(this.data, this.data.attributes, {
+            hitboxSize: this.hitboxSize,
+            glyphBoonedElementals: this.glyphBoonedElementals,
+            thornsBossAuraOnly: this.thornsBossAuraOnly,
+        });
 
         // Rotation couldn't be restored in _restoreBuild because this.sim didn't
         // exist yet.  Re-apply the saved rotation now that the engine is ready.
@@ -383,6 +391,13 @@ class App {
         document.getElementById('glyph-booned-cb').addEventListener('change', (e) => {
             this.glyphBoonedElementals = e.target.checked;
             if (this.sim) this.sim.glyphBoonedElementals = this.glyphBoonedElementals;
+            this._persistBuild();
+            if (this.sim?.rotation.length > 0) this._autoRun();
+        });
+        document.getElementById('thorns-boss-aura-cb').addEventListener('change', (e) => {
+            this.thornsBossAuraOnly = e.target.checked;
+            if (this.sim) this.sim.thornsBossAuraOnly = this.thornsBossAuraOnly;
+            if (this._optimizer) this._optimizer.thornsBossAuraOnly = this.thornsBossAuraOnly;
             this._persistBuild();
             if (this.sim?.rotation.length > 0) this._autoRun();
         });
@@ -446,6 +461,9 @@ class App {
         if (hitboxEl) hitboxEl.value = this.hitboxSize || 'large';
         const glyphCb = document.getElementById('glyph-booned-cb');
         if (glyphCb) glyphCb.checked = !!this.glyphBoonedElementals;
+        const thornsCb = document.getElementById('thorns-boss-aura-cb');
+        if (thornsCb) thornsCb.checked = !!this.thornsBossAuraOnly;
+        updateSpecialOptionVisibility(this);
     }
 
     // ─── Gear Panel ───
@@ -2596,6 +2614,7 @@ class App {
         const STACK_CAPS = {
             Might: 25, Stability: 25, Vulnerability: 25,
             'Elemental Empowerment': 10, 'Empowering Auras': 5, 'Persisting Flames': 5,
+            Thorns: 10,
         };
         const effectLines = {};
         let maxStacks = 0;
@@ -2653,7 +2672,7 @@ class App {
         dpsCtx.textAlign = 'left';
         dpsCtx.fillText('DPS ▲', dpsPad.left + 2, dpsPad.top - 6);
 
-        const LABEL_EFFECTS = new Set(['Elemental Empowerment', 'Empowering Auras', 'Persisting Flames']);
+        const LABEL_EFFECTS = new Set(['Elemental Empowerment', 'Empowering Auras', 'Persisting Flames', 'Thorns']);
         effectsCtx.clearRect(0, 0, effectsCssW, effectsCssH);
         effectsCtx.fillStyle = '#0c0c14';
         effectsCtx.fillRect(0, 0, effectsCssW, effectsCssH);

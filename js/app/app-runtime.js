@@ -53,6 +53,7 @@ export function buildSnapshot(app) {
         rotation: serializeRotation(app),
         hitboxSize: app.hitboxSize,
         glyphBoonedElementals: app.glyphBoonedElementals,
+        thornsBossAuraOnly: app.thornsBossAuraOnly,
     });
 }
 
@@ -68,6 +69,7 @@ export function applySnapshot(app, state) {
         selectedSkills: app.selectedSkills,
         hitboxSize: app.hitboxSize,
         glyphBoonedElementals: app.glyphBoonedElementals,
+        thornsBossAuraOnly: app.thornsBossAuraOnly,
     }, state, app.data?.skills);
 
     app.build = merged.build;
@@ -80,6 +82,7 @@ export function applySnapshot(app, state) {
     app.selectedSkills = merged.selectedSkills;
     app.hitboxSize = merged.hitboxSize || 'large';
     app.glyphBoonedElementals = !!merged.glyphBoonedElementals;
+    app.thornsBossAuraOnly = !!merged.thornsBossAuraOnly;
 
     if (merged.rotation) {
         if (app.sim) deserializeRotation(app, merged.rotation);
@@ -110,6 +113,7 @@ export function onBuildChange(app) {
         rotation,
         hitboxSize: app.hitboxSize,
         glyphBoonedElementals: app.glyphBoonedElementals,
+        thornsBossAuraOnly: app.thornsBossAuraOnly,
     });
     app.data.attributes = rebuilt.attributes;
     app.sim = rebuilt.sim;
@@ -137,6 +141,17 @@ function updateGlyphBoonedVisibility(app) {
     wrap.style.display = hasGlyph ? '' : 'none';
 }
 
+function updateThornsOptionVisibility(app) {
+    const wrap = document.getElementById('thorns-boss-aura-wrap');
+    if (!wrap) return;
+    wrap.style.display = app.build?.relic === 'Thorns' ? '' : 'none';
+}
+
+export function updateSpecialOptionVisibility(app) {
+    updateGlyphBoonedVisibility(app);
+    updateThornsOptionVisibility(app);
+}
+
 export function autoRun(app) {
     if (!app.sim || app.sim.rotation.length === 0) {
         app.sim.results = null;
@@ -144,7 +159,7 @@ export function autoRun(app) {
         app._renderTimeline();
         document.getElementById('rotation-results').innerHTML = '';
         app._updateOptimizerVisibility(false);
-        updateGlyphBoonedVisibility(app);
+        updateSpecialOptionVisibility(app);
         persistBuild(app);
         return;
     }
@@ -165,7 +180,7 @@ export function autoRun(app) {
     app._renderTimeline();
     app._renderResults();
     app._updateOptimizerVisibility(true);
-    updateGlyphBoonedVisibility(app);
+    updateSpecialOptionVisibility(app);
     persistBuild(app);
 }
 
@@ -233,6 +248,7 @@ export function clearRotation(app) {
     app._renderPalette();
     app._renderTimeline();
     document.getElementById('rotation-results').innerHTML = '';
+    updateSpecialOptionVisibility(app);
     persistBuild(app); // persist the empty rotation so a page refresh doesn't restore the old one
 }
 

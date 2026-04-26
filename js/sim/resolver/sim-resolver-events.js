@@ -15,6 +15,7 @@ import {
     handleComboHitEffects,
 } from './sim-event-handlers.js';
 import { isPrecombatAt } from '../run/sim-run-phase-state.js';
+import { getRelicState } from '../state/sim-relic-state.js';
 
 export function shouldStopQueuedEvent(ev, deathTime, stopAtTime, rotEnd) {
     if (deathTime !== null && ev.time > deathTime) return true;
@@ -44,10 +45,14 @@ export function buildQueuedEventContext(ctx, time) {
     const { S, baseCondDmg, skipMight, skipVuln } = ctx;
     const might = skipMight ? 0 : ctx.mightStacksAt(time);
     const empMul = ctx.getEmpMul(time);
+    const thornsCondDmg = S.activeRelic === 'Thorns'
+        ? (getRelicState(S).thornsStacks || 0) * (ctx.getRelicProc('Thorns')?.conditionDamagePerStack || 0)
+        : 0;
     const condDmg = baseCondDmg + might * S._mightCondDmgBonus
-        + Math.round((S._empPool?.['Condition Damage'] || 0) * empMul);
+        + Math.round((S._empPool?.['Condition Damage'] || 0) * empMul)
+        + thornsCondDmg;
     const vulnMul = skipVuln ? 1 : 1 + ctx.vulnStacksAt(time) * 0.01;
-    return { might, empMul, condDmg, vulnMul };
+    return { might, empMul, condDmg, vulnMul, thornsCondDmg };
 }
 
 export function dispatchQueuedCombatEvent(ctx, ev, { tgtHP }) {

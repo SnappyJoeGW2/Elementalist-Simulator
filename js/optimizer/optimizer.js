@@ -9,12 +9,12 @@
 // Each non-gear combo (rune × relic × slot-specific sigils × food × utility × infusions)
 // is sent to a Web Worker for parallel exhaustive evaluation.
 
-import { SimulationEngine } from '../simulation.js?v=46';
+import { SimulationEngine } from '../simulation.js?v=48';
 import { calcAttributes } from '../core/calc-attributes.js';
 import { GEAR_SLOTS, GEAR_STATS, WEAPON_DATA, getActiveGearSlots } from '../data/gear-data.js';
 
 export class GearOptimizer {
-    constructor({ skills, skillHits, weapons, sigils, relics, hitboxSize, glyphBoonedElementals }) {
+    constructor({ skills, skillHits, weapons, sigils, relics, hitboxSize, glyphBoonedElementals, thornsBossAuraOnly }) {
         this.skills = skills;
         this.skillHits = skillHits;
         this.weapons = weapons;
@@ -22,6 +22,7 @@ export class GearOptimizer {
         this.relicsData = relics;
         this.hitboxSize = hitboxSize || 'large';
         this.glyphBoonedElementals = !!glyphBoonedElementals;
+        this.thornsBossAuraOnly = !!thornsBossAuraOnly;
         this._cancelled = false;
         this._workers = [];
     }
@@ -70,6 +71,7 @@ export class GearOptimizer {
             startAtt, startAtt2, evokerElement, permaBoons,
             hitboxSize: this.hitboxSize,
             glyphBoonedElementals: this.glyphBoonedElementals,
+            thornsBossAuraOnly: this.thornsBossAuraOnly,
         };
 
         const top10 = [];
@@ -221,6 +223,7 @@ export class GearOptimizer {
             activeTraits: attrs.activeTraits,
             hitboxSize: this.hitboxSize,
             glyphBoonedElementals: this.glyphBoonedElementals,
+            thornsBossAuraOnly: this.thornsBossAuraOnly,
         });
         sim.rotation = rotation;
         sim.fastMode = true;

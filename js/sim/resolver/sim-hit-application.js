@@ -1,22 +1,36 @@
 import { strikeDamage } from '../../core/damage.js';
 import { anySphereActiveAt } from '../scheduler/sim-special-actions.js';
-import { addPerSkillStrike, addPerSkillHit } from '../state/sim-reporting-state.js';
+import { addPerSkillStrike, addPerSkillHit, recordPerSkillCast } from '../state/sim-reporting-state.js';
 
 function isFlatStrikeEvent(ev) {
     return Number.isFinite(ev?.flatStrikeBase) || Number.isFinite(ev?.flatStrikePowerCoeff);
 }
 
+function getMistStrangerFlatDamage(ctx, ev) {
+    const { S } = ctx;
+    if (S.activeRelic !== 'Mist Stranger') return 0;
+    if (ev.isSigilProc || ev.isRelicProc || ev.isTraitProc || ev.isFoodProc) return 0;
+    return ctx.getRelicProc('Mist Stranger')?.flatDamage || 0;
+}
+
 function applyStrikeDamage(ctx, ev, power, critMult, strikeMul) {
     const { S, catalystEnergyMax } = ctx;
+    const mistStrangerFlat = getMistStrangerFlatDamage(ctx, ev);
+    let baseStrike = 0;
     if (isFlatStrikeEvent(ev)) {
-        const strike = (ev.flatStrikeBase || 0) + ((ev.flatStrikePowerCoeff || 0) * power);
+        baseStrike = (ev.flatStrikeBase || 0) + ((ev.flatStrikePowerCoeff || 0) * power);
+        const strike = baseStrike + mistStrangerFlat;
         S.totalStrike += strike;
-        return strike;
+        return { strike, baseStrike, mistStrangerFlat };
     }
 
-    if (!(ev.dmg > 0 && ev.ws > 0)) return 0;
+    if (!(ev.dmg > 0 && ev.ws > 0)) {
+        S.totalStrike += mistStrangerFlat;
+        return { strike: mistStrangerFlat, baseStrike: 0, mistStrangerFlat };
+    }
 
-    const strike = strikeDamage(ev.dmg, ev.ws, power) * critMult * strikeMul;
+    baseStrike = strikeDamage(ev.dmg, ev.ws, power) * critMult * strikeMul;
+    const strike = baseStrike + mistStrangerFlat;
     S.totalStrike += strike;
 
     if (!ev._energyCredited
@@ -24,7 +38,7 @@ function applyStrikeDamage(ctx, ev, power, critMult, strikeMul) {
         ctx.addCatalystEnergy(1, catalystEnergyMax);
     }
 
-    return strike;
+    return { strike, baseStrike, mistStrangerFlat };
 }
 
 function recordStrikeContribution(ctx, skillName, strike) {
@@ -87,12 +101,17 @@ function logAppliedHit(ctx, ev, strike) {
         finisher: ev.finType,
         att: ev.att,
         flatStrike: isFlatStrikeEvent(ev),
+        mistStrangerFlatDamage: getMistStrangerFlatDamage(ctx, ev),
     });
 }
 
 export function procHit(ctx, ev, power, condDmg, critMult, strikeMul, condMul) {
-    const strike = applyStrikeDamage(ctx, ev, power, critMult, strikeMul);
-    recordStrikeContribution(ctx, ev.skill, strike);
+    const { strike, baseStrike, mistStrangerFlat } = applyStrikeDamage(ctx, ev, power, critMult, strikeMul);
+    recordStrikeContribution(ctx, ev.skill, baseStrike);
+    if (mistStrangerFlat > 0) {
+        recordStrikeContribution(ctx, 'Relic of Mist Stranger', mistStrangerFlat);
+        recordPerSkillCast(ctx.S, 'Relic of Mist Stranger', 0);
+    }
     applyPayloadEffects(ctx, ev, condDmg, condMul);
     logAppliedHit(ctx, ev, strike);
 }

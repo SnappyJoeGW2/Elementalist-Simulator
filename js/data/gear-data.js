@@ -454,6 +454,8 @@ export const SIGIL_NAMES = sortNames(Object.keys(SIGIL_DATA));
 export const RELIC_DATA = {
     Akeem: { trigger: 'CC enemy with 5+ Torment/Confusion stacks', cooldown: 10 },
     Fireworks: { trigger: 'Use weapon skill (CD ≥20s)', cooldown: 0 },
+    Mistburn: { trigger: 'At least 10 Might stacks', cooldown: 0 },
+    'Mist Stranger': { trigger: 'Extra flat damage on every hit', cooldown: 0 },
     'Mount Balrior': { trigger: 'Use elite skill', cooldown: 30 },
     Nourys: { trigger: 'Gain 1 stack every 3s in combat (10 stacks → 5s damage buff)', cooldown: 0 },
     Peitha: { trigger: 'Shadowstep or deception skill', cooldown: 4 },
@@ -465,6 +467,7 @@ export const RELIC_DATA = {
     Eagle: { trigger: 'Enemy below 50% HP', cooldown: 0 },
     Fractal: { trigger: 'Apply bleeding on enemy with 6+ bleed stacks', cooldown: 20 },
     Krait: { trigger: 'Use elite skill', cooldown: 30 },
+    Thorns: { trigger: 'Gain Condition Damage when struck by enemies', cooldown: 5 },
     Thief: { trigger: 'Use weapon skill with CD or resource cost', cooldown: 0 },
     Weaver: { trigger: 'Use stance skill', cooldown: 0 },
     Fire: { trigger: 'Use healing skill (grants Fire Aura 4s)', cooldown: 20 },

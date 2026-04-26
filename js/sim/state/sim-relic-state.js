@@ -13,6 +13,8 @@ export function createRelicState() {
         bloodstoneStacks: 0,
         bloodstoneStacksUntil: 0,
         bloodstoneExplosionUntil: 0,
+        thornsStacks: 0,
+        thornsReadyAt: 0,
     };
 }
 
@@ -32,6 +34,8 @@ export function getRelicState(S) {
             bloodstoneStacks: S.relicBloodstoneStacks ?? 0,
             bloodstoneStacksUntil: S.relicBloodstoneStacksUntil ?? 0,
             bloodstoneExplosionUntil: S.relicBloodstoneExplosionUntil ?? 0,
+            thornsStacks: S.relicThornsStacks ?? 0,
+            thornsReadyAt: S.relicThornsReadyAt ?? 0,
         };
     }
     return S.relicState;

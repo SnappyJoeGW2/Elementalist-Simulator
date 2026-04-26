@@ -107,6 +107,7 @@ export function initOptimizer(app) {
         relics: RELIC_DATA,
         hitboxSize: app.hitboxSize,
         glyphBoonedElementals: app.glyphBoonedElementals,
+        thornsBossAuraOnly: app.thornsBossAuraOnly,
     });
     app._optResults = [];
     app._optRunning = false;
@@ -439,6 +440,9 @@ export async function runOptimizer(app) {
     if (resultsEl) resultsEl.classList.add('hidden');
 
     try {
+        app._optimizer.hitboxSize = app.hitboxSize || 'large';
+        app._optimizer.glyphBoonedElementals = !!app.glyphBoonedElementals;
+        app._optimizer.thornsBossAuraOnly = !!app.thornsBossAuraOnly;
         const results = await app._optimizer.optimize(
             {
                 build: JSON.parse(JSON.stringify(app.build)),

@@ -7,7 +7,11 @@ import {
     normalizeRotationCommands,
 } from './sim-rotation-command-model.js';
 import { getSkillCooldownReadyAt } from '../state/sim-cooldown-state.js';
-import { buildNourysTickAction, queueRuntimeAction } from '../shared/sim-deferred-runtime-actions.js';
+import {
+    buildNourysTickAction,
+    buildThornsEnemyHitAction,
+    queueRuntimeAction,
+} from '../shared/sim-deferred-runtime-actions.js';
 
 export function isConcurrentRotationItem(item) {
     return isRawConcurrentRotationItem(item);
@@ -133,6 +137,9 @@ export function scheduleRotationCommand(ctx, command) {
 export function scheduleRotation(ctx, rotation) {
     if (ctx.S.activeRelic === 'Nourys' && !ctx.S.hasExplicitCombatStart) {
         queueRuntimeAction(ctx.S, buildNourysTickAction({ time: 3000 }));
+    }
+    if (ctx.S.activeRelic === 'Thorns' && !ctx.S.hasExplicitCombatStart) {
+        queueRuntimeAction(ctx.S, buildThornsEnemyHitAction({ time: 3000 }));
     }
 
     const commands = normalizeRotationCommands(rotation);

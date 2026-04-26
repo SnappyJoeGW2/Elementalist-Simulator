@@ -115,9 +115,13 @@ function buildPowerAndCritContext(ctx, ev, {
     const supElemCrit = effectSnapshot.weaknessActive ? 15 : 0;
     const hammerAirCritBonus = effectSnapshot.hammerAirOrbUp ? 15 : 0;
     const severanceCritBonus = effectSnapshot.severanceUp ? (250 / 21) : 0;
+    const mistburnCritBonus = S.activeRelic === 'Mistburn'
+        && might >= (ctx.getRelicProc('Mistburn')?.mightThreshold || 10)
+        ? (ctx.getRelicProc('Mistburn')?.criticalChance || 0)
+        : 0;
     const cc = ev.noCrit ? 0 : (ev.spearForceCrit ? 100 : Math.min(
         baseCritCh + (fury ? S._furyCritBonus : 0) - signetFireLost + supElemCrit
-        + empCritCh + conjurePrec + hammerAirCritBonus + severanceCritBonus,
+        + empCritCh + conjurePrec + hammerAirCritBonus + severanceCritBonus + mistburnCritBonus,
         100
     ));
 
@@ -128,6 +132,7 @@ function buildPowerAndCritContext(ctx, ev, {
         powOvr,
         polyPow,
         polyFer,
+        mistburnCritBonus,
         power,
         hitCondDmg,
         fury,
@@ -326,6 +331,7 @@ export function buildHitResolutionContext(ctx, ev, {
         powOvr: statCtx.powOvr,
         polyPow: statCtx.polyPow,
         polyFer: statCtx.polyFer,
+        mistburnCritBonus: statCtx.mistburnCritBonus,
         addStrike: multCtx.addStrike,
         baseStrike: multCtx.baseStrike,
         vulnMul,
@@ -370,6 +376,7 @@ export function applyResolvedHit(ctx, ev, hitCtx, { skipVuln }) {
             powOvr: hitCtx.powOvr,
             polyPow: hitCtx.polyPow,
             polyFer: hitCtx.polyFer,
+            mistburnCritBonus: hitCtx.mistburnCritBonus,
         };
     }
 }

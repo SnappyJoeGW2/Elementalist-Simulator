@@ -2,6 +2,7 @@ import { enqueueRuntimeActionEvent } from './sim-events.js';
 import { isCombatActiveAt } from '../run/sim-run-phase-state.js';
 import { getRelicState } from '../state/sim-relic-state.js';
 import { getProcState } from '../state/sim-proc-state.js';
+import { pushTimedStack } from '../state/sim-runtime-state.js';
 
 export function buildAuraFollowupAction({ time, skill }) {
     return {
@@ -21,6 +22,13 @@ export function buildPrimordialStanceAction({ time }) {
 export function buildNourysTickAction({ time }) {
     return {
         type: 'nourys_tick',
+        time,
+    };
+}
+
+export function buildThornsEnemyHitAction({ time }) {
+    return {
+        type: 'thorns_enemy_hit',
         time,
     };
 }
@@ -122,6 +130,48 @@ export function applyRuntimeAction(ctx, action) {
 
         ctx.queueRuntimeActionEvent(buildNourysTickAction({
             time: action.time + proc.stackInterval,
+        }));
+    } else if (action.type === 'thorns_enemy_hit') {
+        if (S.activeRelic !== 'Thorns') return;
+        const proc = ctx.getRelicProc('Thorns');
+        if (!proc || !isCombatActiveAt(S, action.time)) return;
+
+        const relicState = getRelicState(S);
+        const interval = ctx.engine?.thornsBossAuraOnly
+            ? proc.bossAuraHitInterval
+            : proc.defaultHitInterval;
+
+        if (action.time >= (relicState.thornsReadyAt || 0)
+            && (relicState.thornsStacks || 0) < proc.maxStacks) {
+            const before = relicState.thornsStacks || 0;
+            relicState.thornsStacks = Math.min(before + 1, proc.maxStacks);
+            relicState.thornsReadyAt = action.time + proc.icd;
+            const current = relicState.thornsStacks;
+            pushTimedStack(S, {
+                t: action.time,
+                cond: 'Thorns',
+                expiresAt: 999999999,
+            });
+            ctx.log({
+                t: action.time,
+                type: 'relic_proc',
+                relic: 'Thorns',
+                skill: 'Relic of Thorns',
+                detail: `${current}/${proc.maxStacks}`,
+            });
+            ctx.addStep({
+                skill: 'Relic of Thorns',
+                start: action.time,
+                end: action.time,
+                att: S.att,
+                type: 'relic_proc',
+                ri: -1,
+                icon: proc.icon,
+            });
+        }
+
+        ctx.queueRuntimeActionEvent(buildThornsEnemyHitAction({
+            time: action.time + interval,
         }));
     }
 }

@@ -1,5 +1,5 @@
 import { calcAttributes } from '../../core/calc-attributes.js';
-import { SimulationEngine } from '../../simulation.js?v=46';
+import { SimulationEngine } from '../../simulation.js?v=48';
 import { WEAPON_DATA, SIGIL_DATA, RELIC_DATA } from '../../data/gear-data.js';
 import { cloneRotationItems } from '../../app/app-state.js';
 
@@ -11,7 +11,7 @@ export function calcBuildAttributes(build, selectedSkills) {
     return calcAttributes(build, getSelectedSkillList(selectedSkills));
 }
 
-export function createSimulationEngine(data, attributes, { hitboxSize, glyphBoonedElementals } = {}) {
+export function createSimulationEngine(data, attributes, { hitboxSize, glyphBoonedElementals, thornsBossAuraOnly } = {}) {
     return new SimulationEngine({
         skills: data.skills,
         skillHits: data.skillHits,
@@ -22,12 +22,13 @@ export function createSimulationEngine(data, attributes, { hitboxSize, glyphBoon
         activeTraits: attributes.activeTraits,
         hitboxSize,
         glyphBoonedElementals,
+        thornsBossAuraOnly,
     });
 }
 
-export function rebuildSimulation({ data, build, selectedSkills, rotation = [], hitboxSize, glyphBoonedElementals }) {
+export function rebuildSimulation({ data, build, selectedSkills, rotation = [], hitboxSize, glyphBoonedElementals, thornsBossAuraOnly }) {
     const attributes = calcBuildAttributes(build, selectedSkills);
-    const sim = createSimulationEngine(data, attributes, { hitboxSize, glyphBoonedElementals });
+    const sim = createSimulationEngine(data, attributes, { hitboxSize, glyphBoonedElementals, thornsBossAuraOnly });
     sim.rotation = cloneRotationItems(rotation);
     return { attributes, sim };
 }
