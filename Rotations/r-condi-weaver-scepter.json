@@ -71,13 +71,10 @@
     },
     "Signet of Fire",
     "Rock Barrier",
+    "Hurl",
     {
       "name": "Fire Attunement",
       "offset": 881
-    },
-    {
-      "name": "Hurl",
-      "offset": 882
     },
     "Dragon's Tooth",
     "Flamestrike",
@@ -398,12 +395,12 @@
       "offset": 119
     },
     {
-      "name": "Fire Attunement",
-      "offset": 518
-    },
-    {
       "name": "Stone Shards",
       "interruptMs": 77
+    },
+    {
+      "name": "Fire Attunement",
+      "offset": 518
     },
     "Dragon's Tooth",
     "Flamestrike",
