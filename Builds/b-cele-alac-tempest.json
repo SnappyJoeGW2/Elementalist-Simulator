@@ -1,33 +1,33 @@
 {
   "build": {
     "gear": {
-      "Helm": "Viper's",
-      "Shoulders": "Viper's",
-      "Chest": "Viper's",
-      "Gloves": "Viper's",
-      "Leggins": "Viper's",
-      "Boots": "Viper's",
-      "Amulet": "Viper's",
-      "Ring1": "Viper's",
-      "Ring2": "Viper's",
-      "Accessory1": "Viper's",
-      "Accessory2": "Viper's",
-      "Back": "Viper's",
-      "Weapon1": "Viper's",
-      "Weapon2": "Viper's"
+      "Helm": "Celestial",
+      "Shoulders": "Celestial",
+      "Chest": "Celestial",
+      "Gloves": "Celestial",
+      "Leggins": "Celestial",
+      "Boots": "Celestial",
+      "Amulet": "Celestial",
+      "Ring1": "Celestial",
+      "Ring2": "Celestial",
+      "Accessory1": "Celestial",
+      "Accessory2": "Celestial",
+      "Back": "Celestial",
+      "Weapon1": "Celestial",
+      "Weapon2": "Celestial"
     },
     "weapons": [
-      "Pistol",
+      "Scepter",
       "Warhorn"
     ],
-    "rune": "Trapper",
+    "rune": "Divinity",
     "sigils": [
-      "Malice",
-      "Bursting"
+      "Smoldering",
+      "Torment"
     ],
-    "relic": "Fractal",
-    "food": "Salsa-Topped Veggie Flatbread",
-    "utility": "Toxic Tuning Crystal",
+    "relic": "Peitha",
+    "food": "Spherified Cilantro Oyster Soup",
+    "utility": "Toxic Maintenance Oil",
     "jadeBotCore": true,
     "specializations": [
       {
@@ -40,12 +40,12 @@
       },
       {
         "name": "Tempest",
-        "traits": "3-1-3"
+        "traits": "3-3-3"
       }
     ],
     "infusions": [
       {
-        "stat": "Expertise",
+        "stat": "Healing Power",
         "count": 18
       },
       {
@@ -59,13 +59,13 @@
     ]
   },
   "selectedSkills": {
-    "heal": "Signet of Restoration",
-    "util1": "Glyph of Storms (Fire)",
-    "util2": "Signet of Fire",
-    "util3": "Feel the Burn!",
+    "heal": "Wash the Pain Away!",
+    "util1": "Feel the Burn!",
+    "util2": "Glyph of Storms (Fire)",
+    "util3": "Signet of Fire",
     "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Earth",
+  "activeAttunement": "Fire",
   "secondaryAttunement": "Air",
   "evokerElement": null,
   "evokerStartCharges": 6,
@@ -92,5 +92,5 @@
     "Vulnerability": 25
   },
   "hitboxSize": "small",
-  "glyphBoonedElementals": false
+  "glyphBoonedElementals": true
 }

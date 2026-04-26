@@ -22,22 +22,24 @@
         "label": "Condi (P/Wh)",
         "build": "Builds/b-condi-weaver-pistol.json",
         "rotation": "Rotations/r-condi-weaver-pistol.json",
-        "upToDate": false
+        "dpsReportUrl": "https://dps.report/Qcq2-20260416-041734_golem",
+        "benchmarkDps": 42706,
+        "upToDate": true
       },
       {
         "label": "Condi (P/D)",
         "build": "Builds/b-condi-weaver-pistol-dagger.json",
         "rotation": "Rotations/r-condi-weaver-pistol-dagger.json",
-        "dpsReportUrl": "https://dps.report/5JlP-20260416-153148_golem",
-        "benchmarkDps": 42874,
+        "dpsReportUrl": "https://dps.report/26i4-20260418-202046_golem",
+        "benchmarkDps": 43829,
         "upToDate": true
       },
       {
         "label": "Condi (Scepter)",
         "build": "Builds/b-condi-weaver-scepter.json",
         "rotation": "Rotations/r-condi-weaver-scepter.json",
-        "dpsReportUrl": "https://dps.report/PRmV-20260416-115959_golem",
-        "benchmarkDps": 42573,
+        "dpsReportUrl": "https://dps.report/FtzK-20260416-203228_golem",
+        "benchmarkDps": 43155,
         "upToDate": true
       }
     ]
@@ -45,6 +47,14 @@
   {
     "section": "Tempest",
     "presets": [
+      {
+        "label": "Celestial Alacrity Tempest",
+        "build": "Builds/b-cele-alac-tempest.json",
+        "rotation": "Rotations/r-cele-alac-tempest.json",
+        "dpsReportUrl": "https://dps.report/3zgo-20260418-133338_golem",
+        "benchmarkDps": 21250,
+        "upToDate": true
+      },
       {
         "label": "Power (Sword)",
         "build": "Builds/b-power-tempest-sword.json",
@@ -107,7 +117,9 @@
         "label": "Condi Alacrity (P/Wh)",
         "build": "Builds/b-condi-alac-tempest-pistol.json",
         "rotation": "Rotations/r-condi-alac-tempest-pistol.json",
-        "upToDate": false
+        "dpsReportUrl": "https://dps.report/4NjC-20260423-082345_golem",
+        "benchmarkDps": 32396,
+        "upToDate": true
       },
       {
         "label": "Condi Alacrity (Scepter)",
@@ -249,8 +261,8 @@
         "label": "Condi (Pistol/Dagger)",
         "build": "Builds/b-condi-evoker-pistol-dagger.json",
         "rotation": "Rotations/r-condi-evoker-pistol-dagger.json",
-        "dpsReportUrl": "https://dps.report/0K7M-20260415-153432_golem",
-        "benchmarkDps": 42289,
+        "dpsReportUrl": "https://dps.report/3LQO-20260422-135335_golem",
+        "benchmarkDps": 42665,
         "upToDate": true
       },
       {
@@ -275,6 +287,14 @@
         "rotation": "Rotations/r-condi-quick-air-se-evoker.json",
         "dpsReportUrl": "https://dps.report/2aDW-20260421-233936_golem",
         "benchmarkDps": 40102,
+        "upToDate": true
+      },
+      {
+        "label": "Condi Alacrity (P/Wh)",
+        "build": "Builds/b-condi-alac-evoker-pistol-warhorn.json",
+        "rotation": "Rotations/r-condi-alac-evoker-pistol-warhorn.json",
+        "dpsReportUrl": "https://dps.report/ZH7U-20260423-182755_golem",
+        "benchmarkDps": 38045,
         "upToDate": true
       }
     ]

@@ -491,6 +491,7 @@ export function renderOptimizerResults(app, results) {
         "Ritualist's": 'Ritu', "Celestial": 'Cele', "Diviner's": 'Divn',
         "Dragon's": 'Drag', "Marshal's": 'Mrsh', "Plaguedoctor's": 'PlgD',
         "Trailblazer's": 'Trbl', "Seraph's": 'Sera', "Minstrel's": 'Mnst',
+        'Rabid': 'Rabid',
     };
     const PFX_CSS = {
         "Berserker's": 'pfx-berserker', "Assassin's": 'pfx-assassin',

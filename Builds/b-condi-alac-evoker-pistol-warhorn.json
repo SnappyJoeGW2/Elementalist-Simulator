@@ -12,7 +12,7 @@
       "Ring2": "Viper's",
       "Accessory1": "Viper's",
       "Accessory2": "Viper's",
-      "Back": "Rabid",
+      "Back": "Viper's",
       "Weapon1": "Viper's",
       "Weapon2": "Viper's"
     },
@@ -23,10 +23,10 @@
     "rune": "Trapper",
     "sigils": [
       "Bursting",
-      "Earth"
+      "Malice"
     ],
     "relic": "Fractal",
-    "food": "Cilantro and Cured Meat Flatbread",
+    "food": "Salsa-Topped Veggie Flatbread",
     "utility": "Toxic Tuning Crystal",
     "jadeBotCore": true,
     "specializations": [
@@ -39,13 +39,13 @@
         "traits": "2-1-2"
       },
       {
-        "name": "Weaver",
-        "traits": "1-1-1"
+        "name": "Evoker",
+        "traits": "1-2-1"
       }
     ],
     "infusions": [
       {
-        "stat": "Condition Damage",
+        "stat": "Expertise",
         "count": 18
       },
       {
@@ -59,15 +59,15 @@
     ]
   },
   "selectedSkills": {
-    "heal": "Signet of Restoration",
-    "util1": "Primordial Stance (Fire)",
+    "heal": "Rejuvenate",
+    "util1": "Fox's Fury",
     "util2": "Signet of Fire",
     "util3": "Signet of Earth",
-    "elite": "Weave Self"
+    "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Fire",
+  "activeAttunement": "Earth",
   "secondaryAttunement": "Fire",
-  "evokerElement": null,
+  "evokerElement": "Earth",
   "evokerStartCharges": 6,
   "evokerStartEmpowered": 0,
   "permaBoons": {
@@ -90,5 +90,7 @@
     "Slow": true,
     "Weakness": true,
     "Vulnerability": 25
-  }
+  },
+  "hitboxSize": "small",
+  "glyphBoonedElementals": false
 }

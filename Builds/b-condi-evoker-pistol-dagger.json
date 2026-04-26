@@ -23,11 +23,11 @@
     "rune": "Trapper",
     "sigils": [
       "Bursting",
-      "Malice"
+      "Smoldering"
     ],
     "relic": "Fractal",
-    "food": "Salsa-Topped Veggie Flatbread",
-    "utility": "Tuning Icicle",
+    "food": "Cilantro and Cured Meat Flatbread",
+    "utility": "Toxic Tuning Crystal",
     "jadeBotCore": true,
     "specializations": [
       {
@@ -45,7 +45,7 @@
     ],
     "infusions": [
       {
-        "stat": "Expertise",
+        "stat": "Condition Damage",
         "count": 18
       },
       {
