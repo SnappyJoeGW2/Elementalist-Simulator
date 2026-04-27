@@ -33,7 +33,7 @@ import {
 import {
     addCatalystEnergy,
     addEvokerCharges,
-    incrementCatalystElemBalance,
+    incrementEvokerElemBalance,
 } from '../state/sim-specialization-state.js';
 import {
     getTraitIcd,
@@ -377,8 +377,8 @@ export function createRuntimeContext(engine, S, config = {}) {
             return addEvokerCharges(S, amount, maxCharges);
         },
 
-        incrementCatalystElemBalance(time, opts = {}) {
-            return incrementCatalystElemBalance(S, time, opts);
+        incrementEvokerElemBalance(time, opts = {}) {
+            return incrementEvokerElemBalance(S, time, opts);
         },
 
         gainEndurance(amount, time = S.t) {

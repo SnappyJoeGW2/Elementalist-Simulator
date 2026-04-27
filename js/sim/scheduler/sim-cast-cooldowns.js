@@ -1,5 +1,5 @@
 import { getProcState } from '../state/sim-proc-state.js';
-import { getCatalystState } from '../state/sim-specialization-state.js';
+import { getEvokerState } from '../state/sim-specialization-state.js';
 import {
     getSkillCooldownReadyAt,
     getChargeState,
@@ -53,7 +53,7 @@ export function finishStandardHitScheduling(ctx) {
 
 function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
     const { S } = ctx;
-    const catalystState = getCatalystState(S);
+    const evokerState = getEvokerState(S);
     const procState = getProcState(S);
     if (name === 'Rock Barrier') return;
     if (sk.recharge <= 0) return;
@@ -70,13 +70,13 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
     } else {
         let baseCdMs = ctx.weaponRechargeMs(sk, Math.round(sk.recharge * 1000));
         if (
-            catalystState.elemBalanceActive
-            && end <= catalystState.elemBalanceExpiry
+            evokerState.elemBalanceActive
+            && end <= evokerState.elemBalanceExpiry
             && sk.type === 'Weapon skill'
             && sk.slot !== '1'
         ) {
             baseCdMs = Math.round(baseCdMs * 0.34);
-            ctx.consumeCatalystElemBalance();
+            ctx.consumeEvokerElemBalance();
         }
         if (name === 'Ride the Lightning') baseCdMs = Math.round(baseCdMs / 2);
         if (S.spearNextCdReduce && sk.weapon === 'Spear' && sk.type === 'Weapon skill' && sk.slot !== '1') {

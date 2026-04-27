@@ -183,6 +183,23 @@ export const GEAR_STATS = {
         Weapon2: { Vitality: 108, Concentration: 59, 'Condition Damage': 108, Expertise: 59 },
         Weapon2H: { Vitality: 215, Concentration: 118, 'Condition Damage': 215, Expertise: 118 },
     },
+    "Trailblazer's": {
+        Helm: { Toughness: 54, Expertise: 30, 'Condition Damage': 54, Vitality: 30 },
+        Shoulders: { Toughness: 40, Expertise: 22, 'Condition Damage': 40, Vitality: 22 },
+        Chest: { Toughness: 121, Expertise: 67, 'Condition Damage': 121, Vitality: 67 },
+        Gloves: { Toughness: 40, Expertise: 22, 'Condition Damage': 40, Vitality: 22 },
+        Leggins: { Toughness: 81, Expertise: 44, 'Condition Damage': 81, Vitality: 44 },
+        Boots: { Toughness: 40, Expertise: 22, 'Condition Damage': 40, Vitality: 22 },
+        Amulet: { Toughness: 133, Expertise: 71, 'Condition Damage': 133, Vitality: 71 },
+        Ring1: { Toughness: 106, Expertise: 56, 'Condition Damage': 106, Vitality: 56 },
+        Ring2: { Toughness: 106, Expertise: 56, 'Condition Damage': 106, Vitality: 56 },
+        Accessory1: { Toughness: 92, Expertise: 49, 'Condition Damage': 92, Vitality: 49 },
+        Accessory2: { Toughness: 92, Expertise: 49, 'Condition Damage': 92, Vitality: 49 },
+        Back: { Toughness: 52, Expertise: 27, 'Condition Damage': 52, Vitality: 27 },
+        Weapon1: { Toughness: 108, Expertise: 59, 'Condition Damage': 108, Vitality: 59 },
+        Weapon2: { Toughness: 108, Expertise: 59, 'Condition Damage': 108, Vitality: 59 },
+        Weapon2H: { Toughness: 215, Expertise: 118, 'Condition Damage': 215, Vitality: 118 },
+    }
 };
 
 function sortNames(names) {

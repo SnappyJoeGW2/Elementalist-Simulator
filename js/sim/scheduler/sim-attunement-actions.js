@@ -177,8 +177,8 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
             });
         }
     }
-    if (state._hasElemBalance && target === evokerState.element) {
-        ctx.incrementCatalystElemBalance(state.t, { activateEvery: 2, durationMs: 5000 });
+    if (combatActive && state._hasElemBalance && target === evokerState.element) {
+        ctx.incrementEvokerElemBalance(state.t, { activateEvery: 2, durationMs: 5000 });
     }
     if (state._hasElemAttunement) ctx.applyElemAttunementBoon(target, state.t);
     ctx.triggerBountifulPower(1, state.t);

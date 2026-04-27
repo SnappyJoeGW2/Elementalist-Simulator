@@ -50,8 +50,8 @@ import {
     addScheduledCatalystEnergy,
     spendScheduledCatalystEnergy,
     activateScheduledCatalystSphere,
-    incrementScheduledCatalystElemBalance,
-    consumeScheduledCatalystElemBalance,
+    incrementScheduledEvokerElemBalance,
+    consumeScheduledEvokerElemBalance,
     setScheduledEvokerCharges,
     addScheduledEvokerEmpowered,
     setScheduledEvokerEmpowered,
@@ -602,12 +602,12 @@ export function createSchedulerContext(engine, S, config = {}) {
             return activateScheduledCatalystSphere(S, attunement, startTime, durationMs);
         },
 
-        incrementCatalystElemBalance(time, opts = {}) {
-            return incrementScheduledCatalystElemBalance(S, time, opts);
+        incrementEvokerElemBalance(time, opts = {}) {
+            return incrementScheduledEvokerElemBalance(S, time, opts);
         },
 
-        consumeCatalystElemBalance() {
-            return consumeScheduledCatalystElemBalance(S);
+        consumeEvokerElemBalance() {
+            return consumeScheduledEvokerElemBalance(S);
         },
 
         setEvokerCharges(charges) {

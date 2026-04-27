@@ -186,8 +186,8 @@ export function triggerAttunementEnterEffects(ctx, element, time) {
             });
         }
     }
-    if (S._hasElemBalance && element === evokerState.element) {
-        ctx.incrementCatalystElemBalance(time, { activateEvery: 2, durationMs: 5000 });
+    if (combatActive && S._hasElemBalance && element === evokerState.element) {
+        ctx.incrementEvokerElemBalance(time, { activateEvery: 2, durationMs: 5000 });
     }
 }
 

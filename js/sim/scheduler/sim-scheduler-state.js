@@ -12,8 +12,8 @@ import {
     addCatalystEnergy,
     spendCatalystEnergy,
     activateCatalystSphere,
-    incrementCatalystElemBalance,
-    consumeCatalystElemBalance,
+    incrementEvokerElemBalance,
+    consumeEvokerElemBalance,
     addEvokerCharges,
     setEvokerCharges,
     addEvokerEmpowered,
@@ -311,12 +311,12 @@ export function activateScheduledCatalystSphere(S, attunement, startTime, durati
     return activateCatalystSphere(S, attunement, startTime, durationMs);
 }
 
-export function incrementScheduledCatalystElemBalance(S, time, opts = {}) {
-    return incrementCatalystElemBalance(S, time, opts);
+export function incrementScheduledEvokerElemBalance(S, time, opts = {}) {
+    return incrementEvokerElemBalance(S, time, opts);
 }
 
-export function consumeScheduledCatalystElemBalance(S) {
-    return consumeCatalystElemBalance(S);
+export function consumeScheduledEvokerElemBalance(S) {
+    return consumeEvokerElemBalance(S);
 }
 
 export function setScheduledEvokerCharges(S, charges) {

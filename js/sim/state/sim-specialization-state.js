@@ -4,9 +4,6 @@ export function createCatalystState(eliteSpec, catalystEnergyMax) {
         sphereActiveUntil: 0,
         sphereWindows: [],
         sphereExpiry: { Fire: 0, Water: 0, Air: 0, Earth: 0 },
-        elemBalanceCount: 0,
-        elemBalanceActive: false,
-        elemBalanceExpiry: 0,
     };
 }
 
@@ -22,6 +19,9 @@ export function createEvokerState(
         empowered: eliteSpec === 'Evoker' ? Math.max(0, Math.min(3, startEvokerEmpowered)) : 0,
         igniteStep: 0,
         igniteLastUse: -Infinity,
+        elemBalanceCount: 0,
+        elemBalanceActive: false,
+        elemBalanceExpiry: 0,
     };
 }
 
@@ -32,9 +32,6 @@ export function getCatalystState(S) {
             sphereActiveUntil: S.sphereActiveUntil ?? 0,
             sphereWindows: S.sphereWindows ?? [],
             sphereExpiry: S.sphereExpiry ?? { Fire: 0, Water: 0, Air: 0, Earth: 0 },
-            elemBalanceCount: S.elemBalanceCount ?? 0,
-            elemBalanceActive: S.elemBalanceActive ?? false,
-            elemBalanceExpiry: S.elemBalanceExpiry ?? 0,
         };
     }
     return S.catalystState;
@@ -48,6 +45,9 @@ export function getEvokerState(S) {
             empowered: S.evokerEmpowered ?? 0,
             igniteStep: S.igniteStep ?? 0,
             igniteLastUse: S.igniteLastUse ?? -Infinity,
+            elemBalanceCount: S.elemBalanceCount ?? 0,
+            elemBalanceActive: S.elemBalanceActive ?? false,
+            elemBalanceExpiry: S.elemBalanceExpiry ?? 0,
         };
     }
     return S.evokerState;
@@ -75,31 +75,31 @@ export function activateCatalystSphere(S, attunement, startTime, durationMs) {
     return catalystState.sphereActiveUntil;
 }
 
-export function incrementCatalystElemBalance(S, time, {
+export function incrementEvokerElemBalance(S, time, {
     activateEvery = 2,
     durationMs = 5000,
 } = {}) {
-    const catalystState = getCatalystState(S);
-    if (catalystState.elemBalanceExpiry <= time) {
-        catalystState.elemBalanceActive = false;
+    const evokerState = getEvokerState(S);
+    if (evokerState.elemBalanceExpiry <= time) {
+        evokerState.elemBalanceActive = false;
     }
-    catalystState.elemBalanceCount++;
+    evokerState.elemBalanceCount++;
     let activated = false;
-    if (catalystState.elemBalanceCount % activateEvery === 0) {
-        catalystState.elemBalanceActive = true;
-        catalystState.elemBalanceExpiry = time + durationMs;
+    if (evokerState.elemBalanceCount % activateEvery === 0) {
+        evokerState.elemBalanceActive = true;
+        evokerState.elemBalanceExpiry = time + durationMs;
         activated = true;
     }
     return {
-        count: catalystState.elemBalanceCount,
+        count: evokerState.elemBalanceCount,
         activated,
     };
 }
 
-export function consumeCatalystElemBalance(S) {
-    const catalystState = getCatalystState(S);
-    catalystState.elemBalanceActive = false;
-    catalystState.elemBalanceExpiry = 0;
+export function consumeEvokerElemBalance(S) {
+    const evokerState = getEvokerState(S);
+    evokerState.elemBalanceActive = false;
+    evokerState.elemBalanceExpiry = 0;
     return false;
 }
 
