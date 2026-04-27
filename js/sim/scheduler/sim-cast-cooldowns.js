@@ -77,6 +77,7 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
         ) {
             baseCdMs = Math.round(baseCdMs * 0.34);
             ctx.consumeEvokerElemBalance();
+            ctx.log({ t: end, type: 'skill_proc', skill: 'Elemental Balance', detail: `${name} CD -66%` });
         }
         if (name === 'Ride the Lightning') baseCdMs = Math.round(baseCdMs / 2);
         if (S.spearNextCdReduce && sk.weapon === 'Spear' && sk.type === 'Weapon skill' && sk.slot !== '1') {

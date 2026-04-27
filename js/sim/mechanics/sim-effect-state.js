@@ -187,7 +187,10 @@ export function triggerAttunementEnterEffects(ctx, element, time) {
         }
     }
     if (combatActive && S._hasElemBalance && element === evokerState.element) {
-        ctx.incrementEvokerElemBalance(time, { activateEvery: 2, durationMs: 5000 });
+        const eb = ctx.incrementEvokerElemBalance(time, { activateEvery: 2, durationMs: 5000 });
+        if (eb.activated) {
+            ctx.log({ t: time, type: 'skill_proc', skill: 'Elemental Balance', detail: 'CDR armed (5s)' });
+        }
     }
 }
 

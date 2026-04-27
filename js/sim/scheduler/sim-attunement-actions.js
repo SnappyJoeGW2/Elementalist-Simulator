@@ -178,7 +178,11 @@ export function handleAttunementSwap(ctx, sk, isConcurrent, concurrents, {
         }
     }
     if (combatActive && state._hasElemBalance && target === evokerState.element) {
-        ctx.incrementEvokerElemBalance(state.t, { activateEvery: 2, durationMs: 5000 });
+        const eb = ctx.incrementEvokerElemBalance(state.t, { activateEvery: 2, durationMs: 5000 });
+        if (eb.activated) {
+            ctx.log({ t: state.t, type: 'skill_proc', skill: 'Elemental Balance', detail: 'CDR armed (5s)' });
+            ctx.addStep({ skill: 'Elemental Balance', start: state.t, end: state.t, att: state.att, type: 'skill_proc', ri: -1, icon: 'https://wiki.guildwars2.com/images/4/4c/Elemental_Balance.png' });
+        }
     }
     if (state._hasElemAttunement) ctx.applyElemAttunementBoon(target, state.t);
     ctx.triggerBountifulPower(1, state.t);
