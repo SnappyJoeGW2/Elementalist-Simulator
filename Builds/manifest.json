@@ -91,7 +91,9 @@
         "label": "Power Alacrity (Sword)",
         "build": "Builds/b-power-alac-tempest-sword.json",
         "rotation": "Rotations/r-power-alac-tempest-sword.json",
-        "upToDate": false
+        "dpsReportUrl": "https://dps.report/4oEj-20260420-081807_golem",
+        "benchmarkDps": 32500,
+        "upToDate": true
       },
       {
         "label": "Power Alacrity (Hammer)",

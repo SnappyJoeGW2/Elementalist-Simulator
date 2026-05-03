@@ -1,18 +1,18 @@
 {
   "build": {
     "gear": {
-      "Helm": "Berserker's",
-      "Shoulders": "Assassin's",
+      "Helm": "Diviner's",
+      "Shoulders": "Berserker's",
       "Chest": "Berserker's",
-      "Gloves": "Diviner's",
-      "Leggins": "Berserker's",
+      "Gloves": "Berserker's",
+      "Leggins": "Diviner's",
       "Boots": "Berserker's",
       "Amulet": "Berserker's",
       "Ring1": "Berserker's",
       "Ring2": "Berserker's",
-      "Accessory1": "Diviner's",
-      "Accessory2": "Diviner's",
-      "Back": "Diviner's",
+      "Accessory1": "Berserker's",
+      "Accessory2": "Berserker's",
+      "Back": "Berserker's",
       "Weapon1": "Berserker's",
       "Weapon2": "Berserker's"
     },
@@ -20,13 +20,13 @@
       "Sword",
       "Dagger"
     ],
-    "rune": "Deadeye",
+    "rune": "Pack",
     "sigils": [
       "Force",
       "Accuracy"
     ],
     "relic": "Fireworks",
-    "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
+    "food": "Cilantro Lime Sous-Vide Steak",
     "utility": "Superior Sharpening Stone",
     "jadeBotCore": true,
     "specializations": [
@@ -46,11 +46,11 @@
     "infusions": [
       {
         "stat": "Power",
-        "count": 15
+        "count": 18
       },
       {
         "stat": "Precision",
-        "count": 3
+        "count": 0
       },
       {
         "stat": "Ferocity",
@@ -61,11 +61,11 @@
   "selectedSkills": {
     "heal": "Signet of Restoration",
     "util1": "Feel the Burn!",
-    "util2": "Glyph of Storms (Fire)",
+    "util2": "Glyph of Storms (Air)",
     "util3": "Signet of Fire",
     "elite": "Glyph of Elementals"
   },
-  "activeAttunement": "Fire",
+  "activeAttunement": "Air",
   "secondaryAttunement": "Air",
   "evokerElement": null,
   "evokerStartCharges": 6,
@@ -90,5 +90,7 @@
     "Slow": true,
     "Weakness": true,
     "Vulnerability": 25
-  }
+  },
+  "hitboxSize": "small",
+  "glyphBoonedElementals": true
 }
