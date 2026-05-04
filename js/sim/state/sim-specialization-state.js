@@ -22,6 +22,7 @@ export function createEvokerState(
         elemBalanceCount: 0,
         elemBalanceActive: false,
         elemBalanceExpiry: 0,
+        elemBalanceActivatedAt: -Infinity,
     };
 }
 
@@ -48,6 +49,7 @@ export function getEvokerState(S) {
             elemBalanceCount: S.elemBalanceCount ?? 0,
             elemBalanceActive: S.elemBalanceActive ?? false,
             elemBalanceExpiry: S.elemBalanceExpiry ?? 0,
+            elemBalanceActivatedAt: S.elemBalanceActivatedAt ?? -Infinity,
         };
     }
     return S.evokerState;
@@ -88,6 +90,7 @@ export function incrementEvokerElemBalance(S, time, {
     if (evokerState.elemBalanceCount % activateEvery === 0) {
         evokerState.elemBalanceActive = true;
         evokerState.elemBalanceExpiry = time + durationMs;
+        evokerState.elemBalanceActivatedAt = time;
         activated = true;
     }
     return {
@@ -100,6 +103,7 @@ export function consumeEvokerElemBalance(S) {
     const evokerState = getEvokerState(S);
     evokerState.elemBalanceActive = false;
     evokerState.elemBalanceExpiry = 0;
+    evokerState.elemBalanceActivatedAt = -Infinity;
     return false;
 }
 

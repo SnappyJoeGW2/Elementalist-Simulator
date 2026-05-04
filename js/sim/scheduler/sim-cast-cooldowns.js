@@ -51,7 +51,7 @@ export function finishStandardHitScheduling(ctx) {
     ctx.setFlag('_frigidFlurryProcActive', false);
 }
 
-function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
+function resolveStandardSkillCooldown(ctx, sk, name, key, start, end) {
     const { S } = ctx;
     const evokerState = getEvokerState(S);
     const procState = getProcState(S);
@@ -72,6 +72,7 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, end) {
         if (
             evokerState.elemBalanceActive
             && end <= evokerState.elemBalanceExpiry
+            && start >= evokerState.elemBalanceActivatedAt
             && sk.type === 'Weapon skill'
             && sk.slot !== '1'
         ) {
@@ -145,7 +146,7 @@ export function finalizeStandardSkillBookkeeping(ctx, sk, name, {
     interruptMs = undefined,
     fullCastMs = castMs,
 }) {
-    resolveStandardSkillCooldown(ctx, sk, name, key, end);
+    resolveStandardSkillCooldown(ctx, sk, name, key, start, end);
     updateStandardSkillChainProgress(ctx, sk, end, { interrupted });
     if (name === 'Hurl') {
         const rootSkill = ctx.skill('Rock Barrier');
