@@ -2011,6 +2011,15 @@ header .accent {
     text-align: right;
 }
 
+.res-hdr-sortable span {
+    cursor: pointer;
+    user-select: none;
+}
+
+.res-hdr-sortable span:hover {
+    color: var(--accent);
+}
+
 .res-row {
     display: grid;
     grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px 72px 48px 48px;

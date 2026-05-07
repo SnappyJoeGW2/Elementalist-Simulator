@@ -2248,17 +2248,8 @@ class App {
         }
         h += '</div></details>';
 
-        const sorted = Object.entries(r.perSkill)
-            .map(([name, d]) => [name, d.strike + d.condition, d])
-            .filter(([, t]) => t > 0)
-            .sort((a, b) => b[1] - a[1]);
-
         const dpsWindowSec = (r.dpsWindowMs ?? 0) / 1000;
 
-        h += `<div class="res-breakdown"><div class="res-hdr">
-            <span>Skill</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span><span>Avg/Cast</span><span>DCT</span><span>1s Delay</span><span>Casts</span><span>Hits</span>
-        </div>`;
-        // Build a name→icon map from proc steps (sigils/relics carry their icon there)
         const stepIconMap = {};
         for (const s of (r.steps || [])) {
             if (s.icon && !stepIconMap[s.skill]) stepIconMap[s.skill] = s.icon;
@@ -2267,34 +2258,73 @@ class App {
             return this.api.getSkillIcon(name)
                 || this.api.getTraitIcon(name)
                 || stepIconMap[name]
-                // strip common synthetic suffixes and retry
                 || this.api.getSkillIcon(name.replace(/ (?:Proc|Bonus)$/, ''))
                 || this.api.getTraitIcon(name.replace(/ (?:Proc|Bonus)$/, ''));
         };
 
-        for (const [name, total, d] of sorted) {
-            const icon = _lookupIcon(name);
-            const skillDps = dpsWindowSec > 0 ? Math.round(total / dpsWindowSec) : 0;
-            const avgPerCast = d.casts > 0 ? Math.round(total / d.casts) : 0;
-            const castTimeSec = (d.castTimeMs || 0) / 1000;
-            const dct = castTimeSec > 0 ? Math.round(total / castTimeSec) : null;
-            const sk = this.sim._skill(name);
-            const cd = sk?.recharge || 0;
-            const delayCost = (avgPerCast > 0 && cd > 0) ? Math.round(avgPerCast / cd) : null;
-            h += `<div class="res-row">
-                <span class="res-skill"><img src="${icon || PLACEHOLDER_ICON}" />${esc(name)}</span>
-                <span>${Math.round(d.strike).toLocaleString()}</span>
-                <span class="condi">${Math.round(d.condition).toLocaleString()}</span>
-                <span class="total">${Math.round(total).toLocaleString()}</span>
-                <span class="dps">${skillDps.toLocaleString()}</span>
-                <span>${avgPerCast.toLocaleString()}</span>
-                <span>${dct !== null ? dct.toLocaleString() : '—'}</span>
-                <span>${delayCost !== null ? delayCost.toLocaleString() : '—'}</span>
-                <span>${d.casts}</span>
-                <span>${d.hits ?? 0}</span>
+        const SKILL_COLS = [
+            { key: 'name',     label: 'Skill',    numeric: false },
+            { key: 'strike',   label: 'Strike',   numeric: true },
+            { key: 'condi',    label: 'Condi',     numeric: true },
+            { key: 'total',    label: 'Total',     numeric: true },
+            { key: 'dps',      label: 'DPS',       numeric: true },
+            { key: 'avg',      label: 'Avg/Cast',  numeric: true },
+            { key: 'dct',      label: 'DCT',       numeric: true },
+            { key: 'delay',    label: '1s Delay',  numeric: true },
+            { key: 'casts',    label: 'Casts',     numeric: true },
+            { key: 'hits',     label: 'Hits',      numeric: true },
+        ];
+
+        const skillRows = Object.entries(r.perSkill)
+            .map(([name, d]) => {
+                const total = d.strike + d.condition;
+                const skillDps = dpsWindowSec > 0 ? Math.round(total / dpsWindowSec) : 0;
+                const avgPerCast = d.casts > 0 ? Math.round(total / d.casts) : 0;
+                const castTimeSec = (d.castTimeMs || 0) / 1000;
+                const dct = castTimeSec > 0 ? Math.round(total / castTimeSec) : null;
+                const sk = this.sim._skill(name);
+                const cd = sk?.recharge || 0;
+                const delayCost = (avgPerCast > 0 && cd > 0) ? Math.round(avgPerCast / cd) : null;
+                return {
+                    name, icon: _lookupIcon(name),
+                    strike: Math.round(d.strike), condi: Math.round(d.condition),
+                    total: Math.round(total), dps: skillDps, avg: avgPerCast,
+                    dct: dct ?? -Infinity, delay: delayCost ?? -Infinity,
+                    casts: d.casts, hits: d.hits ?? 0,
+                    _dctNull: dct === null, _delayNull: delayCost === null,
+                };
+            })
+            .filter(row => row.total > 0);
+        skillRows.sort((a, b) => b.total - a.total);
+
+        const renderSkillRow = (row) =>
+            `<div class="res-row">
+                <span class="res-skill"><img src="${row.icon || PLACEHOLDER_ICON}" />${esc(row.name)}</span>
+                <span>${row.strike.toLocaleString()}</span>
+                <span class="condi">${row.condi.toLocaleString()}</span>
+                <span class="total">${row.total.toLocaleString()}</span>
+                <span class="dps">${row.dps.toLocaleString()}</span>
+                <span>${row.avg.toLocaleString()}</span>
+                <span>${!row._dctNull ? row.dct.toLocaleString() : '—'}</span>
+                <span>${!row._delayNull ? row.delay.toLocaleString() : '—'}</span>
+                <span>${row.casts}</span>
+                <span>${row.hits}</span>
             </div>`;
+
+        const sortIndicator = (col) => {
+            if (!this._skillSortCol || this._skillSortCol !== col) return '';
+            return this._skillSortDir === 'asc' ? ' ▲' : ' ▼';
+        };
+
+        h += `<div class="res-breakdown"><div class="res-hdr res-hdr-sortable">`;
+        for (const col of SKILL_COLS) {
+            h += `<span data-sort-col="${col.key}">${col.label}${sortIndicator(col.key)}</span>`;
         }
-        h += '</div>';
+        h += `</div><div class="res-skill-rows">`;
+        for (const row of skillRows) h += renderSkillRow(row);
+        h += '</div></div>';
+
+        this._skillBreakdownState = { skillRows, renderSkillRow, SKILL_COLS };
 
         // ── Per-condition damage breakdown ──
         const condEntries = Object.entries(r.condDamage || {})
@@ -2348,6 +2378,59 @@ class App {
         el.innerHTML = h;
 
         this._bindChartToggles();
+        this._bindSkillBreakdownSort(el);
+    }
+
+    _bindSkillBreakdownSort(el) {
+        const hdr = el.querySelector('.res-hdr-sortable');
+        if (!hdr) return;
+        hdr.querySelectorAll('span[data-sort-col]').forEach(span => {
+            span.addEventListener('click', () => {
+                const col = span.dataset.sortCol;
+                if (this._skillSortCol === col) {
+                    this._skillSortDir = this._skillSortDir === 'desc' ? 'asc' : this._skillSortDir === 'asc' ? null : 'desc';
+                } else {
+                    this._skillSortDir = 'desc';
+                }
+                this._skillSortCol = this._skillSortDir ? col : null;
+                this._applySkillBreakdownSort(el);
+            });
+        });
+    }
+
+    _applySkillBreakdownSort(el) {
+        const st = this._skillBreakdownState;
+        if (!st) return;
+        const { skillRows, renderSkillRow, SKILL_COLS } = st;
+
+        const col = this._skillSortCol;
+        const dir = this._skillSortDir;
+        const sorted = [...skillRows];
+        if (col && dir) {
+            const colDef = SKILL_COLS.find(c => c.key === col);
+            if (colDef?.numeric) {
+                sorted.sort((a, b) => dir === 'asc' ? a[col] - b[col] : b[col] - a[col]);
+            } else {
+                sorted.sort((a, b) => dir === 'asc'
+                    ? a[col].localeCompare(b[col])
+                    : b[col].localeCompare(a[col]));
+            }
+        } else {
+            sorted.sort((a, b) => b.total - a.total);
+        }
+
+        const rowsEl = el.querySelector('.res-skill-rows');
+        if (rowsEl) rowsEl.innerHTML = sorted.map(renderSkillRow).join('');
+
+        const hdr = el.querySelector('.res-hdr-sortable');
+        if (hdr) {
+            hdr.querySelectorAll('span[data-sort-col]').forEach(span => {
+                const key = span.dataset.sortCol;
+                const colDef = SKILL_COLS.find(c => c.key === key);
+                const indicator = (col === key && dir) ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+                span.textContent = colDef.label + indicator;
+            });
+        }
     }
 
     // ─── Chart ───
