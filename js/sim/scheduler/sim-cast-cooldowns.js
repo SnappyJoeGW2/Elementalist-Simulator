@@ -2,6 +2,7 @@ import { getProcState } from '../state/sim-proc-state.js';
 import { getEvokerState } from '../state/sim-specialization-state.js';
 import {
     getSkillCooldownReadyAt,
+    getSkillCooldownMeta,
     getChargeState,
 } from '../state/sim-cooldown-state.js';
 
@@ -66,7 +67,23 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, start, end) {
         displayDurationMs = 1000;
         displayUsesAlacrity = false;
         ctx.clearArcaneEchoWindow();
-        ctx.log({ t: end, type: 'skill_proc', skill: 'Arcane Echo', detail: `${name} CD → 1s` });
+
+        const absorbedCdMs = ctx.weaponRechargeMs(sk, Math.round(sk.recharge * 1000));
+        const echoSkill = ctx.skill('Arcane Echo');
+        if (echoSkill) {
+            const echoKey = ctx.cdKey(echoSkill);
+            const echoReadyAt = getSkillCooldownReadyAt(S, echoKey);
+            const echoMeta = getSkillCooldownMeta(S, echoKey);
+            const newReadyAt = echoReadyAt + ctx.alacrityAdjustedCooldown(absorbedCdMs, end);
+            const echoBaseMs = Math.round(echoSkill.recharge * 1000);
+            ctx.setSkillCooldown(echoKey, newReadyAt, {
+                startedAt: echoMeta?.startedAt ?? end,
+                displayDurationMs: echoBaseMs + absorbedCdMs,
+                alacrityUntil: S.alacrityUntil || 0,
+            });
+        }
+
+        ctx.log({ t: end, type: 'skill_proc', skill: 'Arcane Echo', detail: `${name} CD → 1s (Echo +${(absorbedCdMs / 1000).toFixed(0)}s)` });
     } else {
         let baseCdMs = ctx.weaponRechargeMs(sk, Math.round(sk.recharge * 1000));
         if (
