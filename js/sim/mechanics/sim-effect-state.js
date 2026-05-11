@@ -11,7 +11,7 @@ import {
 import { isSetupPhase, isCombatActiveAt, hasExplicitCombatStart } from '../run/sim-run-phase-state.js';
 import { getRelicState } from '../state/sim-relic-state.js';
 import { getEvokerState } from '../state/sim-specialization-state.js';
-import { getTraitIcd, setTraitIcd, isTraitIcdReady, armTraitIcd } from '../state/sim-icd-state.js';
+import { isTraitIcdReady, armTraitIcd } from '../state/sim-icd-state.js';
 import { effectStacksAt } from '../shared/sim-state-queries.js';
 import { pushReportingLog } from '../state/sim-reporting-state.js';
 import {
@@ -40,13 +40,6 @@ const DURATION_STACKING_BOONS = new Set([
     'Swiftness',
     'Vigor',
 ]);
-const EVASIVE_ARCANA_SKILL_BY_ATTUNEMENT = Object.freeze({
-    Fire: 'Flame Burst (trait)',
-    Water: 'Cleansing Wave (trait)',
-    Air: 'Blinding Flash (trait)',
-    Earth: 'Shock Wave (trait)',
-});
-
 export function refreshEffect(ctx, effectName, durSec, time) {
     const { S } = ctx;
     expireActiveTimedStacks(S, effectName, time);
@@ -133,19 +126,6 @@ export function rechargeWeaponSkills(ctx, pct, time) {
         }
     }
 
-    if (S._hasEvasiveArcana) {
-        const skillName = EVASIVE_ARCANA_SKILL_BY_ATTUNEMENT[S.att];
-        const skill = skillName ? ctx.skill(skillName) : null;
-        if (skill && skill.recharge > 0) {
-            const icdKey = `EvasiveArcana:${skillName}`;
-            const readyAt = getTraitIcd(S, icdKey, 0);
-            if (readyAt > time) {
-                const baseCdMs = Math.round(skill.recharge * 1000);
-                const reducedByMs = Math.round(baseCdMs * pct);
-                setTraitIcd(S, icdKey, Math.max(time, readyAt - reducedByMs));
-            }
-        }
-    }
 }
 
 export function triggerAttunementEnterEffects(ctx, element, time) {
