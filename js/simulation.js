@@ -455,12 +455,20 @@ const NOOP_ARRAY = { push() { }, length: 0 };
 // When hitboxSize is 'small', these skills have their hit count capped.
 // Key = skill name, value = max hit index (rows with h.hit > cap are skipped).
 export const SMALL_HITBOX_CAPS = new Map([
-    ['Meteor Shower',           12],
-    ['Lightning Orb',           11],
-    ['Frost Storm',             14],
-    ['Invoke Lightning',         9],
-    ['Glyph of Storms (Air)',   20],
+    ['Meteor Shower', 12],
+    ['Lightning Orb', 11],
+    ['Frost Storm', 14],
+    ['Invoke Lightning', 9],
+    ['Glyph of Storms (Air)', 20],
     ['Glyph of Storms (Water)', 11],
+    ['Dust Storm', 6],
+    ['Fiery Whirl', 4],
+]);
+
+// Duration-based skills that gain extra ticks on large hitbox.
+// Key = skill name, value = bonus duration (in the same unit as the CSV Duration column).
+export const LARGE_HITBOX_DURATION_BONUS = new Map([
+    ['Wildfire', 2],
 ]);
 
 export class SimulationEngine {

@@ -4,7 +4,7 @@ import {
     estimateFreshAirLookaheadCritChance,
     processFreshAirCandidate,
 } from '../mechanics/sim-fresh-air-state.js';
-import { SMALL_HITBOX_CAPS } from '../../simulation.js';
+import { SMALL_HITBOX_CAPS, LARGE_HITBOX_DURATION_BONUS } from '../../simulation.js';
 
 export function applyPrimordialStance(ctx, att1, att2, time) {
     const stanceEffects = {
@@ -75,6 +75,9 @@ export function scheduleSkillHits(ctx, sk, castStart, scaleOff = off => off, int
         if (raw === 'Duration') {
             durBased = true;
             let effectiveDur = h.duration || 1;
+            if (ctx.hitboxSize === 'large') {
+                effectiveDur += LARGE_HITBOX_DURATION_BONUS.get(sk.name) || 0;
+            }
             if (S._hasPersistingFlames && fireFieldSkills.has(sk.name) && h.isFieldTick) {
                 effectiveDur += 2;
             }
