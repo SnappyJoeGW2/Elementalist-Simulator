@@ -103,15 +103,15 @@ function resolveStandardSkillCooldown(ctx, sk, name, key, start, end) {
             ctx.setFlag('spearNextCdReduce', false);
             ctx.log({ t: end, type: 'skill_proc', skill: 'Ripple', detail: `${name} CD -33%` });
         }
+        if (procState.dazingDischargeUntil > end && sk.weapon === 'Pistol' && sk.type === 'Weapon skill' && sk.slot !== '1') {
+            cdrPct += 0.33;
+            ctx.setFlag('dazingDischargeUntil', 0);
+            ctx.log({ t: end, type: 'skill_proc', skill: 'Dazing Discharge', detail: `${name} CD -33%` });
+        }
         if (cdrPct > 0) {
             baseCdMs = Math.round(baseCdMs * Math.max(0, 1 - cdrPct));
         }
         if (name === 'Ride the Lightning') baseCdMs = Math.round(baseCdMs / 2);
-        if (procState.dazingDischargeUntil > end && sk.weapon === 'Pistol' && sk.type === 'Weapon skill' && sk.slot !== '1') {
-            baseCdMs = Math.round(baseCdMs * (2 / 3));
-            ctx.setFlag('dazingDischargeUntil', 0);
-            ctx.log({ t: end, type: 'skill_proc', skill: 'Dazing Discharge', detail: `${name} CD -33%` });
-        }
         if (name === 'Purblinding Plasma' && S._purblindingCDReduce) {
             baseCdMs = Math.round(baseCdMs * (2 / 3));
             ctx.log({ t: end, type: 'skill_proc', skill: 'Purblinding Plasma', detail: 'Air bullet → CD -33%' });
