@@ -6,7 +6,7 @@ import { triggerEvasiveArcana } from '../mechanics/sim-elemental-traits.js';
 import { getEvokerState } from '../state/sim-specialization-state.js';
 import { expireActiveTimedStacks } from '../state/sim-runtime-state.js';
 
-const FULL_ETCHING_CHARGE_SKILLS = new Set(['Overload Fire', 'Overload Air']);
+const FULL_ETCHING_CHARGE_SKILLS = new Set(['Overload Fire', 'Overload Air', 'Overload Earth']);
 
 const AURA_TRANSMUTE_SKILLS = Object.freeze({
     'Transmute Frost': 'Frost Aura',

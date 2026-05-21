@@ -542,6 +542,8 @@ export function renderStartAttSelector(app, { ATTUNEMENTS, ATTUNEMENT_COLORS }) 
                 if (att === app.evokerElement) return;
                 app.evokerElement = att;
                 app._renderStartAttSelector();
+                app.renderAttributes();
+                app.renderSkillInfoTable();
                 if (app.sim?.rotation.length > 0) app._autoRun();
                 else app._renderPalette();
             } else {

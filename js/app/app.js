@@ -942,10 +942,12 @@ class App {
         };
 
         // ── Might ──
-        // Enhanced Potency raises CondDmg-per-Might to +35 for Evoker in Fire attunement
+        // Enhanced Potency raises stats-per-Might to +35 when familiar matches:
+        // Fire familiar → +35 Power & +35 Cond Dmg per stack; Air familiar → Power stays +30
         if (c.might > 0) {
-            const mightCond = (hasEnhancedPotency && isEvoker && c.primaryAtt === 'Fire') ? 35 : 30;
-            addPrimary('Power', c.might * 30);
+            const mightPwr = (hasEnhancedPotency && isEvoker && this.evokerElement === 'Fire') ? 35 : 30;
+            const mightCond = (hasEnhancedPotency && isEvoker && this.evokerElement === 'Fire') ? 35 : 30;
+            addPrimary('Power', c.might * mightPwr);
             addPrimary('Condition Damage', c.might * mightCond);
         }
 
@@ -1035,8 +1037,8 @@ class App {
         const traitCC = base['Critical Chance']?.traits ?? 0;
         const sigilCC = base['Critical Chance']?.sigils ?? 0;
         const newPrecCC = (prec - 895) / 21;
-        // Fury: +25% base; Enhanced Potency raises it to +40%
-        const furyCC = c.fury ? (hasEnhancedPotency ? 40 : 25) : 0;
+        // Fury: +25% base; Enhanced Potency with Air familiar raises it to +40%
+        const furyCC = c.fury ? ((hasEnhancedPotency && isEvoker && this.evokerElement === 'Air') ? 40 : 25) : 0;
         // Superior Elements: +15% Crit Chance vs. Weakened enemies
         const supElemCC = (c.superiorElements && hasSuperiorElements) ? 15 : 0;
         const crescentWindCC = (c.crescentWind && hasHammer) ? 15 : 0;
