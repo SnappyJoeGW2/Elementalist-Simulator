@@ -6,6 +6,8 @@ import { triggerEvasiveArcana } from '../mechanics/sim-elemental-traits.js';
 import { getEvokerState } from '../state/sim-specialization-state.js';
 import { expireActiveTimedStacks } from '../state/sim-runtime-state.js';
 
+const FULL_ETCHING_CHARGE_SKILLS = new Set(['Overload Fire', 'Overload Air']);
+
 const AURA_TRANSMUTE_SKILLS = Object.freeze({
     'Transmute Frost': 'Frost Aura',
     'Transmute Lightning': 'Shocking Aura',
@@ -85,7 +87,8 @@ export function updateSpearEtchingProgression(ctx, sk, name, end) {
     for (const chain of Object.values(ctx.etchingChains)) {
         if (S.etchingState[chain.etching] !== 'lesser') continue;
 
-        const otherCasts = ctx.incrementEtchingOtherCasts(chain.etching);
+        const amount = FULL_ETCHING_CHARGE_SKILLS.has(name) ? 3 : 1;
+        const otherCasts = ctx.incrementEtchingOtherCasts(chain.etching, amount);
         if (otherCasts >= 3) {
             ctx.setEtchingProgress(chain.etching, 'full', otherCasts);
             ctx.log({ t: end, type: 'skill_proc', skill: chain.etching, detail: `upgraded to ${chain.full}` });
