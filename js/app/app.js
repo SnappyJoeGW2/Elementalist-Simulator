@@ -1309,11 +1309,36 @@ class App {
         const condiState = this.epState.condi || {};
         const mightChecked = condiState['cmight'] !== undefined ? condiState['cmight'] : true;
         const activeTraitsLocal = this.data.attributes.activeTraits || [];
-        const hasEnhPot = activeTraitsLocal.some(t => t.name === 'Enhanced Potency');
+        const hasTrait = name => activeTraitsLocal.some(t => t.name === name);
+        const hasEnhPot = hasTrait('Enhanced Potency');
+        const hasInferno = hasTrait('Inferno');
         const mightPerStack = (hasEnhPot && this.evokerElement === 'Fire') ? 35 : 30;
-        const mightCondDmg = mightChecked ? (this.permaBoons?.Might || 0) * mightPerStack : 0;
+        const mightStacks = this.permaBoons?.Might || 0;
+        const mightCondDmg = mightChecked ? mightStacks * mightPerStack : 0;
         const effectiveCondDmg = condDmg + mightCondDmg;
         const baseDur = base['Condition Duration']?.final ?? 0;
+
+        // Inferno: Burning uses Power-based formula instead of Condition Damage
+        // infernoPower = Power + Might*30 + trait bonuses
+        let infernoTickDmg = 0;
+        if (hasInferno) {
+            let infernoPower = base.Power?.final ?? 1000;
+            const mightPowerPerStack = (hasEnhPot && this.evokerElement === 'Fire') ? 35 : 30;
+            if (mightChecked) infernoPower += mightStacks * mightPowerPerStack;
+            if (hasTrait('Empowering Flame')) infernoPower += 150;
+            if (hasTrait('Power Overwhelming') && mightChecked && mightStacks >= 10) infernoPower += 300;
+            if (hasTrait('Elemental Polyphony')) infernoPower += 200;
+            // EE pool Power contribution
+            const specs = this.data.attributes.specializations || [];
+            const isCatalyst = specs.some(s => s.name === 'Catalyst');
+            if (isCatalyst && this._empPool?.Power) {
+                const hasEmpEmp = hasTrait('Empowered Empowerment');
+                const empMul = hasEmpEmp ? 0.02 : 0.01;
+                const eeChecked = condiState['cee'] !== undefined ? condiState['cee'] : true;
+                if (eeChecked) infernoPower += Math.round(this._empPool.Power * 10 * empMul);
+            }
+            infernoTickDmg = 0.075 * infernoPower + 131;
+        }
 
         const FORMULAS = {
             Burning:   { base: 131.0,  scaling: 0.155, durKey: 'Burning Duration' },
@@ -1339,7 +1364,9 @@ class App {
 
         const results = [];
         for (const [cond, f] of Object.entries(FORMULAS)) {
-            const tickDmg = f.base + f.scaling * effectiveCondDmg;
+            const tickDmg = (hasInferno && cond === 'Burning')
+                ? infernoTickDmg
+                : f.base + f.scaling * effectiveCondDmg;
             const specDur = base[f.durKey]?.final ?? 0;
             const totalDur = Math.min(baseDur + specDur + wpDur, 100);
             const durMul = 1 + totalDur / 100;
@@ -1982,7 +2009,16 @@ class App {
             }
         }
 
-        return { strikeMul: result.modifierTotal, condMul: this._getCondiMul(), attrs: modifiedAttrs };
+        // Inferno: compute Power-based Burning tick for skill damage
+        let infernoBurningTick = 0;
+        const activeTraits = this.data.attributes.activeTraits || [];
+        if (activeTraits.some(t => t.name === 'Inferno')) {
+            const infernoResults = this._computeCondiEp();
+            const burningRow = infernoResults.find(r => r.cond === 'Burning');
+            if (burningRow) infernoBurningTick = burningRow.tickDmg;
+        }
+
+        return { strikeMul: result.modifierTotal, condMul: this._getCondiMul(), attrs: modifiedAttrs, infernoBurningTick };
     }
 
     _getEpRowKeyForPair(att, att2) {
@@ -2070,7 +2106,8 @@ class App {
         const wStr = WEAPON_DATA[weaponKey]?.weaponStrength || WEAPON_DATA[this._getWeaponForSkill(skill)]?.weaponStrength || 1000;
         const attrs = epCtx ? epCtx.attrs : this.data.attributes.attributes;
         const maxHit = this.hitboxSize === 'small' ? (SMALL_HITBOX_CAPS.get(skill.name) ?? Infinity) : Infinity;
-        const dmg = calculateSkillDamage(skill, hits, wStr, attrs, { maxHit });
+        const infernoBurningTick = epCtx ? epCtx.infernoBurningTick || 0 : 0;
+        const dmg = calculateSkillDamage(skill, hits, wStr, attrs, { maxHit, infernoBurningTick });
 
         const strikeMul = epCtx ? epCtx.strikeMul : 1;
         const condMul = epCtx ? epCtx.condMul : 1;

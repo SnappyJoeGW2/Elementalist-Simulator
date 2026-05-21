@@ -65,7 +65,7 @@ export function getBoonDurationBonus(boonType, attributes) {
  * Calculate full damage for a single skill cast.
  * Returns { totalStrike, totalCondition, totalDamage, dps, hits[], conditions[] }
  */
-export function calculateSkillDamage(skill, skillHits, weaponStrength, attributes, { maxHit = Infinity } = {}) {
+export function calculateSkillDamage(skill, skillHits, weaponStrength, attributes, { maxHit = Infinity, infernoBurningTick = 0 } = {}) {
     const power = attributes['Power']?.final ?? 1000;
     const condDmg = attributes['Condition Damage']?.final ?? 0;
     const critChance = attributes['Critical Chance']?.final ?? 0;
@@ -120,15 +120,19 @@ export function calculateSkillDamage(skill, skillHits, weaponStrength, attribute
 
             const durationBonus = getConditionDurationBonus(condType, attributes);
             const effectiveStacks = isPerTick ? stacks * tickCount : stacks;
-            const dmg = conditionTotalDamage(condType, effectiveStacks, duration, condDmg, durationBonus);
+            const tickDmg = (infernoBurningTick > 0 && condType === 'Burning')
+                ? infernoBurningTick
+                : conditionTickDamage(condType, condDmg);
+            const adjustedDuration = duration * (1 + Math.min(durationBonus / 100, 1));
+            const dmg = effectiveStacks * tickDmg * adjustedDuration;
             totalCondition += dmg;
 
             conditionDetails.push({
                 type: condType,
                 stacks: effectiveStacks,
                 baseDuration: duration,
-                adjustedDuration: duration * (1 + Math.min(durationBonus / 100, 1)),
-                tickDamage: conditionTickDamage(condType, condDmg),
+                adjustedDuration,
+                tickDamage: tickDmg,
                 totalDamage: dmg,
             });
         }
