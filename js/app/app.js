@@ -305,6 +305,7 @@ class App {
             conjureLightningHammer: false,
             conjureFieryGreatsword: false,
         };
+        this.epState = this._createDefaultEpState();
     }
 
     async init() {
@@ -688,6 +689,7 @@ class App {
             return h + '</div>';
         };
         container.innerHTML = section('Primary', primary) + section('Derived', derived);
+        this.renderEffectivePower();
     }
 
     // ─── Conditions panel ───
@@ -1056,6 +1058,398 @@ class App {
         out['Condition Duration'] = { ...out['Condition Duration'], final: exp / 15 + condFixedBonus + wpBonus + frostBowCondBonus };
 
         return out;
+    }
+
+    // ─── Effective Power Panel ───
+
+    _createDefaultEpState() {
+        return {};
+    }
+
+    _getEpRowKey(att, att2) {
+        return att2 ? `${att}/${att2}` : att;
+    }
+
+    _getEpModifiers(att, att2) {
+        const activeTraits = this.data?.attributes?.activeTraits || [];
+        const specs = this.data?.attributes?.specializations || [];
+        const hasTrait = name => activeTraits.some(t => t.name === name);
+        const sigils = this.build?.sigils || [];
+        const relic = this.build?.relic || '';
+        const isWeaver = specs.some(s => s.name === 'Weaver');
+        const attSet = att2 ? new Set([att, att2]) : new Set([att]);
+
+        const mods = [];
+        const icon = name => this.api.getTraitIcon(name) || null;
+
+        // ── Stat modifiers (affect Power / Precision / Ferocity / CC) ──
+        const enhPot = hasTrait('Enhanced Potency');
+        const evokerElem = this.evokerElement;
+        const furyCCBonus = (enhPot && evokerElem === 'Air') ? 40 : 25;
+        mods.push({ id: 'might', label: '25 Might', cat: 'stat', effects: { power: 750 }, default: true });
+        mods.push({ id: 'fury', label: `Fury (+${furyCCBonus}% CC)`, cat: 'stat', effects: { cc: furyCCBonus }, default: true });
+
+        if (hasTrait('Empowering Flame')) {
+            mods.push({ id: 'empFlame', icon: icon('Empowering Flame'), trait: 'Empowering Flame', tip: '+150 Power', cat: 'stat', effects: { power: 150 }, default: att === 'Fire' });
+        }
+        if (hasTrait('Power Overwhelming')) {
+            const bonus = att === 'Fire' ? 300 : 150;
+            mods.push({ id: 'powOvr', icon: icon('Power Overwhelming'), trait: 'Power Overwhelming', tip: `+${bonus} Power`, cat: 'stat', effects: { power: bonus }, default: true });
+        }
+        if (hasTrait('Elemental Polyphony')) {
+            const eff = {};
+            if (attSet.has('Fire')) eff.power = (eff.power || 0) + 200;
+            if (attSet.has('Air')) eff.ferocity = (eff.ferocity || 0) + 200;
+            const parts = [];
+            if (eff.power) parts.push(`+${eff.power} Pwr`);
+            if (eff.ferocity) parts.push(`+${eff.ferocity} Fer`);
+            if (parts.length) {
+                mods.push({ id: 'polyphony', icon: icon('Elemental Polyphony'), trait: 'Elemental Polyphony', tip: parts.join(', '), cat: 'stat', effects: eff, default: true });
+            }
+        }
+        if (hasTrait("Aeromancer's Training")) {
+            mods.push({ id: 'aeroTrain', icon: icon("Aeromancer's Training"), trait: "Aeromancer's Training", tip: '+150 Ferocity', cat: 'stat', effects: { ferocity: 150 }, default: att === 'Air' });
+        }
+        if (hasTrait('Fresh Air')) {
+            mods.push({ id: 'freshAir', icon: icon('Fresh Air'), trait: 'Fresh Air', tip: '+250 Ferocity', cat: 'stat', effects: { ferocity: 250 }, default: true });
+        }
+        if (hasTrait('Raging Storm')) {
+            mods.push({ id: 'ragingStorm', icon: icon('Raging Storm'), trait: 'Raging Storm', tip: '+180 Ferocity', cat: 'stat', effects: { ferocity: 180 }, default: true });
+        }
+        if (hasTrait('Arcane Lightning')) {
+            mods.push({ id: 'arcLight', icon: icon('Arcane Lightning'), trait: 'Arcane Lightning', tip: '+150 Ferocity', cat: 'stat', effects: { ferocity: 150 }, default: att === 'Air' });
+        }
+        if (hasTrait('Superior Elements')) {
+            mods.push({ id: 'supElem', icon: icon('Superior Elements'), trait: 'Superior Elements', tip: '+15% CC', cat: 'stat', effects: { cc: 15 }, default: true });
+        }
+
+        // Elemental Empowerment (Catalyst) — 10 stacks × 1% (or 1.5% with Empowered Empowerment, capped at 20% at 10)
+        const isCatalyst = specs.some(s => s.name === 'Catalyst');
+        if (isCatalyst) {
+            const base = this.data?.attributes?.attributes;
+            const hasEmpEmp = hasTrait('Empowered Empowerment');
+            const empMul = hasEmpEmp ? 0.20 : 0.10;
+            const PRIMARY_STATS = ['Power', 'Precision', 'Ferocity'];
+            const eeEffects = {};
+            for (const s of PRIMARY_STATS) {
+                const attr = base?.[s] || {};
+                const pool = (attr.base || 0) + (attr.gear || 0) + (attr.runes || 0) + (attr.infusions || 0) + (attr.food || 0);
+                if (pool > 0) eeEffects[s.toLowerCase()] = Math.round(pool * empMul);
+            }
+            const tipParts = [];
+            if (eeEffects.power) tipParts.push(`+${eeEffects.power} Pwr`);
+            if (eeEffects.precision) tipParts.push(`+${eeEffects.precision} Prec`);
+            if (eeEffects.ferocity) tipParts.push(`+${eeEffects.ferocity} Fer`);
+            mods.push({ id: 'ee', icon: icon('Elemental Empowerment'), trait: 'Elemental Empowerment', tip: `10× (${tipParts.join(', ')})`, cat: 'stat', effects: eeEffects, default: true });
+        }
+
+        // ── Damage modifiers (additive / multiplicative) ──
+        mods.push({ id: 'vuln', label: 'Vuln 25×', cat: 'mul', value: 1.25, default: true });
+
+        for (const name of sigils) {
+            const s = SIGIL_DATA[name];
+            if (!s) continue;
+            if (s.strikeDamageA) mods.push({ id: `sigil-${name}`, label: `${name} (+${s.strikeDamageA}%)`, cat: 'add', value: s.strikeDamageA / 100, default: true });
+            if (s.strikeDamageM) mods.push({ id: `sigil-${name}-m`, label: `${name} (×${(1 + s.strikeDamageM / 100).toFixed(2)})`, cat: 'mul', value: 1 + s.strikeDamageM / 100, default: true });
+        }
+
+        if (hasTrait('Persisting Flames')) mods.push({ id: 'pf', icon: icon('Persisting Flames'), trait: 'Persisting Flames', tip: '5×2%', cat: 'add', value: 0.10, default: true });
+        if (hasTrait('Tempestuous Aria')) mods.push({ id: 'tempAria', icon: icon('Tempestuous Aria'), trait: 'Tempestuous Aria', tip: '+10%', cat: 'add', value: 0.10, default: true });
+        if (hasTrait('Transcendent Tempest')) mods.push({ id: 'transcTemp', icon: icon('Transcendent Tempest'), trait: 'Transcendent Tempest', tip: '+25%', cat: 'add', value: 0.25, default: true });
+        if (hasTrait('Elements of Rage')) mods.push({ id: 'elemRage', icon: icon('Elements of Rage'), trait: 'Elements of Rage', tip: '+7%', cat: 'add', value: 0.07, default: true });
+        if (hasTrait('Empowering Auras')) mods.push({ id: 'empAuras', icon: icon('Empowering Auras'), trait: 'Empowering Auras', tip: '5×1%', cat: 'add', value: 0.05, default: true });
+        if (hasTrait('Relentless Fire')) mods.push({ id: 'relFire', icon: icon('Relentless Fire'), trait: 'Relentless Fire', tip: '+10%', cat: 'add', value: 0.10, default: att === 'Fire' });
+        if (hasTrait('Bountiful Power')) mods.push({ id: 'bountiful', icon: icon('Bountiful Power'), trait: 'Bountiful Power', tip: '+20%', cat: 'add', value: 0.20, default: false });
+        if (hasTrait('Swift Revenge')) mods.push({ id: 'swiftRev', icon: icon('Swift Revenge'), trait: 'Swift Revenge', tip: '×1.07', cat: 'mul', value: 1.07, default: true });
+
+        if (isWeaver) mods.push({ id: 'wsAir', icon: icon('Weave Self'), trait: 'Weave Self', tip: 'Air +10%', cat: 'add', value: 0.10, default: false });
+
+        if (hasTrait("Familiar's Prowess")) {
+            const pct = hasTrait("Familiar's Focus") ? 10 : 5;
+            mods.push({ id: 'famProwess', icon: icon("Familiar's Prowess"), trait: "Familiar's Prowess", tip: `+${pct}%`, cat: 'add', value: pct / 100, default: true });
+        }
+
+        if (hasTrait("Pyromancer's Training")) mods.push({ id: 'pyro', icon: icon("Pyromancer's Training"), trait: "Pyromancer's Training", tip: '×1.07', cat: 'mul', value: 1.07, default: true });
+        if (hasTrait('Fiery Might')) mods.push({ id: 'fieryMight', icon: icon('Fiery Might'), trait: 'Fiery Might', tip: '×1.05', cat: 'mul', value: 1.05, default: true });
+        if (hasTrait('Serrated Stones')) mods.push({ id: 'serrated', icon: icon('Serrated Stones'), trait: 'Serrated Stones', tip: '×1.05', cat: 'mul', value: 1.05, default: true });
+        if (hasTrait('Stormsoul')) mods.push({ id: 'stormsoul', icon: icon('Stormsoul'), trait: 'Stormsoul', tip: '×1.07', cat: 'mul', value: 1.07, default: true });
+        if (hasTrait('Flow Like Water')) mods.push({ id: 'flowWater', icon: icon('Flow Like Water'), trait: 'Flow Like Water', tip: '×1.10', cat: 'mul', value: 1.10, default: true });
+        if (hasTrait('Bolt to the Heart')) mods.push({ id: 'bolt', icon: icon('Bolt to the Heart'), trait: 'Bolt to the Heart', tip: '×1.20', cat: 'mul', value: 1.20, default: false });
+        if (hasTrait('Piercing Shards')) {
+            const mul = att === 'Water' ? 1.14 : 1.07;
+            mods.push({ id: 'piercing', icon: icon('Piercing Shards'), trait: 'Piercing Shards', tip: `×${mul.toFixed(2)}`, cat: 'mul', value: mul, default: true });
+        }
+        if (hasTrait('Elemental Dynamo') || specs.some(s => s.name === 'Evoker')) {
+            mods.push({ id: 'zap', icon: icon('Elemental Dynamo'), trait: 'Zap', tip: '×1.03', cat: 'mul', value: 1.03, default: true });
+        }
+
+        const weapons = this.data?.attributes?.weapons || [];
+        if (weapons.includes('Hammer')) mods.push({ id: 'hammerFire', label: 'Hammer Fire (+5%)', cat: 'add', value: 0.05, default: false });
+
+        const RELIC_STRIKE = { Fireworks: 1.07, Claw: 1.07, Peitha: 1.10, 'Mount Balrior': 1.15, Brawler: 1.10, Weaver: 1.10, Fire: 1.07, Bloodstone: 1.07, Eagle: 1.10 };
+        if (RELIC_STRIKE[relic]) mods.push({ id: 'relic', label: `${relic} (×${RELIC_STRIKE[relic].toFixed(2)})`, cat: 'mul', value: RELIC_STRIKE[relic], default: true });
+        if (relic === 'Nourys') mods.push({ id: 'relicNourys', label: 'Nourys (+25%)', cat: 'add', value: 0.25, default: true });
+
+        return mods;
+    }
+
+    _getEpCondiModifiers() {
+        const activeTraits = this.data?.attributes?.activeTraits || [];
+        const hasTrait = name => activeTraits.some(t => t.name === name);
+        const sigils = this.build?.sigils || [];
+        const isWeaver = (this.data?.attributes?.specializations || []).some(s => s.name === 'Weaver');
+        const icon = name => this.api.getTraitIcon(name) || null;
+
+        const mods = [];
+
+        mods.push({ id: 'cmight', label: '25 Might (+CondDmg)', cat: 'stat', value: 0, default: true });
+        mods.push({ id: 'cvuln', label: 'Vuln 25×', cat: 'mul', value: 1.25, default: true });
+
+        for (const name of sigils) {
+            const s = SIGIL_DATA[name];
+            if (!s) continue;
+            if (s.conditionDamageA) mods.push({ id: `csigil-${name}`, label: `${name} (+${s.conditionDamageA}%)`, cat: 'add', value: s.conditionDamageA / 100, default: true });
+            if (s.conditionDamageM) mods.push({ id: `csigil-${name}-m`, label: `${name} (×${(1 + s.conditionDamageM / 100).toFixed(2)})`, cat: 'mul', value: 1 + s.conditionDamageM / 100, default: true });
+        }
+
+        if (hasTrait('Tempestuous Aria')) mods.push({ id: 'ctempAria', icon: icon('Tempestuous Aria'), trait: 'Tempestuous Aria', tip: '+5%', cat: 'add', value: 0.05, default: true });
+        if (hasTrait('Transcendent Tempest')) mods.push({ id: 'ctranscTemp', icon: icon('Transcendent Tempest'), trait: 'Transcendent Tempest', tip: '+20%', cat: 'add', value: 0.20, default: true });
+        if (hasTrait('Elements of Rage')) mods.push({ id: 'celemRage', icon: icon('Elements of Rage'), trait: 'Elements of Rage', tip: '+5%', cat: 'add', value: 0.05, default: true });
+        if (hasTrait('Empowering Auras')) mods.push({ id: 'cempAuras', icon: icon('Empowering Auras'), trait: 'Empowering Auras', tip: '5×1%', cat: 'add', value: 0.05, default: true });
+        if (hasTrait("Weaver's Prowess")) mods.push({ id: 'cwp', icon: icon("Weaver's Prowess"), trait: "Weaver's Prowess", tip: '+5% cond dmg, +20% dur', cat: 'add', value: 0.05, default: true });
+
+        if (hasTrait("Familiar's Prowess")) {
+            const pct = hasTrait("Familiar's Focus") ? 10 : 5;
+            mods.push({ id: 'cfamProwess', icon: icon("Familiar's Prowess"), trait: "Familiar's Prowess", tip: `+${pct}%`, cat: 'add', value: pct / 100, default: true });
+        }
+
+        if (isWeaver) mods.push({ id: 'cwsFire', icon: icon('Weave Self'), trait: 'Weave Self', tip: 'Fire +20%', cat: 'add', value: 0.20, default: false });
+
+        if ((this.data?.attributes?.weapons || []).includes('Hammer')) mods.push({ id: 'chammerFire', label: 'Hammer Fire (+5%)', cat: 'add', value: 0.05, default: false });
+
+        const relic = this.build?.relic || '';
+        if (relic === 'Nourys') mods.push({ id: 'crelicNourys', label: 'Nourys (+25%)', cat: 'add', value: 0.25, default: true });
+
+        return mods;
+    }
+
+    _computeEp(att, att2, rowKey) {
+        const base = this.data?.attributes?.attributes;
+        if (!base) return null;
+
+        const traitCC = base['Critical Chance']?.traits ?? 0;
+        const sigilCC = base['Critical Chance']?.sigils ?? 0;
+
+        let power = base.Power?.final ?? 1000;
+        let precision = base.Precision?.final ?? 1000;
+        let ferocity = base.Ferocity?.final ?? 0;
+        let extraCC = 0;
+
+        const mods = this._getEpModifiers(att, att2);
+        const rowState = this.epState[rowKey] || {};
+        let additive = 0;
+        let multiplicative = 1;
+
+        for (const mod of mods) {
+            const checked = rowState[mod.id] !== undefined ? rowState[mod.id] : mod.default;
+            if (!checked) continue;
+
+            if (mod.cat === 'stat') {
+                const e = mod.effects;
+                if (e.power) power += e.power;
+                if (e.precision) precision += e.precision;
+                if (e.ferocity) ferocity += e.ferocity;
+                if (e.cc) extraCC += e.cc;
+            } else if (mod.cat === 'add') {
+                additive += mod.value;
+            } else if (mod.cat === 'mul') {
+                multiplicative *= mod.value;
+            }
+        }
+
+        const ccPct = Math.min((precision - 895) / 21 + traitCC + sigilCC + extraCC, 100);
+        const cdPct = 150 + ferocity / 15;
+        const cc = ccPct / 100;
+        const cd = cdPct / 100;
+        const critMul = cc * cd + (1 - cc);
+        const modifierTotal = (1 + additive) * multiplicative;
+        const ep = power * critMul * modifierTotal;
+
+        return { power, ferocity, cc: ccPct, cd: cdPct, critMul, modifierTotal, ep };
+    }
+
+    _computeCondiEp() {
+        const base = this.data?.attributes?.attributes;
+        if (!base) return [];
+
+        const condDmg = base['Condition Damage']?.final ?? 0;
+        const condiState = this.epState.condi || {};
+        const mightChecked = condiState['cmight'] !== undefined ? condiState['cmight'] : true;
+        const activeTraitsLocal = this.data.attributes.activeTraits || [];
+        const hasEnhPot = activeTraitsLocal.some(t => t.name === 'Enhanced Potency');
+        const mightPerStack = (hasEnhPot && this.evokerElement === 'Fire') ? 35 : 30;
+        const mightCondDmg = mightChecked ? (this.permaBoons?.Might || 0) * mightPerStack : 0;
+        const effectiveCondDmg = condDmg + mightCondDmg;
+        const baseDur = base['Condition Duration']?.final ?? 0;
+
+        const FORMULAS = {
+            Burning:   { base: 131.0,  scaling: 0.155, durKey: 'Burning Duration' },
+            Bleeding:  { base: 22.0,   scaling: 0.06,  durKey: 'Bleeding Duration' },
+            Poisoned:  { base: 33.5,   scaling: 0.06,  durKey: 'Poison Duration' },
+            Torment:   { base: 31.8,   scaling: 0.09,  durKey: 'Torment Duration' },
+            Confusion: { base: 18.25,  scaling: 0.05,  durKey: 'Confusion Duration' },
+        };
+
+        const mods = this._getEpCondiModifiers();
+        let additive = 0;
+        let multiplicative = 1;
+        let wpDur = 0;
+        for (const mod of mods) {
+            const checked = condiState[mod.id] !== undefined ? condiState[mod.id] : mod.default;
+            if (!checked) continue;
+            if (mod.cat === 'stat') continue;
+            if (mod.id === 'cwp') { wpDur = 20; additive += mod.value; continue; }
+            if (mod.cat === 'add') additive += mod.value;
+            else if (mod.cat === 'mul') multiplicative *= mod.value;
+        }
+        const condMul = (1 + additive) * multiplicative;
+
+        const results = [];
+        for (const [cond, f] of Object.entries(FORMULAS)) {
+            const tickDmg = f.base + f.scaling * effectiveCondDmg;
+            const specDur = base[f.durKey]?.final ?? 0;
+            const totalDur = Math.min(baseDur + specDur + wpDur, 100);
+            const durMul = 1 + totalDur / 100;
+            const effective = tickDmg * durMul * condMul;
+            results.push({ cond, tickDmg, totalDur, durMul, condMul, effective });
+        }
+        return results;
+    }
+
+    renderEffectivePower() {
+        const container = document.getElementById('ep-content');
+        if (!container || !this.data?.attributes) return;
+
+        const specs = this.data.attributes.specializations || [];
+        const isWeaver = specs.some(s => s.name === 'Weaver');
+        const ATTS = ['Fire', 'Water', 'Air', 'Earth'];
+        const ATT_COLORS = { Fire: '#e55', Water: '#5ae', Air: '#ce6', Earth: '#c96' };
+
+        const rows = [];
+        if (isWeaver) {
+            rows.push({ att: 'Fire',  att2: 'Fire',  key: 'Fire/Fire',  label: 'Fire/Fire' });
+            rows.push({ att: 'Air',   att2: 'Air',   key: 'Air/Air',    label: 'Air/Air' });
+            rows.push({ att: 'Fire',  att2: 'Air',   key: 'Fire/Air',   label: 'Fire/Air' });
+            rows.push({ att: 'Air',   att2: 'Fire',  key: 'Air/Fire',   label: 'Air/Fire' });
+            rows.push({ att: 'Fire',  att2: 'Water', key: 'Fire/WE',    label: 'Fire/Water·Earth' });
+            rows.push({ att: 'Air',   att2: 'Water', key: 'Air/WE',     label: 'Air/Water·Earth' });
+            rows.push({ att: 'Water', att2: 'Fire',  key: 'WE/Fire',    label: 'Water·Earth/Fire' });
+            rows.push({ att: 'Water', att2: 'Air',   key: 'WE/Air',     label: 'Water·Earth/Air' });
+            rows.push({ att: 'Water', att2: 'Water', key: 'WE/WE',      label: 'Water·Earth dual' });
+        } else {
+            for (const att of ATTS) {
+                rows.push({ att, att2: null, key: att, label: att });
+            }
+        }
+
+        let html = '';
+
+        for (const row of rows) {
+            const mods = this._getEpModifiers(row.att, row.att2);
+            const epResult = this._computeEp(row.att, row.att2, row.key);
+            if (!epResult) continue;
+
+            const rowState = this.epState[row.key] || {};
+            const priColor = ATT_COLORS[row.att];
+            let nameHtml;
+            if (!row.att2) {
+                nameHtml = `<span style="color:${priColor}">${row.att}</span>`;
+            } else if (row.label.includes('·')) {
+                const parts = row.label.split('/');
+                const colorPart = (p) => {
+                    if (p.startsWith('Fire')) return `<span style="color:${ATT_COLORS.Fire}">${p}</span>`;
+                    if (p.startsWith('Air')) return `<span style="color:${ATT_COLORS.Air}">${p}</span>`;
+                    return `<span style="color:${ATT_COLORS.Water}">${p}</span>`;
+                };
+                nameHtml = parts.map(colorPart).join('/');
+            } else {
+                const secColor = ATT_COLORS[row.att2];
+                nameHtml = `<span style="color:${priColor}">${row.att}</span>/<span style="color:${secColor}">${row.att2}</span>`;
+            }
+
+            html += `<div class="ep-att-row">`;
+            html += `<div class="ep-att-header">`;
+            html += `<span class="ep-att-name">${nameHtml}</span>`;
+            html += `<span class="ep-att-result">${Math.round(epResult.ep).toLocaleString()}</span>`;
+            html += `<span class="ep-att-stats">Pwr:${Math.round(epResult.power)} CC:${epResult.cc.toFixed(1)}% CD:${epResult.cd.toFixed(1)}%</span>`;
+            html += `</div>`;
+
+            html += `<div class="ep-modifiers">`;
+            for (const mod of mods) {
+                const checked = rowState[mod.id] !== undefined ? rowState[mod.id] : mod.default;
+                const chk = checked ? 'checked' : '';
+                if (mod.icon) {
+                    html += `<label class="ep-mod-label ep-mod-icon" title="${esc(mod.trait || '')} (${mod.tip || ''})"><input type="checkbox" data-att="${row.key}" data-mod="${mod.id}" ${chk} /><img src="${mod.icon}" class="ep-mod-img" /></label>`;
+                } else {
+                    const text = mod.label || `${mod.trait} (${mod.tip})`;
+                    html += `<label class="ep-mod-label"><input type="checkbox" data-att="${row.key}" data-mod="${mod.id}" ${chk} />${text}</label>`;
+                }
+            }
+            html += `</div>`;
+            html += `</div>`;
+        }
+
+        // Condition EP section
+        const condiMods = this._getEpCondiModifiers();
+        const condiResults = this._computeCondiEp();
+        const condiState = this.epState.condi || {};
+
+        html += `<div class="ep-condi-section">`;
+        html += `<div class="ep-condi-header">Effective Condition Damage (1s × duration)</div>`;
+
+        html += `<div class="ep-condi-modifiers">`;
+        for (const mod of condiMods) {
+            const checked = condiState[mod.id] !== undefined ? condiState[mod.id] : mod.default;
+            const chk = checked ? 'checked' : '';
+            if (mod.icon) {
+                html += `<label class="ep-mod-label ep-mod-icon" title="${esc(mod.trait || '')} (${mod.tip || ''})"><input type="checkbox" data-att="condi" data-mod="${mod.id}" ${chk} /><img src="${mod.icon}" class="ep-mod-img" /></label>`;
+            } else {
+                const text = mod.label || `${mod.trait} (${mod.tip})`;
+                html += `<label class="ep-mod-label"><input type="checkbox" data-att="condi" data-mod="${mod.id}" ${chk} />${text}</label>`;
+            }
+        }
+        html += `</div>`;
+
+        html += `<table class="ep-condi-table"><thead><tr>`;
+        html += `<th>Condition</th><th>Tick/s</th><th>Dur%</th><th>Dur×</th><th>Mod×</th><th>Effective</th>`;
+        html += `</tr></thead><tbody>`;
+
+        const CONDI_COLORS = { Burning: '#e8a048', Bleeding: '#d44', Poisoned: '#6b4', Torment: '#b6e', Confusion: '#d8e' };
+        for (const r of condiResults) {
+            html += `<tr>`;
+            html += `<td style="color:${CONDI_COLORS[r.cond] || '#ccc'}">${r.cond}</td>`;
+            html += `<td>${r.tickDmg.toFixed(1)}</td>`;
+            html += `<td>${r.totalDur.toFixed(1)}%</td>`;
+            html += `<td>${r.durMul.toFixed(3)}</td>`;
+            html += `<td>${r.condMul.toFixed(3)}</td>`;
+            html += `<td class="ep-condi-result">${Math.round(r.effective).toLocaleString()}</td>`;
+            html += `</tr>`;
+        }
+        html += `</tbody></table>`;
+        html += `</div>`;
+
+        container.innerHTML = html;
+
+        container.querySelectorAll('input[type="checkbox"][data-att][data-mod]').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const att = e.target.dataset.att;
+                const modId = e.target.dataset.mod;
+                if (!this.epState[att]) this.epState[att] = {};
+                this.epState[att][modId] = e.target.checked;
+                this.renderEffectivePower();
+                this.renderSkillInfoTable();
+            });
+        });
     }
 
     // ─── Traits ───
@@ -1431,11 +1825,18 @@ class App {
         const oh = weps[1] || '';
         const is2h = TH_WEAPONS.has(mh);
         const eliteSpec = this._getEliteSpec();
+        const isWeaver = eliteSpec === 'Weaver';
 
         const hdr = `<div class="info-header">
             <span></span><span>Name</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span>
         </div>`;
         let html = hdr;
+
+        // For weapon skills under an attunement: use best EP combo for that skill
+        // For Weaver, a Fire skill can be used in Fire/Fire, Fire/Air, Fire/Water, Fire/Earth (primary=Fire)
+        // and also in Air/Fire, Water/Fire, Earth/Fire (secondary=Fire for slots 4-5)
+        const selectedAtt = this.activeAttunement;
+        const selectedAtt2 = isWeaver ? this.secondaryAttunement : null;
 
         for (const att of ATTUNEMENTS) {
             const color = ATTUNEMENT_COLORS[att];
@@ -1446,15 +1847,19 @@ class App {
                 const weapon = is2h ? mh : (slot <= 3 ? mh : oh);
                 const skills = this._getSkillsForSlot(weapon, att, String(slot));
                 const chain = this._getChainOrderWithEtching(skills);
+                const bestCtx = this._getBestEpContext(att, slot, isWeaver);
                 for (const sk of chain) {
-                    html += this._renderInfoRow(sk, weapon);
+                    html += this._renderInfoRow(sk, weapon, bestCtx);
                 }
             }
 
             if (eliteSpec === 'Tempest') {
                 const overload = this.data.skills.find(s =>
                     s.weapon === 'Profession mechanic' && s.attunement === att && s.type === 'Attunement' && s.name.startsWith('Overload'));
-                if (overload) html += this._renderInfoRow(overload, 'Profession mechanic');
+                if (overload) {
+                    const ctx = this._getEpContextForAtt(att, null);
+                    html += this._renderInfoRow(overload, 'Profession mechanic', ctx);
+                }
             }
             html += '</div>';
         }
@@ -1463,7 +1868,10 @@ class App {
         if (weaverDualSkills.length > 0) {
             html += '<div class="info-att-header" style="color:#d7c06a">Weaver Dual Skills</div>';
             html += '<div class="info-rows">';
-            for (const sk of weaverDualSkills) html += this._renderInfoRow(sk, sk.weapon);
+            for (const sk of weaverDualSkills) {
+                const bestCtx = this._getBestEpContextForDual(sk);
+                html += this._renderInfoRow(sk, sk.weapon, bestCtx);
+            }
             html += '</div>';
         }
 
@@ -1471,7 +1879,8 @@ class App {
         if (specialSkills.length > 0) {
             html += '<div class="info-att-header" style="color:var(--accent)">Special Skills</div>';
             html += '<div class="info-rows">';
-            for (const sk of specialSkills) html += this._renderInfoRow(sk, this._getWeaponForSkill(sk));
+            const selCtx = this._getEpContextForAtt(selectedAtt, selectedAtt2);
+            for (const sk of specialSkills) html += this._renderInfoRow(sk, this._getWeaponForSkill(sk), selCtx);
             html += '</div>';
         }
 
@@ -1479,7 +1888,11 @@ class App {
         if (professionMechanics.length > 0) {
             html += '<div class="info-att-header" style="color:#66c7d8">Profession Mechanics</div>';
             html += '<div class="info-rows">';
-            for (const sk of professionMechanics) html += this._renderInfoRow(sk, 'Profession mechanic');
+            for (const sk of professionMechanics) {
+                const mechAtt = sk.attunement || selectedAtt;
+                const ctx = this._getEpContextForAtt(mechAtt, isWeaver ? selectedAtt2 : null);
+                html += this._renderInfoRow(sk, 'Profession mechanic', ctx);
+            }
             html += '</div>';
         }
 
@@ -1487,19 +1900,20 @@ class App {
         if (selectedAny) {
             html += '<div class="info-att-header" style="color:var(--accent)">Selected Skills</div>';
             html += '<div class="info-rows">';
+            const selCtx = this._getEpContextForAtt(selectedAtt, selectedAtt2);
             for (const slotKey of SLOT_LABELS) {
                 const sel = this.selectedSkills[slotKey];
                 if (!sel) continue;
                 const resolved = this._resolveAttunementSkill(sel);
                 const wKey = this._getWeaponForSkill(resolved);
-                html += this._renderInfoRow(resolved, wKey);
+                html += this._renderInfoRow(resolved, wKey, selCtx);
 
                 if (sel.type === 'Conjure') {
                     const conjWeapon = CONJURE_MAP[resolved.name];
                     if (conjWeapon) {
                         const conjSkills = this.data.skills.filter(s => s.weapon === conjWeapon);
                         for (const cs of conjSkills) {
-                            html += this._renderInfoRow(cs, 'Conjured Weapon');
+                            html += this._renderInfoRow(cs, 'Conjured Weapon', selCtx);
                         }
                     }
                 }
@@ -1510,21 +1924,145 @@ class App {
         container.innerHTML = html || '<div class="placeholder-text">No weapon skills found for current weapon set</div>';
     }
 
-    _renderInfoRow(skill, weaponKey) {
+    _getEpContextForAtt(att, att2) {
+        const rowKey = this._getEpRowKeyForPair(att, att2);
+        const result = this._computeEp(att, att2 || att, rowKey);
+        if (!result) return { strikeMul: 1, condMul: 1, attrs: this.data.attributes.attributes };
+
+        const base = this.data.attributes.attributes;
+        const modifiedAttrs = {};
+        for (const [k, v] of Object.entries(base)) modifiedAttrs[k] = { ...v };
+        modifiedAttrs['Power'] = { ...modifiedAttrs['Power'], final: result.power };
+        modifiedAttrs['Critical Chance'] = { ...modifiedAttrs['Critical Chance'], final: result.cc };
+        modifiedAttrs['Critical Damage'] = { ...modifiedAttrs['Critical Damage'], final: result.cd };
+
+        // Include Might's condition damage contribution
+        const condiState = this.epState.condi || {};
+        const mightChecked = condiState['cmight'] !== undefined ? condiState['cmight'] : true;
+        if (mightChecked) {
+            const activeTraitsLocal = this.data.attributes.activeTraits || [];
+            const hasEnhPot = activeTraitsLocal.some(t => t.name === 'Enhanced Potency');
+            const mightPerStack = (hasEnhPot && this.evokerElement === 'Fire') ? 35 : 30;
+            const mightCondDmg = (this.permaBoons?.Might || 0) * mightPerStack;
+            const baseCondDmg = base['Condition Damage']?.final ?? 0;
+            modifiedAttrs['Condition Damage'] = { ...modifiedAttrs['Condition Damage'], final: baseCondDmg + mightCondDmg };
+        }
+
+        // Include Weaver's Prowess condition duration bonus
+        const cwpMods = this._getEpCondiModifiers();
+        const cwpMod = cwpMods.find(m => m.id === 'cwp');
+        if (cwpMod) {
+            const cwpChecked = condiState['cwp'] !== undefined ? condiState['cwp'] : cwpMod.default;
+            if (cwpChecked) {
+                const baseCondDur = base['Condition Duration']?.final ?? 0;
+                modifiedAttrs['Condition Duration'] = { ...modifiedAttrs['Condition Duration'], final: Math.min(baseCondDur + 20, 100) };
+            }
+        }
+
+        return { strikeMul: result.modifierTotal, condMul: this._getCondiMul(), attrs: modifiedAttrs };
+    }
+
+    _getEpRowKeyForPair(att, att2) {
+        const specs = this.data?.attributes?.specializations || [];
+        const isWeaver = specs.some(s => s.name === 'Weaver');
+        if (!isWeaver) return att;
+
+        const WE = new Set(['Water', 'Earth']);
+        const pri = att;
+        const sec = att2 || att;
+
+        if (pri === 'Fire' && sec === 'Fire') return 'Fire/Fire';
+        if (pri === 'Air' && sec === 'Air') return 'Air/Air';
+        if (pri === 'Fire' && sec === 'Air') return 'Fire/Air';
+        if (pri === 'Air' && sec === 'Fire') return 'Air/Fire';
+        if (pri === 'Fire' && WE.has(sec)) return 'Fire/WE';
+        if (pri === 'Air' && WE.has(sec)) return 'Air/WE';
+        if (WE.has(pri) && sec === 'Fire') return 'WE/Fire';
+        if (WE.has(pri) && sec === 'Air') return 'WE/Air';
+        return 'WE/WE';
+    }
+
+    _getBestEpContext(skillAtt, slot, isWeaver) {
+        if (!isWeaver) return this._getEpContextForAtt(skillAtt, null);
+
+        // For Weaver weapon skills: the skill's attunement is fixed.
+        // Slots 1-3 use primary attunement = skillAtt, secondary can be anything.
+        // Slots 4-5 use secondary attunement = skillAtt, primary can be anything.
+        const ATTS = ['Fire', 'Water', 'Air', 'Earth'];
+        let bestCtx = null;
+        let bestEp = -Infinity;
+
+        if (slot <= 3) {
+            for (const sec of ATTS) {
+                const rowKey = this._getEpRowKeyForPair(skillAtt, sec);
+                const result = this._computeEp(skillAtt, sec, rowKey);
+                if (result && result.ep > bestEp) {
+                    bestEp = result.ep;
+                    bestCtx = { att: skillAtt, att2: sec, rowKey };
+                }
+            }
+        } else {
+            for (const pri of ATTS) {
+                const rowKey = this._getEpRowKeyForPair(pri, skillAtt);
+                const result = this._computeEp(pri, skillAtt, rowKey);
+                if (result && result.ep > bestEp) {
+                    bestEp = result.ep;
+                    bestCtx = { att: pri, att2: skillAtt, rowKey };
+                }
+            }
+        }
+
+        if (!bestCtx) return this._getEpContextForAtt(skillAtt, skillAtt);
+        return this._getEpContextForAtt(bestCtx.att, bestCtx.att2);
+    }
+
+    _getBestEpContextForDual(skill) {
+        // Dual skills have attunement like "Fire+Air" — both attunements are fixed
+        const parts = (skill.attunement || '').split('+');
+        if (parts.length === 2) {
+            return this._getEpContextForAtt(parts[0], parts[1]);
+        }
+        return this._getEpContextForAtt(this.activeAttunement, this.secondaryAttunement);
+    }
+
+    _getCondiMul() {
+        const mods = this._getEpCondiModifiers();
+        const condiState = this.epState.condi || {};
+        let additive = 0;
+        let multiplicative = 1;
+        for (const mod of mods) {
+            const checked = condiState[mod.id] !== undefined ? condiState[mod.id] : mod.default;
+            if (!checked) continue;
+            if (mod.cat === 'stat') continue;
+            if (mod.id === 'cwp') { additive += mod.value; continue; }
+            if (mod.cat === 'add') additive += mod.value;
+            else if (mod.cat === 'mul') multiplicative *= mod.value;
+        }
+        return (1 + additive) * multiplicative;
+    }
+
+    _renderInfoRow(skill, weaponKey, epCtx) {
         const icon = this.api.getSkillIcon(skill.name);
         const hits = this.data.skillHits[skill.name] || [];
         const wStr = WEAPON_DATA[weaponKey]?.weaponStrength || WEAPON_DATA[this._getWeaponForSkill(skill)]?.weaponStrength || 1000;
-        const attrs = this.data.attributes.attributes;
+        const attrs = epCtx ? epCtx.attrs : this.data.attributes.attributes;
         const maxHit = this.hitboxSize === 'small' ? (SMALL_HITBOX_CAPS.get(skill.name) ?? Infinity) : Infinity;
         const dmg = calculateSkillDamage(skill, hits, wStr, attrs, { maxHit });
+
+        const strikeMul = epCtx ? epCtx.strikeMul : 1;
+        const condMul = epCtx ? epCtx.condMul : 1;
+        const strike = dmg.totalStrike * strikeMul;
+        const condition = dmg.totalCondition * condMul;
+        const total = strike + condition;
+        const dps = dmg.castTime > 0 ? total / dmg.castTime : 0;
 
         return `<div class="info-row">
             <img class="info-icon" src="${icon || PLACEHOLDER_ICON}" title="${esc(skill.name)}" />
             <span class="info-name" title="${esc(skill.name)}">${esc(skill.name)}</span>
-            <span class="info-val">${Math.round(dmg.totalStrike)}</span>
-            <span class="info-val condi">${Math.round(dmg.totalCondition)}</span>
-            <span class="info-val total">${Math.round(dmg.totalDamage)}</span>
-            <span class="info-val dps">${dmg.castTime > 0 ? Math.round(dmg.dps) : '—'}</span>
+            <span class="info-val">${Math.round(strike)}</span>
+            <span class="info-val condi">${Math.round(condition)}</span>
+            <span class="info-val total">${Math.round(total)}</span>
+            <span class="info-val dps">${dmg.castTime > 0 ? Math.round(dps) : '—'}</span>
         </div>`;
     }
 

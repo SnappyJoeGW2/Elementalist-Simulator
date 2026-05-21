@@ -892,6 +892,153 @@ header .accent {
     filter: drop-shadow(0 0 5px rgba(200, 162, 76, 1)) drop-shadow(0 0 8px rgba(200, 162, 76, 0.7));
 }
 
+/* ─── Effective Power Section ─── */
+.ep-section {
+    margin-bottom: 12px;
+}
+
+.ep-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+}
+
+.ep-att-row {
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.ep-att-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.ep-att-name {
+    font-weight: 600;
+    font-size: 0.88em;
+    min-width: 110px;
+}
+
+.ep-att-stats {
+    font-size: 0.82em;
+    color: var(--text-dim);
+    display: flex;
+    gap: 12px;
+}
+
+.ep-att-result {
+    font-weight: 700;
+    font-size: 1.05em;
+    color: var(--accent);
+}
+
+.ep-modifiers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 4px;
+}
+
+.ep-mod-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.78em;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+}
+
+.ep-mod-label input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+.ep-mod-label:hover {
+    color: var(--text);
+}
+
+.ep-mod-icon {
+    gap: 1px;
+}
+
+.ep-mod-img {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    opacity: 0.9;
+}
+
+.ep-mod-icon:hover .ep-mod-img {
+    opacity: 1;
+    filter: brightness(1.2);
+}
+
+.ep-mod-icon input:not(:checked) + .ep-mod-img {
+    opacity: 0.35;
+    filter: grayscale(0.6);
+}
+
+.ep-condi-section {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.ep-condi-header {
+    font-weight: 600;
+    font-size: 0.9em;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+}
+
+.ep-condi-modifiers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-bottom: 8px;
+}
+
+.ep-condi-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82em;
+}
+
+.ep-condi-table th,
+.ep-condi-table td {
+    padding: 3px 10px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.ep-condi-table th:first-child,
+.ep-condi-table td:first-child {
+    text-align: left;
+}
+
+.ep-condi-table th {
+    color: var(--text-dim);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+}
+
+.ep-condi-table tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.ep-condi-result {
+    font-weight: 700;
+    color: #e8a048;
+}
+
 /* ─── Skills Section ─── */
 .skills-section {
     display: grid;
