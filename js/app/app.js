@@ -1184,7 +1184,17 @@ class App {
         }
 
         const weapons = this.data?.attributes?.weapons || [];
-        if (weapons.includes('Hammer')) mods.push({ id: 'hammerFire', label: 'Hammer Fire (+5%)', cat: 'add', value: 0.05, default: false });
+        if (weapons.includes('Hammer')) {
+            mods.push({ id: 'hammerFire', label: 'Hammer Fire (+5%)', cat: 'add', value: 0.05, default: true });
+            mods.push({ id: 'hammerAir', label: 'Hammer Air (+15% CC)', cat: 'stat', effects: { cc: 15 }, default: true });
+        }
+
+        // Signet of Fire passive: +180 Precision (already in base attrs when selected).
+        // When unchecked → subtract 180 Precision (signet kept on cooldown).
+        const selectedSkillNames = new Set(Object.values(this.selectedSkills || {}).filter(Boolean).map(s => s.name));
+        if (selectedSkillNames.has('Signet of Fire')) {
+            mods.push({ id: 'signetFire', label: 'Signet of Fire (+180 Prec)', cat: 'stat', effects: { precision: 180 }, default: true, _invertedStat: true });
+        }
 
         const RELIC_STRIKE = { Fireworks: 1.07, Claw: 1.07, Peitha: 1.10, 'Mount Balrior': 1.15, Brawler: 1.10, Weaver: 1.10, Fire: 1.07, Bloodstone: 1.07, Eagle: 1.10 };
         if (RELIC_STRIKE[relic]) mods.push({ id: 'relic', label: `${relic} (×${RELIC_STRIKE[relic].toFixed(2)})`, cat: 'mul', value: RELIC_STRIKE[relic], default: true });
@@ -1225,7 +1235,7 @@ class App {
 
         if (isWeaver) mods.push({ id: 'cwsFire', icon: icon('Weave Self'), trait: 'Weave Self', tip: 'Fire +20%', cat: 'add', value: 0.20, default: false });
 
-        if ((this.data?.attributes?.weapons || []).includes('Hammer')) mods.push({ id: 'chammerFire', label: 'Hammer Fire (+5%)', cat: 'add', value: 0.05, default: false });
+        if ((this.data?.attributes?.weapons || []).includes('Hammer')) mods.push({ id: 'chammerFire', label: 'Hammer Fire (+5%)', cat: 'add', value: 0.05, default: true });
 
         const relic = this.build?.relic || '';
         if (relic === 'Nourys') mods.push({ id: 'crelicNourys', label: 'Nourys (+25%)', cat: 'add', value: 0.25, default: true });
@@ -1252,6 +1262,19 @@ class App {
 
         for (const mod of mods) {
             const checked = rowState[mod.id] !== undefined ? rowState[mod.id] : mod.default;
+
+            // Inverted stat: already in base attrs; subtract when unchecked
+            if (mod._invertedStat) {
+                if (!checked) {
+                    const e = mod.effects;
+                    if (e.power) power -= e.power;
+                    if (e.precision) precision -= e.precision;
+                    if (e.ferocity) ferocity -= e.ferocity;
+                    if (e.cc) extraCC -= e.cc;
+                }
+                continue;
+            }
+
             if (!checked) continue;
 
             if (mod.cat === 'stat') {
