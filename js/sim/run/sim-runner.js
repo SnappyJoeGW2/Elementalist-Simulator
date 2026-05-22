@@ -41,9 +41,11 @@ export function runSimulationContributions({
     startEvokerCharges = 6,
     startEvokerEmpowered = 0,
     permaBoons,
+    permaField = '',
     targetHP = 0,
     startPistolBullets = null,
 }) {
+    sim.permaField = permaField || '';
     sim.computeContributions(
         activeAttunement,
         secondaryAttunement,

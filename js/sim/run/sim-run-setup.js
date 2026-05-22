@@ -342,6 +342,11 @@ export function initializeStartingPistolBullets(engine, S, permaExpiry) {
     }
 }
 
+export function applyPermanentField(S, permaField, permaExpiry) {
+    if (!permaField) return;
+    S.fields.push({ type: permaField, start: 0, end: permaExpiry, skill: 'Permanent Field', perma: true });
+}
+
 export function applyRunSetupState(engine, S, {
     disTrait,
     disFood,

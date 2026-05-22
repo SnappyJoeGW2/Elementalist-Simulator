@@ -443,6 +443,7 @@ export async function runOptimizer(app) {
         app._optimizer.hitboxSize = app.hitboxSize || 'large';
         app._optimizer.glyphBoonedElementals = !!app.glyphBoonedElementals;
         app._optimizer.thornsBossAuraOnly = !!app.thornsBossAuraOnly;
+        app._optimizer.permaField = app.permaField || '';
         const results = await app._optimizer.optimize(
             {
                 build: JSON.parse(JSON.stringify(app.build)),

@@ -287,6 +287,7 @@ class App {
         this.evokerStartEmpowered = 0;
         this.selectedSkills = createEmptySelectedSkills();
         this.permaBoons = createDefaultPermaBoons();
+        this.permaField = '';
         this.openDropdown = null;
         this.sim = null;
         this.dragState = null;
@@ -389,6 +390,11 @@ class App {
             this.renderWeaponBar();
             if (this.sim?.rotation.length > 0) this._autoRun();
         });
+        document.getElementById('perma-field').addEventListener('change', (e) => {
+            this.permaField = e.target.value;
+            this._persistBuild();
+            if (this.sim?.rotation.length > 0) this._autoRun();
+        });
         document.getElementById('glyph-booned-cb').addEventListener('change', (e) => {
             this.glyphBoonedElementals = e.target.checked;
             if (this.sim) this.sim.glyphBoonedElementals = this.glyphBoonedElementals;
@@ -460,6 +466,8 @@ class App {
         this.renderRotationBuilder();
         const hitboxEl = document.getElementById('hitbox-size');
         if (hitboxEl) hitboxEl.value = this.hitboxSize || 'large';
+        const fieldEl = document.getElementById('perma-field');
+        if (fieldEl) fieldEl.value = this.permaField || '';
         const glyphCb = document.getElementById('glyph-booned-cb');
         if (glyphCb) glyphCb.checked = !!this.glyphBoonedElementals;
         const thornsCb = document.getElementById('thorns-boss-aura-cb');

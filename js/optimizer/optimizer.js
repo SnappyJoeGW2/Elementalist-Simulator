@@ -69,6 +69,7 @@ export class GearOptimizer {
             slotConstraints,
             activeSlots,
             startAtt, startAtt2, evokerElement, permaBoons,
+            permaField: this.permaField || '',
             hitboxSize: this.hitboxSize,
             glyphBoonedElementals: this.glyphBoonedElementals,
             thornsBossAuraOnly: this.thornsBossAuraOnly,
@@ -225,6 +226,7 @@ export class GearOptimizer {
             glyphBoonedElementals: this.glyphBoonedElementals,
             thornsBossAuraOnly: this.thornsBossAuraOnly,
         });
+        sim.permaField = this.permaField || '';
         sim.rotation = rotation;
         sim.fastMode = true;
         sim.activeTraitNames = new Set((attrs.activeTraits || []).map(t => t.name));

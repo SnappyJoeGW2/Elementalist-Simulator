@@ -9,7 +9,14 @@ const ELEMENTAL_EPITOME_AURAS = {
 };
 
 function findActiveComboField(S, time) {
-    return getCombatFields(S).find(field => field.start <= time && field.end > time);
+    const fields = getCombatFields(S);
+    let permaMatch = null;
+    for (const field of fields) {
+        if (field.start > time || field.end <= time) continue;
+        if (field.perma) { permaMatch = field; continue; }
+        return field;
+    }
+    return permaMatch;
 }
 
 function triggerElementalEpitomeCombo(ctx, attunement, time) {

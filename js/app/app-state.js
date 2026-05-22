@@ -57,6 +57,7 @@ export function buildSnapshotFromState({
     evokerStartCharges,
     evokerStartEmpowered,
     permaBoons,
+    permaField,
     rotation,
     hitboxSize,
     glyphBoonedElementals,
@@ -71,6 +72,7 @@ export function buildSnapshotFromState({
         evokerStartCharges,
         evokerStartEmpowered,
         permaBoons: JSON.parse(JSON.stringify(permaBoons)),
+        permaField: permaField || '',
         rotation: cloneRotationItems(rotation),
         hitboxSize: hitboxSize || 'large',
         glyphBoonedElementals: !!glyphBoonedElementals,
@@ -87,6 +89,7 @@ export function mergeSnapshotIntoState(currentState, snapshot, skillDefs = null)
         evokerStartCharges: currentState.evokerStartCharges,
         evokerStartEmpowered: currentState.evokerStartEmpowered,
         permaBoons: currentState.permaBoons,
+        permaField: currentState.permaField || '',
         selectedSkills: currentState.selectedSkills,
         hitboxSize: currentState.hitboxSize || 'large',
         glyphBoonedElementals: !!currentState.glyphBoonedElementals,
@@ -103,6 +106,7 @@ export function mergeSnapshotIntoState(currentState, snapshot, skillDefs = null)
     if (snapshot.hitboxSize) nextState.hitboxSize = snapshot.hitboxSize;
     if ('glyphBoonedElementals' in snapshot) nextState.glyphBoonedElementals = !!snapshot.glyphBoonedElementals;
     if ('thornsBossAuraOnly' in snapshot) nextState.thornsBossAuraOnly = !!snapshot.thornsBossAuraOnly;
+    if ('permaField' in snapshot) nextState.permaField = snapshot.permaField || '';
     if (snapshot.permaBoons && Object.keys(snapshot.permaBoons).length > 0) {
         nextState.permaBoons = JSON.parse(JSON.stringify(snapshot.permaBoons));
     }

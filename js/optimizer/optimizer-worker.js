@@ -14,6 +14,7 @@ self.onmessage = ({ data }) => {
             baseBuild, selectedSkills, rotation,
             prefixes, constraints = {}, slotConstraints = {},
             startAtt, startAtt2, evokerElement, permaBoons,
+            permaField,
             combos, activeSlots, hitboxSize, glyphBoonedElementals, thornsBossAuraOnly,
         } = data;
 
@@ -28,6 +29,7 @@ self.onmessage = ({ data }) => {
             glyphBoonedElementals,
             thornsBossAuraOnly,
         });
+        sim.permaField = permaField || '';
         sim.rotation = rotation;
         sim.fastMode = true;
         sim.activeTraitNames = new Set((initAttrs.activeTraits || []).map(t => t.name));

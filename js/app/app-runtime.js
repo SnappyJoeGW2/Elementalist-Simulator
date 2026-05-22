@@ -50,6 +50,7 @@ export function buildSnapshot(app) {
         evokerStartCharges: app.evokerStartCharges,
         evokerStartEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
+        permaField: app.permaField,
         rotation: serializeRotation(app),
         hitboxSize: app.hitboxSize,
         glyphBoonedElementals: app.glyphBoonedElementals,
@@ -66,6 +67,7 @@ export function applySnapshot(app, state) {
         evokerStartCharges: app.evokerStartCharges,
         evokerStartEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
+        permaField: app.permaField,
         selectedSkills: app.selectedSkills,
         hitboxSize: app.hitboxSize,
         glyphBoonedElementals: app.glyphBoonedElementals,
@@ -79,6 +81,7 @@ export function applySnapshot(app, state) {
     app.evokerStartCharges = merged.evokerStartCharges;
     app.evokerStartEmpowered = merged.evokerStartEmpowered;
     app.permaBoons = merged.permaBoons;
+    app.permaField = merged.permaField || '';
     app.selectedSkills = merged.selectedSkills;
     app.hitboxSize = merged.hitboxSize || 'large';
     app.glyphBoonedElementals = !!merged.glyphBoonedElementals;
@@ -172,6 +175,7 @@ export function autoRun(app) {
         startEvokerCharges: app.evokerStartCharges,
         startEvokerEmpowered: app.evokerStartEmpowered,
         permaBoons: app.permaBoons,
+        permaField: app.permaField,
         targetHP: app._getTargetHP(),
         startPistolBullets: getStartPistolBullets(app),
     });

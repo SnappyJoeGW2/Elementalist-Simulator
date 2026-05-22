@@ -4,6 +4,7 @@ import {
     applyDisabledStatAdjustments,
     createRunState,
     applyRunSetupState,
+    applyPermanentField,
     restoreAdjustedStats,
 } from './sim/run/sim-run-setup.js';
 import {
@@ -772,7 +773,7 @@ export class SimulationEngine {
         a,
         realStartAtt2,
     }) {
-        return applyRunSetupState(this, S, {
+        applyRunSetupState(this, S, {
             disTrait,
             disFood,
             permaBoons,
@@ -781,6 +782,7 @@ export class SimulationEngine {
             realStartAtt2,
             permaExpiry: PERMA_EXPIRY,
         });
+        applyPermanentField(S, this.permaField, PERMA_EXPIRY);
     }
 
     _restoreAdjustedStats(a, statAdj) {
