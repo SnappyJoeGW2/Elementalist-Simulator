@@ -121,6 +121,13 @@ export function onBuildChange(app) {
     app.data.attributes = rebuilt.attributes;
     app.sim = rebuilt.sim;
 
+    const elite = app._getEliteSpec();
+    if (elite === 'Evoker' && !app.evokerElement) {
+        app.evokerElement = 'Fire';
+    } else if (elite !== 'Evoker') {
+        app.evokerElement = null;
+    }
+
     app.renderTraits();
     app.renderAttributes();
     app.renderConditions();
@@ -128,6 +135,7 @@ export function onBuildChange(app) {
     app.renderWeaponBar();
     app.renderSkillBar();
     app.renderSkillInfoTable();
+    app._renderStartAttSelector();
 
     if (app.sim.rotation.length > 0) autoRun(app);
     else app._renderPalette();
