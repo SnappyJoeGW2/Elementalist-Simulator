@@ -1351,11 +1351,11 @@ class App {
         }
 
         const FORMULAS = {
-            Burning:   { base: 131.0,  scaling: 0.155, durKey: 'Burning Duration' },
-            Bleeding:  { base: 22.0,   scaling: 0.06,  durKey: 'Bleeding Duration' },
-            Poisoned:  { base: 33.5,   scaling: 0.06,  durKey: 'Poison Duration' },
-            Torment:   { base: 31.8,   scaling: 0.09,  durKey: 'Torment Duration' },
-            Confusion: { base: 18.25,  scaling: 0.05,  durKey: 'Confusion Duration' },
+            Burning: { base: 131.0, scaling: 0.155, durKey: 'Burning Duration' },
+            Bleeding: { base: 22.0, scaling: 0.06, durKey: 'Bleeding Duration' },
+            Poisoned: { base: 33.5, scaling: 0.06, durKey: 'Poison Duration' },
+            Torment: { base: 31.8, scaling: 0.09, durKey: 'Torment Duration' },
+            Confusion: { base: 18.25, scaling: 0.05, durKey: 'Confusion Duration' },
         };
 
         const mods = this._getEpCondiModifiers();
@@ -1397,15 +1397,15 @@ class App {
 
         const rows = [];
         if (isWeaver) {
-            rows.push({ att: 'Fire',  att2: 'Fire',  key: 'Fire/Fire',  label: 'Fire/Fire' });
-            rows.push({ att: 'Air',   att2: 'Air',   key: 'Air/Air',    label: 'Air/Air' });
-            rows.push({ att: 'Fire',  att2: 'Air',   key: 'Fire/Air',   label: 'Fire/Air' });
-            rows.push({ att: 'Air',   att2: 'Fire',  key: 'Air/Fire',   label: 'Air/Fire' });
-            rows.push({ att: 'Fire',  att2: 'Water', key: 'Fire/WE',    label: 'Fire/Water·Earth' });
-            rows.push({ att: 'Air',   att2: 'Water', key: 'Air/WE',     label: 'Air/Water·Earth' });
-            rows.push({ att: 'Water', att2: 'Fire',  key: 'WE/Fire',    label: 'Water·Earth/Fire' });
-            rows.push({ att: 'Water', att2: 'Air',   key: 'WE/Air',     label: 'Water·Earth/Air' });
-            rows.push({ att: 'Water', att2: 'Water', key: 'WE/WE',      label: 'Water·Earth dual' });
+            rows.push({ att: 'Fire', att2: 'Fire', key: 'Fire/Fire', label: 'Fire/Fire' });
+            rows.push({ att: 'Air', att2: 'Air', key: 'Air/Air', label: 'Air/Air' });
+            rows.push({ att: 'Fire', att2: 'Air', key: 'Fire/Air', label: 'Fire/Air' });
+            rows.push({ att: 'Air', att2: 'Fire', key: 'Air/Fire', label: 'Air/Fire' });
+            rows.push({ att: 'Fire', att2: 'Water', key: 'Fire/WE', label: 'Fire/Water·Earth' });
+            rows.push({ att: 'Air', att2: 'Water', key: 'Air/WE', label: 'Air/Water·Earth' });
+            rows.push({ att: 'Water', att2: 'Fire', key: 'WE/Fire', label: 'Water·Earth/Fire' });
+            rows.push({ att: 'Water', att2: 'Air', key: 'WE/Air', label: 'Water·Earth/Air' });
+            rows.push({ att: 'Water', att2: 'Water', key: 'WE/WE', label: 'Water·Earth dual' });
         } else {
             for (const att of ATTS) {
                 rows.push({ att, att2: null, key: att, label: att });
@@ -1888,7 +1888,7 @@ class App {
         const isWeaver = eliteSpec === 'Weaver';
 
         const hdr = `<div class="info-header">
-            <span></span><span>Name</span><span>Strike</span><span>Condi</span><span>Total</span><span>DPS</span>
+            <span></span><span>Name</span><span>Strike</span><span>Condi</span><span>Total</span><span>DCT</span>
         </div>`;
         let html = hdr;
 
@@ -2871,16 +2871,16 @@ class App {
         };
 
         const SKILL_COLS = [
-            { key: 'name',     label: 'Skill',    numeric: false },
-            { key: 'strike',   label: 'Strike',   numeric: true },
-            { key: 'condi',    label: 'Condi',     numeric: true },
-            { key: 'total',    label: 'Total',     numeric: true },
-            { key: 'dps',      label: 'DPS',       numeric: true },
-            { key: 'avg',      label: 'Avg/Cast',  numeric: true },
-            { key: 'dct',      label: 'DCT',       numeric: true },
-            { key: 'delay',    label: '1s Delay',  numeric: true },
-            { key: 'casts',    label: 'Casts',     numeric: true },
-            { key: 'hits',     label: 'Hits',      numeric: true },
+            { key: 'name', label: 'Skill', numeric: false },
+            { key: 'strike', label: 'Strike', numeric: true },
+            { key: 'condi', label: 'Condi', numeric: true },
+            { key: 'total', label: 'Total', numeric: true },
+            { key: 'dps', label: 'DPS', numeric: true },
+            { key: 'avg', label: 'Avg/Cast', numeric: true },
+            { key: 'dct', label: 'DCT', numeric: true },
+            { key: 'delay', label: '1s Delay', numeric: true },
+            { key: 'casts', label: 'Casts', numeric: true },
+            { key: 'hits', label: 'Hits', numeric: true },
         ];
 
         const skillRows = Object.entries(r.perSkill)
@@ -3726,7 +3726,7 @@ class App {
         const items = convertEIRotation(this._eiJson, player, toolSkillNames, skillAttunements, weapons);
 
         const waits = items.filter(i => i?.name === '__wait').length;
-        const total  = items.length;
+        const total = items.length;
 
         appendToRotation(this, items);
         this._autoRun();
