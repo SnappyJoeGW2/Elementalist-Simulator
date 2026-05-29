@@ -132,6 +132,23 @@ export const GEAR_STATS = {
         Weapon2: { Toughness: 90, Precision: 90, 'Condition Damage': 125 },
         Weapon2H: { Toughness: 179, Precision: 179, 'Condition Damage': 251 },
     },
+    'Dire': {
+        Helm: { Toughness: 45, Vitality: 45, 'Condition Damage': 63 },
+        Shoulders: { Toughness: 34, Vitality: 34, 'Condition Damage': 47 },
+        Chest: { Toughness: 101, Vitality: 101, 'Condition Damage': 141 },
+        Gloves: { Toughness: 34, Vitality: 34, 'Condition Damage': 47 },
+        Leggins: { Toughness: 67, Vitality: 67, 'Condition Damage': 94 },
+        Boots: { Toughness: 34, Vitality: 34, 'Condition Damage': 47 },
+        Amulet: { Toughness: 108, Vitality: 108, 'Condition Damage': 157 },
+        Ring1: { Toughness: 85, Vitality: 85, 'Condition Damage': 126 },
+        Ring2: { Toughness: 85, Vitality: 85, 'Condition Damage': 126 },
+        Accessory1: { Toughness: 74, Vitality: 74, 'Condition Damage': 110 },
+        Accessory2: { Toughness: 74, Vitality: 74, 'Condition Damage': 110 },
+        Back: { Toughness: 40, Vitality: 40, 'Condition Damage': 63 },
+        Weapon1: { Toughness: 90, Vitality: 90, 'Condition Damage': 125 },
+        Weapon2: { Toughness: 90, Vitality: 90, 'Condition Damage': 125 },
+        Weapon2H: { Toughness: 179, Vitality: 179, 'Condition Damage': 251 },
+    },
     'Celestial': {
         Helm: { Power: 30, Precision: 30, Ferocity: 30, Concentration: 30, 'Condition Damage': 30, Expertise: 30, Toughness: 30 },
         Shoulders: { Power: 22, Precision: 22, Ferocity: 22, Concentration: 22, 'Condition Damage': 22, Expertise: 22, Toughness: 22 },
@@ -408,6 +425,7 @@ export const UTILITY_DATA = {
     'Furious Sharpening Stone': [{ to: 'Power', from: 'Precision' }, { to: 'Ferocity', from: 'Precision' }],
     'Furious Tuning Crystal': [{ to: 'Condition Damage', from: 'Precision' }, { to: 'Expertise', from: 'Precision' }],
     'Superior Sharpening Stone': [{ to: 'Power', from: 'Precision' }, { to: 'Power', from: 'Ferocity' }],
+    'Magnanimous Tuning Crystal': [{ to: 'Condition Damage', from: 'Vitality' }, { to: 'Condition Damage', from: 'Toughness' }],
     'Tuning Icicle': [{ to: 'Condition Damage', from: 'Precision' }, { to: 'Condition Damage', from: 'Expertise' }],
 };
 
