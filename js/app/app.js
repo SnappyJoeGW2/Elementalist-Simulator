@@ -739,7 +739,7 @@ class App {
                 `<option${a === cur ? ' selected' : ''}>${a}</option>`).join('')}</select>`;
 
         // Dynamic hint showing what an attunement triggers (Polyphony + primary-only auto effects)
-        const POLY_STAT = { Fire: 'Pwr', Water: 'Heal', Air: 'Ferocity', Earth: 'Vitality' };
+        const POLY_STAT = { Fire: 'Pwr', Water: 'Heal', Air: 'Ferocity', Earth: 'CndDmg' };
         const attEffects = (att, isPrimary) => {
             if (!att || att === 'None') return '';
             const parts = [];
