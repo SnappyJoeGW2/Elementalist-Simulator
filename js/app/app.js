@@ -1818,12 +1818,11 @@ class App {
 
     _getAvailableSkillsForSlot(slotType) {
         const selectedSpecs = new Set(this.data.attributes.specializations.map(s => s.name));
-        const activeTraits = this.data.attributes?.activeTraits || [];
-        const hasElementsOfRage = activeTraits.some(t => t.name === 'Elements of Rage');
         const skills = this.data.skills.filter(s => {
             if (s.slot !== slotType) return false;
-            // Unravel is only accessible while Elements of Rage is traited.
-            if (s.name === 'Unravel' && !hasElementsOfRage) return false;
+            // Unravel is not a utility skill — it is the Weaver F5 profession mechanic
+            // granted by the Elements of Rage trait, surfaced as an F5 palette slot.
+            if (s.name === 'Unravel') return false;
             const requiredSpec = SKILL_TYPE_SPEC[s.type];
             if (requiredSpec && !selectedSpecs.has(requiredSpec)) return false;
             return true;

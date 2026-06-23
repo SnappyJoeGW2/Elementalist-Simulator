@@ -173,6 +173,19 @@ export function renderPalette(app, {
         h += '</div></div>';
     }
 
+    if (elite === 'Weaver') {
+        const activeTraits = app.data.attributes?.activeTraits || [];
+        const hasElementsOfRage = activeTraits.some(t => t.name === 'Elements of Rage');
+        if (hasElementsOfRage) {
+            const unravel = skills.find(s => s.name === 'Unravel');
+            if (unravel) {
+                h += `<div class="pal-group"><div class="pal-label" style="color:#ff4444">F5</div><div class="pal-row">`;
+                h += app._palIcon(unravel, app._isSkillAvailable(unravel.name));
+                h += '</div></div>';
+            }
+        }
+    }
+
     if (elite === 'Evoker') {
         const EVOKER_SELECTORS = new Set(['Ignite', 'Splash', 'Zap', 'Calcify']);
         const curEl = es?.evokerElement || app.evokerElement || null;
