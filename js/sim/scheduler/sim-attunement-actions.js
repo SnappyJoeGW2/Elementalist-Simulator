@@ -262,13 +262,13 @@ export function handleWeaverSwap(ctx, target, sk, isConcurrent, concurrents, {
         allowFreshAirBuff: prevPrimary !== 'Air',
     });
     if (unravelActive) {
-        if (S._hasWeaversProwess) ctx.refreshEffect("Weaver's Prowess", 8, S.t);
+        if (S._hasWeaversProwess) ctx.trackEffect('Resistance', 1, 3, S.t);
         if (S._hasElementsOfRage) ctx.refreshEffect('Elements of Rage', 8, S.t);
         if (S._hasElemAttunement) ctx.applyElemAttunementBoon(target, S.t);
         ctx.triggerBountifulPower(1, S.t);
     } else {
-        if (S._hasWeaversProwess && target !== prevPrimary) {
-            ctx.refreshEffect("Weaver's Prowess", 8, S.t);
+        if (S._hasWeaversProwess && target === prevPrimary) {
+            ctx.trackEffect('Resistance', 1, 3, S.t);
         }
         if (S._hasElementsOfRage && target === prevPrimary) {
             ctx.refreshEffect('Elements of Rage', 8, S.t);

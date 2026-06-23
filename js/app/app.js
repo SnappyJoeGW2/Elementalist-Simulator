@@ -724,7 +724,6 @@ class App {
         const hasFreshAirTrait = hasTrait('Fresh Air');
         const hasBurningPrecision = hasTrait('Burning Precision');
         const hasSuperiorElements = hasTrait('Superior Elements');
-        const hasWeaversProwess = hasTrait("Weaver's Prowess");
         const hasEnhancedPotency = hasTrait('Enhanced Potency');
         const hasEmpEmpowerment = hasTrait('Empowered Empowerment');
 
@@ -791,7 +790,7 @@ class App {
                 </div>` : ''}
             </div>` : ''}
 
-            ${(hasFreshAirTrait || hasSuperiorElements || hasWeaversProwess) ? `
+            ${(hasFreshAirTrait || hasSuperiorElements) ? `
             <div class="cond-section">Trait Conditionals</div>
             <div class="cond-grid">
                 ${hasFreshAirTrait ? `
@@ -804,13 +803,7 @@ class App {
                 <label class="cond-label">Sup. Elements</label>
                 <div class="cond-ctrl">
                     <input type="checkbox" id="cond-sup-elem"${c.superiorElements ? ' checked' : ''} />
-                    <span class="cond-unit">+15% Crit Chance (vs. Weakened)</span>
-                </div>` : ''}
-                ${hasWeaversProwess ? `
-                <label class="cond-label">Weaver's Prowess</label>
-                <div class="cond-ctrl">
-                    <input type="checkbox" id="cond-wp"${c.weaversProwess ? ' checked' : ''} />
-                    <span class="cond-unit">+20% Cond. Duration (while dual-attuned)</span>
+                    <span class="cond-unit">+20% Crit Chance (vs. Weakened)</span>
                 </div>` : ''}
             </div>` : ''}
 
@@ -884,7 +877,6 @@ class App {
         bind('cond-ee', e => { c.elemEmpowerment = Math.max(0, Math.min(10, parseInt(e.target.value) || 0)); e.target.value = c.elemEmpowerment; this.renderAttributes(); });
         bind('cond-fresh-air', e => { c.freshAir = e.target.checked; this.renderAttributes(); });
         bind('cond-sup-elem', e => { c.superiorElements = e.target.checked; this.renderAttributes(); });
-        bind('cond-wp', e => { c.weaversProwess = e.target.checked; this.renderAttributes(); });
         bind('cond-severance', e => { c.severance = e.target.checked; this.renderAttributes(); });
         bind('cond-raging-storm', e => { c.ragingStorm = e.target.checked; this.renderAttributes(); });
         bind('cond-arcane-lightning', e => { c.arcaneLightning = e.target.checked; this.renderAttributes(); });
@@ -919,7 +911,6 @@ class App {
         const hasRagingStorm = hasTrait('Raging Storm');
         const hasFreshAirTrait = hasTrait('Fresh Air');
         const hasSuperiorElements = hasTrait('Superior Elements');
-        const hasWeaversProwess = hasTrait("Weaver's Prowess");
         const hasEnhancedPotency = hasTrait('Enhanced Potency');
         const hasEmpEmpowerment = hasTrait('Empowered Empowerment');
         const hasArcaneLightning = hasTrait('Arcane Lightning');
@@ -929,7 +920,7 @@ class App {
         const hasAny = c.might > 0 || c.fury
             || c.primaryAtt !== 'None' || c.secondaryAtt !== 'None'
             || c.elemEmpowerment > 0
-            || c.freshAir || c.superiorElements || c.weaversProwess
+            || c.freshAir || c.superiorElements
             || (hasSeveranceSigil && c.severance)
             || (hasRagingStorm && c.ragingStorm && c.fury)
             || (hasArcaneLightning && c.arcaneLightning)
@@ -962,7 +953,7 @@ class App {
         // ── Elemental Polyphony (+200 per distinct active attunement) ──
         // Set deduplication: Fire/Fire gives +200 Power once, not twice.
         // Air gives Ferocity (matches simulation: polyFer = 200/15)
-        const POLY = { Fire: 'Power', Water: 'Healing Power', Air: 'Ferocity', Earth: 'Vitality' };
+        const POLY = { Fire: 'Power', Water: 'Healing Power', Air: 'Ferocity', Earth: 'Condition Damage' };
         if (hasPolyphony) {
             const atts = new Set([c.primaryAtt, c.secondaryAtt].filter(a => a && a !== 'None'));
             for (const att of atts) {
@@ -1047,8 +1038,8 @@ class App {
         const newPrecCC = (prec - 895) / 21;
         // Fury: +25% base; Enhanced Potency with Air familiar raises it to +40%
         const furyCC = c.fury ? ((hasEnhancedPotency && isEvoker && this.evokerElement === 'Air') ? 40 : 25) : 0;
-        // Superior Elements: +15% Crit Chance vs. Weakened enemies
-        const supElemCC = (c.superiorElements && hasSuperiorElements) ? 15 : 0;
+        // Superior Elements: +20% Crit Chance vs. Weakened enemies
+        const supElemCC = (c.superiorElements && hasSuperiorElements) ? 20 : 0;
         const crescentWindCC = (c.crescentWind && hasHammer) ? 15 : 0;
         out['Critical Chance'] = { ...out['Critical Chance'], final: newPrecCC + traitCC + sigilCC + furyCC + supElemCC + crescentWindCC };
 
@@ -1059,13 +1050,9 @@ class App {
         out['Boon Duration'] = { ...out['Boon Duration'], final: conc / 15 + boonFixedBonus };
 
         // Condition Duration: non-expertise bonus preserved; expertise component updated
-        // Weaver's Prowess: +20% Condition Duration while dual-attuned with two DIFFERENT attunements
-        // Matches simulation: `if (a2 !== null && a1 !== a2) bonus += 20`
-        const wpBonus = (c.weaversProwess && hasWeaversProwess
-            && c.secondaryAtt !== 'None' && c.primaryAtt !== c.secondaryAtt) ? 20 : 0;
         const condFixedBonus = (base['Condition Duration']?.final ?? 0) - (base['Expertise']?.final ?? 0) / 15;
         const frostBowCondBonus = (c.conjureFrostBow && hasConjureFrostBow) ? 20 : 0;
-        out['Condition Duration'] = { ...out['Condition Duration'], final: exp / 15 + condFixedBonus + wpBonus + frostBowCondBonus };
+        out['Condition Duration'] = { ...out['Condition Duration'], final: exp / 15 + condFixedBonus + frostBowCondBonus };
 
         return out;
     }
@@ -1130,7 +1117,7 @@ class App {
             mods.push({ id: 'arcLight', icon: icon('Arcane Lightning'), trait: 'Arcane Lightning', tip: '+150 Ferocity', cat: 'stat', effects: { ferocity: 150 }, default: att === 'Air' });
         }
         if (hasTrait('Superior Elements')) {
-            mods.push({ id: 'supElem', icon: icon('Superior Elements'), trait: 'Superior Elements', tip: '+15% CC', cat: 'stat', effects: { cc: 15 }, default: true });
+            mods.push({ id: 'supElem', icon: icon('Superior Elements'), trait: 'Superior Elements', tip: '+20% CC', cat: 'stat', effects: { cc: 20 }, default: true });
         }
 
         // Elemental Empowerment (Catalyst) — 10 stacks × 1% (or 1.5% with Empowered Empowerment, capped at 20% at 10)
@@ -1166,11 +1153,10 @@ class App {
         if (hasTrait('Persisting Flames')) mods.push({ id: 'pf', icon: icon('Persisting Flames'), trait: 'Persisting Flames', tip: '5×2%', cat: 'add', value: 0.10, default: true });
         if (hasTrait('Tempestuous Aria')) mods.push({ id: 'tempAria', icon: icon('Tempestuous Aria'), trait: 'Tempestuous Aria', tip: '+10%', cat: 'add', value: 0.10, default: true });
         if (hasTrait('Transcendent Tempest')) mods.push({ id: 'transcTemp', icon: icon('Transcendent Tempest'), trait: 'Transcendent Tempest', tip: '+25%', cat: 'add', value: 0.25, default: true });
-        if (hasTrait('Elements of Rage')) mods.push({ id: 'elemRage', icon: icon('Elements of Rage'), trait: 'Elements of Rage', tip: '+7%', cat: 'add', value: 0.07, default: true });
+        if (hasTrait('Elements of Rage')) mods.push({ id: 'elemRage', icon: icon('Elements of Rage'), trait: 'Elements of Rage', tip: '+15%', cat: 'add', value: 0.15, default: true });
         if (hasTrait('Empowering Auras')) mods.push({ id: 'empAuras', icon: icon('Empowering Auras'), trait: 'Empowering Auras', tip: '5×1%', cat: 'add', value: 0.05, default: true });
         if (hasTrait('Relentless Fire')) mods.push({ id: 'relFire', icon: icon('Relentless Fire'), trait: 'Relentless Fire', tip: '+10%', cat: 'add', value: 0.10, default: att === 'Fire' });
         if (hasTrait('Bountiful Power')) mods.push({ id: 'bountiful', icon: icon('Bountiful Power'), trait: 'Bountiful Power', tip: '+20%', cat: 'add', value: 0.20, default: false });
-        if (hasTrait('Swift Revenge')) mods.push({ id: 'swiftRev', icon: icon('Swift Revenge'), trait: 'Swift Revenge', tip: '×1.07', cat: 'mul', value: 1.07, default: true });
 
         if (isWeaver) mods.push({ id: 'wsAir', icon: icon('Weave Self'), trait: 'Weave Self', tip: 'Air +10%', cat: 'add', value: 0.10, default: false });
 
@@ -1234,9 +1220,8 @@ class App {
 
         if (hasTrait('Tempestuous Aria')) mods.push({ id: 'ctempAria', icon: icon('Tempestuous Aria'), trait: 'Tempestuous Aria', tip: '+5%', cat: 'add', value: 0.05, default: true });
         if (hasTrait('Transcendent Tempest')) mods.push({ id: 'ctranscTemp', icon: icon('Transcendent Tempest'), trait: 'Transcendent Tempest', tip: '+20%', cat: 'add', value: 0.20, default: true });
-        if (hasTrait('Elements of Rage')) mods.push({ id: 'celemRage', icon: icon('Elements of Rage'), trait: 'Elements of Rage', tip: '+5%', cat: 'add', value: 0.05, default: true });
+        if (hasTrait('Elements of Rage')) mods.push({ id: 'celemRage', icon: icon('Elements of Rage'), trait: 'Elements of Rage', tip: '+10%', cat: 'add', value: 0.10, default: true });
         if (hasTrait('Empowering Auras')) mods.push({ id: 'cempAuras', icon: icon('Empowering Auras'), trait: 'Empowering Auras', tip: '5×1%', cat: 'add', value: 0.05, default: true });
-        if (hasTrait("Weaver's Prowess")) mods.push({ id: 'cwp', icon: icon("Weaver's Prowess"), trait: "Weaver's Prowess", tip: '+5% cond dmg, +20% dur', cat: 'add', value: 0.05, default: true });
 
         if (hasTrait("Familiar's Prowess")) {
             const pct = hasTrait("Familiar's Focus") ? 10 : 5;
@@ -1347,7 +1332,7 @@ class App {
                 const eeChecked = condiState['cee'] !== undefined ? condiState['cee'] : true;
                 if (eeChecked) infernoPower += Math.round(this._empPool.Power * 10 * empMul);
             }
-            infernoTickDmg = 0.075 * infernoPower + 131;
+            infernoTickDmg = 0.0825 * infernoPower + 131;
         }
 
         const FORMULAS = {
@@ -1833,8 +1818,12 @@ class App {
 
     _getAvailableSkillsForSlot(slotType) {
         const selectedSpecs = new Set(this.data.attributes.specializations.map(s => s.name));
+        const activeTraits = this.data.attributes?.activeTraits || [];
+        const hasElementsOfRage = activeTraits.some(t => t.name === 'Elements of Rage');
         const skills = this.data.skills.filter(s => {
             if (s.slot !== slotType) return false;
+            // Unravel is only accessible while Elements of Rage is traited.
+            if (s.name === 'Unravel' && !hasElementsOfRage) return false;
             const requiredSpec = SKILL_TYPE_SPEC[s.type];
             if (requiredSpec && !selectedSpecs.has(requiredSpec)) return false;
             return true;
@@ -2819,7 +2808,7 @@ class App {
                 case 'apply': desc = `EFFECT ${ev.effect} ×${ev.stacks}${ev.dur > 0 ? ` (${ev.dur}s)` : ''} [${ev.skill}]`; break;
                 case 'cond_apply': {
                     let detail = `COND+ ${ev.cond} ×${ev.stacks} (${ev.durMs}ms) [${ev.skill}] total:${ev.total}`;
-                    if (d.baseDurMs) detail += ` | base:${d.baseDurMs}ms +${d.bonusPct}%${d.weaversProwess ? ' [WP+20%]' : ''}`;
+                    if (d.baseDurMs) detail += ` | base:${d.baseDurMs}ms +${d.bonusPct}%`;
                     desc = detail;
                     break;
                 }

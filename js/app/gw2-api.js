@@ -195,6 +195,10 @@ export class GW2API {
     }
 
     getTraitIcon(name) {
+        // Flow State (reworked) reuses the Invigorating Strikes icon.
+        if (name === 'Flow State' && !this.traitIcons[name]) {
+            return this.traitIcons['Invigorating Strikes'] || null;
+        }
         return this.traitIcons[name] || null;
     }
 

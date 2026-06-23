@@ -54,24 +54,6 @@ function runStrengthOfStone(hasTrait, convBaseNoFood, traitAccum) {
     add(traitAccum, 'Condition Damage', bonus);
 }
 
-// Master's Fortitude: 5% (Power + CondDmg) → Vitality, + flat 120 if Sword equipped
-function runMastersFortitude(hasTrait, convBase, hasSword, traitAccum) {
-    if (!hasTrait) return;
-    const flat = hasSword ? 120 : 0;
-    const converted = Math.round(
-        ((convBase['Power'] || 0) + (convBase['Condition Damage'] || 0)) * 0.05
-    );
-    add(traitAccum, 'Vitality', flat + converted);
-}
-
-// Elements of Rage: 13% Vitality (convBase + MF flat) → Precision
-function runElementsOfRage(hasTrait, convBase, hasMF, hasSword, traitAccum) {
-    if (!hasTrait) return;
-    const mfFlat = (hasMF && hasSword) ? 120 : 0;
-    const bonus = Math.round(((convBase['Vitality'] || 0) + mfFlat) * 0.13);
-    add(traitAccum, 'Precision', bonus);
-}
-
 // Signet of Fire passive: +180 Precision (applied AFTER conversions – not converted)
 function runSignetOfFire(skills, traitAccum) {
     if (skills && skills.some(s => s.name === 'Signet of Fire')) {
@@ -157,15 +139,10 @@ export function calcAttributes(build, skills) {
     const hasTrait    = (name) => activeTraits.some(t => t.name === name);
     const hasFW       = hasTrait('Ferocious Winds');
     const hasSoS      = hasTrait('Strength of Stone');
-    const hasMF       = hasTrait("Master's Fortitude");
-    const hasEoR      = hasTrait('Elements of Rage');
-    const hasSword    = (build.weapons || []).includes('Sword');
 
-    // Conversion traits (order matters: MF before EoR so mfFlat is available)
+    // Conversion traits
     runFerociousWinds(hasFW,  convBase, traitAcc);
     runStrengthOfStone(hasSoS, convBaseNoFood, traitAcc);
-    runMastersFortitude(hasMF, convBase, hasSword, traitAcc);
-    runElementsOfRage(hasEoR, convBase, hasMF, hasSword, traitAcc);
 
     // Flat trait buffs from traits_data.csv (Burning Rage +CondDmg, Gathered Focus +Concentration, etc.)
     // Duration bonuses go directly into the appropriate duration accumulator objects.

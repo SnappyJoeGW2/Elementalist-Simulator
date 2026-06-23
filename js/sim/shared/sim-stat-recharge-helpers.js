@@ -83,6 +83,10 @@ export function getAdjustedWeaponRechargeMs(engine, sk, baseMs) {
         if (engine._hasTrait("Aeromancer's Training") && sk.attunement === 'Air') baseMs = Math.round(baseMs * 0.8);
         if (engine._hasTrait("Geomancer's Training") && sk.attunement === 'Earth') baseMs = Math.round(baseMs * 0.8);
         if (engine._hasTrait("Aquamancer's Training") && sk.attunement === 'Water') baseMs = Math.round(baseMs * 0.8);
+        // Flow State: -20% recharge on Dual Attack skills (weaver slot 3, two elements)
+        if (engine._hasTrait('Flow State') && sk.slot === '3' && sk.attunement && sk.attunement.includes('+')) {
+            baseMs = Math.round(baseMs * 0.8);
+        }
     }
     return baseMs;
 }

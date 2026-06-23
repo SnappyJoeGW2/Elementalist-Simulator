@@ -73,7 +73,13 @@ export function applyGenericPostCastHooks(ctx, sk, { key, end }) {
             ctx.armTraitIcd('SuperiorElements', end, 4000);
             ctx.trackEffect('Weakness', 1, 5, end);
         }
-        if (S._hasSwiftRevenge) ctx.trackEffect('Swiftness', 1, 4, end);
-        if (S._hasInvigoratingStrikes) ctx.trackEffect('Vigor', 1, 3, end);
+        if (S._hasSwiftRevenge) {
+            for (const elem of new Set(sk.attunement.split('+'))) {
+                if (elem === 'Fire') ctx.trackEffect('Might', 3, 5, end);
+                else if (elem === 'Air') ctx.trackEffect('Swiftness', 1, 5, end);
+                else if (elem === 'Earth') ctx.gainEndurance(25, end);
+                // Water: no bonus
+            }
+        }
     }
 }

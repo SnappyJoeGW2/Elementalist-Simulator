@@ -189,7 +189,7 @@ export function createRunState(engine, {
         _hasBolsteredElements: engine._hasTrait('Bolstered Elements'),
         _hasElemPolyphony: engine._hasTrait('Elemental Polyphony'),
         _hasElementsOfRage: engine._hasTrait('Elements of Rage'),
-        _hasInvigoratingStrikes: engine._hasTrait('Invigorating Strikes'),
+        _hasFlowState: engine._hasTrait('Flow State'),
         _hasViciousEmpowerment: engine._hasTrait('Vicious Empowerment'),
         _hasEnergizedElements: engine._hasTrait('Energized Elements'),
         _hasElemEmpowermentTrait: engine._hasTrait('Elemental Empowerment'),

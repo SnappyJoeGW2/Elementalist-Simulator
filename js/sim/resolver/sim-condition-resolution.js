@@ -49,7 +49,7 @@ function buildConditionTickEffectSnapshot(ctx, ev) {
             && effectStacks('Transcendent Tempest') > 0
             ? 0.20
             : 0,
-        elementsOfRage: S._hasElementsOfRage && effectStacks('Elements of Rage') > 0 ? 0.05 : 0,
+        elementsOfRage: S._hasElementsOfRage && effectStacks('Elements of Rage') > 0 ? 0.10 : 0,
         empoweringAuras: S._hasEmpoweringAuras ? Math.min(effectStacks('Empowering Auras'), 5) * 0.01 : 0,
         familiarsProwess: (S._hasFamiliarsProwess && evokerState.element === 'Fire'
             && effectStacks("Familiar's Prowess") > 0)
@@ -165,9 +165,6 @@ export function applyCondition(engine, S, cond, stacks, durSec, time, skillName,
     const relicState = getRelicState(S);
     const attrs = engine.attributes.attributes;
     let bonus = getConditionDurationBonus(cond, attrs) + extraCondDurPct;
-    if (S._hasWeaversProwess && effectStacksAt(S, "Weaver's Prowess", time) > 0) {
-        bonus += 20;
-    }
     if (S._empPool?.Expertise) {
         bonus += (S._empPool.Expertise * getEmpowermentMultiplier({
             S,
@@ -197,8 +194,6 @@ export function applyCondition(engine, S, cond, stacks, durSec, time, skillName,
     }
 
     const activeAtTime = countActiveConditionStacks(S, cond, time);
-    const wpApplied = S._hasWeaversProwess
-        && effectStacksAt(S, "Weaver's Prowess", time) > 0;
     const effectiveBonus = Math.min(bonus, 100) + uncapped;
     pushReportingLog(S, {
         t: time, type: 'cond_apply', cond, stacks, durMs: adjMs,
@@ -206,7 +201,6 @@ export function applyCondition(engine, S, cond, stacks, durSec, time, skillName,
         diag: {
             baseDurMs: Math.round(durSec * 1000),
             bonusPct: Math.round(effectiveBonus * 100) / 100,
-            weaversProwess: wpApplied || false,
             uncappedPct: uncapped,
         },
     });
@@ -279,7 +273,7 @@ export function procConditionTick(ctx, ev, condDmg, condMul, infernoPower = 0, d
 
     if (active.length > 0) {
         const baseTick = (infernoPower > 0 && cond === 'Burning')
-            ? (0.075 * infernoPower + 131)
+            ? (0.0825 * infernoPower + 131)
             : conditionTickDamage(cond, condDmg);
         const tick = baseTick * condMul;
         const total = tick * active.length;

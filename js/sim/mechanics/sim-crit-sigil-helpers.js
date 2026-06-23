@@ -150,7 +150,10 @@ export function applyElementalAttunementBoon(ctx, attunement, time) {
 }
 
 export function getAttunementCooldownMs(S, baseCdMs) {
-    return S._hasElemEnchantment ? Math.round(baseCdMs * 0.85) : baseCdMs;
+    let ms = baseCdMs;
+    if (S._hasElemEnchantment) ms = Math.round(ms * 0.85);
+    if (S._hasFlowState) ms = Math.round(ms * 0.8);
+    return ms;
 }
 
 export function refreshArcaneLightningBuff(engine, S, time) {

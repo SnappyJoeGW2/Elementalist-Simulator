@@ -167,6 +167,10 @@ export function handleCritAndCcTriggers(ctx, ev, hitCtx, triggerCtx) {
         ctx.procOnCcSigils(ev.time);
     }
 
+    if (S._hasElementalPursuit && triggerCtx.ccPlayerHit) {
+        ctx.trackEffect('Swiftness', 1, 3, ev.time);
+    }
+
     if (S._hasViciousEmpowerment && triggerCtx.ccPlayerHit
         && ctx.traitIcdReady('ViciousEmp', ev.time)) {
         ctx.armTraitIcd('ViciousEmp', ev.time, 250);

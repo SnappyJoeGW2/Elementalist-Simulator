@@ -48,9 +48,16 @@ export function buildQueuedEventContext(ctx, time) {
     const thornsCondDmg = S.activeRelic === 'Thorns'
         ? (getRelicState(S).thornsStacks || 0) * (ctx.getRelicProc('Thorns')?.conditionDamagePerStack || 0)
         : 0;
+    let polyCondDmg = 0;
+    if (S._hasElemPolyphony) {
+        const att = ctx.attAt(time);
+        const att2 = ctx.att2At(time);
+        const atts = att2 !== null ? new Set([att, att2]) : new Set([att]);
+        if (atts.has('Earth')) polyCondDmg = 200;
+    }
     const condDmg = baseCondDmg + might * S._mightCondDmgBonus
         + Math.round((S._empPool?.['Condition Damage'] || 0) * empMul)
-        + thornsCondDmg;
+        + thornsCondDmg + polyCondDmg;
     const vulnMul = skipVuln ? 1 : 1 + ctx.vulnStacksAt(time) * 0.01;
     return { might, empMul, condDmg, vulnMul, thornsCondDmg };
 }

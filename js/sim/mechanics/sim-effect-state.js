@@ -250,9 +250,6 @@ export function trackEffect(engine, S, effect, stacks, durSec, time, {
     } else {
         bonus = getConditionDurationBonus(effect, attrs);
         if (S._hasPiercingShards && effect === 'Vulnerability') bonus += 33;
-        if (S._hasWeaversProwess && effectStacksAt(S, "Weaver's Prowess", time) > 0) {
-            bonus += 20;
-        }
         if (S._empPool?.Expertise) {
             bonus += (S._empPool.Expertise * getEmpowermentMultiplier({
                 S,
@@ -297,13 +294,6 @@ export function trackEffect(engine, S, effect, stacks, durSec, time, {
         armTraitIcd(S, 'StrengthOfStone', time, 3000);
         applyConditionFn('Bleeding', 3, 10, time, 'Strength of Stone');
         log({ t: time, type: 'trait_proc', trait: 'Strength of Stone', skill: 'Strength of Stone' });
-    }
-
-    if (S._hasElementalPursuit
-        && (effect === 'Immobilize' || effect === 'Chilled' || effect === 'Crippled')
-        && isTraitIcdReady(S, 'ElemPursuit', time)) {
-        armTraitIcd(S, 'ElemPursuit', time, 10000);
-        trackEffect(engine, S, 'Superspeed', 1, 2.5, time, { boons, relicProcs });
     }
 
     if (S._hasViciousEmpowerment && effect === 'Immobilize'
