@@ -332,7 +332,7 @@ const CONJURE_MAP = {
     'Conjure Lightning Hammer': 'Lightning Hammer',
     'Conjure Fiery Greatsword': 'Fiery Greatsword',
 };
-const CONJURE_PICKUP_DURATION = 33000;
+const CONJURE_PICKUP_DURATION = 35000;
 const FIRE_FIELD_SKILLS = new Set([
     'Lava Font', 'Pyroclastic Blast', 'Burning Retreat', 'Burning Speed',
     'Flamewall', 'Wildfire', 'Flame Uprising', 'Ring of Fire'
