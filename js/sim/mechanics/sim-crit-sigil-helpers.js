@@ -151,8 +151,10 @@ export function applyElementalAttunementBoon(ctx, attunement, time) {
 
 export function getAttunementCooldownMs(S, baseCdMs) {
     let ms = baseCdMs;
+    // Elemental Enchantment's -15% applies first, then Flow State's flat -1s
+    // (e.g. Weaver 4s → ×0.85 → 3.4s → -1s → 2.4s).
     if (S._hasElemEnchantment) ms = Math.round(ms * 0.85);
-    if (S._hasFlowState) ms = Math.round(ms * 0.8);
+    if (S._hasFlowState) ms = Math.max(0, ms - 1000);
     return ms;
 }
 

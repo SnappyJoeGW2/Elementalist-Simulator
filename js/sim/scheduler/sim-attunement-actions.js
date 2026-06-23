@@ -241,6 +241,8 @@ export function handleWeaverSwap(ctx, target, sk, isConcurrent, concurrents, {
         }
     }
 
+    // Weave Self pins attunement recharge to a flat 2s — it never goes below 2s, even
+    // when combined with Flow State and/or Elemental Enchantment.
     const weaveSelfSwapCD = weaveSelfWasActive ? 2000 : ctx.attunementCooldownMs(weaverSwapCd);
     for (const a of attunements) {
         let newCD = S.t + ctx.alacrityAdjustedCooldown(weaveSelfSwapCD, S.t);
