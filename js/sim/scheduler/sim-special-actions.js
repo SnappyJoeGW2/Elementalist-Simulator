@@ -56,16 +56,17 @@ export function anySphereActiveAt(S, time) {
 
 export function flushPendingEnergy(engine, S, catalystEnergyMax) {
     const catalystState = getCatalystState(S);
-    if (catalystState.energy === null || catalystState.energy >= catalystEnergyMax) return;
+    if (catalystState.energy === null) return;
     for (const ev of S.eq) {
         if (!isHitEvent(ev) || ev.dmg <= 0 || ev.ws <= 0) continue;
         if (ev.time > S.t) continue;
         if (ev._energyCredited) continue;
-        if (!anySphereActiveAt(S, ev.time) || S._hasSphereSpecialist) {
-            addCatalystEnergy(S, 1, catalystEnergyMax);
-            ev._energyCredited = true;
-            if (catalystState.energy >= catalystEnergyMax) break;
-        }
+        // Hits that land while a Jade Sphere is active grant no energy (unless Sphere Specialist).
+        if (anySphereActiveAt(S, ev.time) && !S._hasSphereSpecialist) continue;
+        // Mark every eligible past hit as accounted for — even when energy is capped — so the
+        // overflow is wasted instead of being stored and released after the next spend.
+        ev._energyCredited = true;
+        addCatalystEnergy(S, 1, catalystEnergyMax);
     }
 }
 

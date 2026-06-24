@@ -1,5 +1,4 @@
 import { strikeDamage } from '../../core/damage.js';
-import { anySphereActiveAt } from '../scheduler/sim-special-actions.js';
 import { addPerSkillStrike, addPerSkillHit, recordPerSkillCast } from '../state/sim-reporting-state.js';
 
 function isFlatStrikeEvent(ev) {
@@ -14,7 +13,7 @@ function getMistStrangerFlatDamage(ctx, ev) {
 }
 
 function applyStrikeDamage(ctx, ev, power, critMult, strikeMul) {
-    const { S, catalystEnergyMax } = ctx;
+    const { S } = ctx;
     const mistStrangerFlat = getMistStrangerFlatDamage(ctx, ev);
     let baseStrike = 0;
     if (isFlatStrikeEvent(ev)) {
@@ -33,10 +32,11 @@ function applyStrikeDamage(ctx, ev, power, critMult, strikeMul) {
     const strike = baseStrike + mistStrangerFlat;
     S.totalStrike += strike;
 
-    if (!ev._energyCredited
-        && (!anySphereActiveAt(S, ev.time) || S._hasSphereSpecialist)) {
-        ctx.addCatalystEnergy(1, catalystEnergyMax);
-    }
+    // Catalyst energy is intentionally NOT credited here. Energy is accounted for entirely by
+    // the scheduler (flushPendingEnergy at each sphere cast plus a final catch-up at the end of
+    // the rotation), so the displayed end-of-rotation energy stays consistent with the energy
+    // model that gates sphere casts. Crediting again during resolution would double-count
+    // reactive proc strikes that the scheduler never saw, inflating the bar past the log value.
 
     return { strike, baseStrike, mistStrangerFlat };
 }

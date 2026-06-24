@@ -29,6 +29,7 @@ import { createSchedulerContext } from './sim/scheduler/sim-scheduler-context.js
 import {
     handleJadeSphere,
     handleFamiliar,
+    flushPendingEnergy,
 } from './sim/scheduler/sim-special-actions.js';
 import {
     handleAttunementSwap,
@@ -949,6 +950,13 @@ export class SimulationEngine {
         const schedulerPhaseState = createSchedulerPhaseState(S);
         const ctx = this._createRootSchedulerContext(schedulerPhaseState);
         const rotationEndTime = scheduleRotation(ctx, this.rotation);
+        // Final energy catch-up: credit every direct hit that lands by the end of the last cast
+        // (rotationEndTime === schedulerPhaseState.t) so the displayed end-of-rotation energy
+        // reflects regen from hits after the last sphere cast (e.g. trailing auto-attacks) without
+        // having to wait for the next sphere cast to flush. Hits queued for the future
+        // (ev.time > t) and reactive resolver-only proc strikes are deliberately excluded, keeping
+        // the displayed energy consistent with the scheduler energy model that gates sphere casts.
+        flushPendingEnergy(this, schedulerPhaseState, CATALYST_ENERGY_MAX);
         const scheduledStream = createScheduledEventStreamFromState(schedulerPhaseState, rotationEndTime, {
             source: 'rotation_scheduler',
             metadata: {
