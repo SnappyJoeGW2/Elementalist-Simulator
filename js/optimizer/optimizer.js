@@ -9,7 +9,7 @@
 // Each non-gear combo (rune × relic × slot-specific sigils × food × utility × infusions)
 // is sent to a Web Worker for parallel exhaustive evaluation.
 
-import { SimulationEngine } from '../simulation.js?v=48';
+import { SimulationEngine } from '../simulation.js?v=49';
 import { calcAttributes } from '../core/calc-attributes.js';
 import { GEAR_SLOTS, GEAR_STATS, WEAPON_DATA, getActiveGearSlots } from '../data/gear-data.js';
 
